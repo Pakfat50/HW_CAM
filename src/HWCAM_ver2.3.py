@@ -1516,8 +1516,8 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
                 
                 time_str = dt_now.strftime('%Y%m%d_%H%M%S')
                 
-                name0 = dxf_obj0.filename.replace(".dxf",'')
-                name1 = dxf_obj1.filename.replace(".dxf",'')
+                name0 = os.path.splitext(os.path.basename(dxf_obj0.filename))[0]
+                name1 = os.path.splitext(os.path.basename(dxf_obj1.filename))[0]
                 
                 Output_FileName = "%s,%s,%s_%s.nc"%(name0, name1, CS, time_str)
                 

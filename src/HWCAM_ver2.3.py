@@ -38,6 +38,7 @@ from matplotlib.figure import Figure
 from scipy.integrate import quad
 import os.path as op
 import datetime
+import os
 
 
 #======================================================================================================================================
@@ -1194,6 +1195,11 @@ def poly_to_spline(poly_obj):
 #            ボタンにより呼び出される関数
 #======================================================================================================================================
 #
+#   open_explorer(dxf_file　dxf_obj, tk.Entry entry, messeage_window messeage_window)
+#   【引数】　dxf_obj, entry, messeage_window
+#   【戻り値】　なし
+#   【機能】 エクスプローラーを使ってファイルパスを読みこむ。パスをEntryにセットしたうえで、load_fileによりファイルを読み込む。
+#
 #   load_file(dxf_file　dxf_obj, tk.Entry entry, messeage_window messeage_window)
 #   【引数】　dxf_obj, entry, messeage_window
 #   【戻り値】　なし
@@ -1267,7 +1273,16 @@ def poly_to_spline(poly_obj):
 #   【機能】 メインウィンドウが閉じられた際，インスタンスを破棄する．
 #
         
-    
+
+def open_explorer(dxf_obj, entry, messeage_window):
+    fTyp = [("","*")]
+    iDir = os.path.abspath(os.path.dirname(__file__))
+    selected_file_path = tk.filedialog.askopenfilename(filetypes = fTyp,initialdir = iDir)
+    entry.delete(0,tk.END)
+    entry.insert(tk.END, selected_file_path)
+    load_file(dxf_obj, entry, messeage_window)
+
+
 def load_file(dxf_obj, entry, messeage_window):
     filename = entry.get()
     if file_chk(filename) == 1:
@@ -1935,14 +1950,21 @@ if __name__ == "__main__":
     #            ボタンインスタンスの生成
     #======================================================================================================================================
 
+    #【X-Y用 dxfファイル読込用のエクスプローラーを開くボタン】
+    LoadBtn0 = tk.Button(root, text="開く", command = lambda: open_explorer(dxf0, FileNameEntry0, MessageWindow))
+    LoadBtn0.place(x=1160, y=30)  
+
+    #【U-V用 dxfファイル読込用のエクスプローラーを開くボタン】   
+    LoadBtn1 = tk.Button(root, text="開く", command = lambda: open_explorer(dxf1, FileNameEntry1, MessageWindow))
+    LoadBtn1.place(x=1560, y=30)    
 
     #【X-Y用 dxfファイル名の読込ボタン】
-    LoadBtn0 = tk.Button(root, text="読込", command = lambda: load_file(dxf0, FileNameEntry0, MessageWindow))
-    LoadBtn0.place(x=1210, y=30)  
+    LoadBtn0 = tk.Button(root, text="再読込", command = lambda: load_file(dxf0, FileNameEntry0, MessageWindow))
+    LoadBtn0.place(x=1200, y=30)  
 
     #【U-V用 dxfファイル名の読込ボタン】   
-    LoadBtn1 = tk.Button(root, text="読込", command = lambda: load_file(dxf1, FileNameEntry1, MessageWindow))
-    LoadBtn1.place(x=1610, y=30)    
+    LoadBtn1 = tk.Button(root, text="再読込", command = lambda: load_file(dxf1, FileNameEntry1, MessageWindow))
+    LoadBtn1.place(x=1600, y=30)    
 
     #【X-Yラインテーブル用　カット方向入れ替えボタン】
     ChangeCutDirBtn0 = tk.Button(root, text="カット方向入替え", width =15, bg = "#3cb371", command = lambda: Change_CutDir(dxf0, MessageWindow))

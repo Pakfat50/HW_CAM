@@ -44,7 +44,8 @@ import os
 #======================================================================================================================================
 #            グローバル変数
 #======================================================================================================================================
-Z_ERROR = 5.0 #2020.10.13　ver2.1 新規追加  単位：mm Z面の許容誤差 
+Z_ERROR = 5.0           #2020.10.13　ver2.1 新規追加  単位：mm Z面の許容誤差 
+LINE_MARGE_NORM_MN = 1  #単位:mm ラインを結合時にラインを結合してよいかを判断するためのライン端点間距離
 
    
 #======================================================================================================================================
@@ -129,8 +130,8 @@ Z_ERROR = 5.0 #2020.10.13　ver2.1 新規追加  単位：mm Z面の許容誤差
 
 class line_object:
     def __init__(self, x_points, y_points, num):
-        self.x_raw = x_points
-        self.y_raw = y_points
+        self.x_raw = np.array(x_points)
+        self.y_raw = np.array(y_points)
         self.st = np.array([x_points[0], y_points[0]])
         self.ed = np.array([x_points[-1], y_points[-1]])
         self.N = max(len(x_points), len(y_points))
@@ -148,6 +149,24 @@ class line_object:
             self.line_type = "line"
         if len(x_points)>2:
             self.line_type = "spline"
+       
+        
+    def reset_point(self, x_points, y_points):
+        self.x_raw = np.array(x_points)
+        self.y_raw = np.array(y_points)
+        self.st = np.array([x_points[0], y_points[0]])
+        self.ed = np.array([x_points[-1], y_points[-1]])
+        self.N = max(len(x_points), len(y_points))
+        self.x = x_points
+        self.y = y_points
+        self.interp_mode = "cubic" 
+
+        if len(x_points)<2:
+            self.line_type = "point"
+        if len(x_points)==2:
+            self.line_type = "line"
+        if len(x_points)>2:
+            self.line_type = "spline"        
     
     
     def update(self):
@@ -689,13 +708,90 @@ class dxf_file:
             self.table_reload()
             self.plot()
         return selected_items
-
+    
 
     def Swap_line(self, item_num0, item_num1):
         self.line_num_list[item_num0], self.line_num_list[item_num1] = self.line_num_list[item_num1], self.line_num_list[item_num0] 
         self.set_selected_line(item_num1)    
 
 
+    def Merge_Selected_line(self):
+        selected_items = self.table.table.selection()
+        if len(selected_items) == 2:
+            parent_line_num = item2num(selected_items[0])
+            child_line_num = item2num(selected_items[1])
+            if self.Merge_line(parent_line_num, child_line_num) == True:
+                self.delete_line(selected_items[1])
+                self.table_reload()
+                self.plot()
+                return [selected_items[0]]
+            
+        elif len(selected_items) == 1:
+            return []
+        
+        else:
+            return selected_items
+
+
+    def Merge_line(self, parent_item_num, child_item_num):
+        parent_line = self.line_list[parent_item_num]
+        child_line = self.line_list[child_item_num]
+        
+        x_p_st = parent_line.st[0]
+        y_p_st = parent_line.st[1]
+        x_c_st = child_line.st[0]
+        y_c_st = child_line.st[1]
+
+        x_p_ed = parent_line.ed[0]
+        y_p_ed = parent_line.ed[1]
+        x_c_ed = child_line.ed[0]
+        y_c_ed = child_line.ed[1]
+        
+        x_p = parent_line.x_raw.tolist()
+        y_p = parent_line.y_raw.tolist()
+        x_c = child_line.x_raw.tolist()
+        y_c = child_line.y_raw.tolist()     
+        
+        new_x = []
+        new_y = []
+
+        if norm(x_p_ed, y_p_ed, x_c_st, y_c_st) < LINE_MARGE_NORM_MN:
+            # 親ラインに子ラインを接続
+            new_x.extend(x_p)
+            new_y.extend(y_p)
+            new_x.extend(x_c)
+            new_y.extend(y_c)
+        elif norm(x_p_ed, y_p_ed, x_c_ed, y_c_ed) < LINE_MARGE_NORM_MN:
+            # 子ラインを反転させたのち、親ラインに子ラインを接続
+            x_c.reverse()
+            y_c.reverse()
+            new_x.extend(x_p)
+            new_y.extend(y_p)
+            new_x.extend(x_c)
+            new_y.extend(y_c)
+        elif norm(x_p_st, y_p_st, x_c_ed, y_c_ed) < LINE_MARGE_NORM_MN:
+            # 子ラインに親ラインを接続
+            new_x.extend(x_c)
+            new_y.extend(y_c)
+            new_x.extend(x_p)
+            new_y.extend(y_p)
+        elif norm(x_p_st, y_p_st, x_c_st, y_c_st) < LINE_MARGE_NORM_MN:
+            # 子ラインを反転させたのち、子ラインに親ラインに接続
+            x_c.reverse()
+            y_c.reverse()
+            new_x.extend(x_c)
+            new_y.extend(y_c)
+            new_x.extend(x_p)
+            new_y.extend(y_p)
+            
+        else:
+            # 端点が隣接していない線同士であるので、結合すべきではない。
+            return False
+        
+        parent_line.reset_point(new_x, new_y)
+        return True
+                
+        
     def delete_Selected_line(self):
         selected_items = self.table.table.selection()
         i = 0
@@ -957,33 +1053,17 @@ def offset_line(x, y, d, cut_dir, interp_mode): #ver2.2 interp_mode 追加　ポ
         else:
             i = 0
             while i < len(x):
-                if i < len(x) - 1: 
-                    if x[i] == x[i+1]:
-                        k = np.pi/2.0
-                    else:
-                        k = np.arctan((y[i+1]-y[i])/(x[i+1]-x[i]))
-                    if (x[i] < x[i+1]):
-                        sign = 1
-                    else:
-                        sign = -1
+                if i == 0:
+                    k = np.arctan2((y[1]-y[0]), (x[1]-x[0]))
+
+                elif i == len(x) - 1:
+                    k = np.arctan2((y[i]-y[i-1]), (x[i]-x[i-1]))
                     
-                    if i == 0:
-                        new_x.append(x[0] - d*np.sin(k) * sign * sign_cut_dir)
-                        new_y.append(y[0] + d*np.cos(k) * sign * sign_cut_dir)
-                    else:
-                        new_x.append((x[i]+x[i+1])/2.0 - d*np.sin(k) * sign * sign_cut_dir)
-                        new_y.append((y[i]+y[i+1])/2.0 + d*np.cos(k) * sign * sign_cut_dir)                        
                 else:
-                    if x[i-1] == x[i]:
-                        k = np.pi/2.0
-                    else:
-                        k = np.arctan((y[i]-y[i-1])/(x[i]-x[i-1]))
-                    if (x[i-1] < x[i]):
-                        sign = 1
-                    else:
-                        sign = -1
-                    new_x.append(x[i] - d*np.sin(k) * sign * sign_cut_dir)      
-                    new_y.append(y[i] + d*np.cos(k) * sign * sign_cut_dir)
+                    k = np.arctan2((y[i+1]-y[i-1]), (x[i+1]-x[i-1]))
+
+                new_x.append(x[i] - d*np.sin(k) * sign_cut_dir)      
+                new_y.append(y[i] + d*np.cos(k) * sign_cut_dir)
                 i += 1
     
     new_x = np.array(new_x)
@@ -1336,6 +1416,18 @@ def Set_OffsetDist(dxf_obj0, dxf_obj1, entry, messeage_window):
         pass
 
 
+def Merge_line(dxf_obj, messeage_window):
+    selected_items = dxf_obj.Merge_Selected_line()
+    if len(selected_items) == 1:
+        messeage_window.set_messeage("%s番目のラインに結合しました。\n"%item2num(selected_items[0]))
+    elif len(selected_items) == 2:
+        messeage_window.set_messeage("２つの近接したラインを選択して下さい。ラインの端点間の距離が遠すぎます。\n")
+    elif len(selected_items) == 0:
+        messeage_window.set_messeage("２つのラインを選択してください。1本しかラインが選択されていません。\n")
+    else:
+        messeage_window.set_messeage("２つのラインを選択して下さい。%s本のラインが選択されています。\n"%len(selected_items))
+        
+        
 def delete_line(dxf_obj, messeage_window):
     dxf_obj.delete_Selected_line()
     messeage_window.set_messeage("ラインを削除しました。\n")
@@ -1979,12 +2071,16 @@ if __name__ == "__main__":
     ReverseBtn0.place(x=1125, y=435)  
     
     #【X-Yラインテーブル用　ライン入れ替えボタン】
-    SwapBtn0 = tk.Button(root, text="ライン入れ替え", width =25, bg = "#fffacd", command = lambda: swap_line(dxf0, MessageWindow))
+    SwapBtn0 = tk.Button(root, text="ライン入れ替え", width =15, bg = "#fffacd", command = lambda: swap_line(dxf0, MessageWindow))
     SwapBtn0.place(x=855, y=465)    
     
+    #【X-Yラインテーブル用　ライン結合ボタン】
+    SwapBtn0 = tk.Button(root, text="ライン結合", width =15, bg = "#4ba3fb", command = lambda: Merge_line(dxf0, MessageWindow))
+    SwapBtn0.place(x=990, y=465) 
+        
     #【X-Yラインテーブル用　ライン削除ボタン】    
-    DelateBtn0 = tk.Button(root, text="ライン削除", width = 25, bg = "#ff6347", command = lambda: delete_line(dxf0, MessageWindow))
-    DelateBtn0.place(x=1055, y=465)
+    DelateBtn0 = tk.Button(root, text="ライン削除", width = 15, bg = "#ff6347", command = lambda: delete_line(dxf0, MessageWindow))
+    DelateBtn0.place(x=1125, y=465)
   
   
     #【U-Vラインテーブル用　カット方向入れ替えボタン】    
@@ -2000,12 +2096,16 @@ if __name__ == "__main__":
     ReverseBtn1.place(x=1525, y=435)   
     
     #【U-Vラインテーブル用　ライン入れ替えボタン】    
-    SwapBtn1 = tk.Button(root, text="ライン入れ替え", width = 25, bg = "#fffacd", command = lambda: swap_line(dxf1, MessageWindow))
+    SwapBtn1 = tk.Button(root, text="ライン入れ替え", width = 15, bg = "#fffacd", command = lambda: swap_line(dxf1, MessageWindow))
     SwapBtn1.place(x=1255, y=465)
-    
+ 
+    #【U-Vラインテーブル用　ライン結合ボタン】    
+    DelateBtn1 = tk.Button(root, text="ライン結合", width = 15, bg = "#4ba3fb" , command = lambda: Merge_line(dxf1, MessageWindow))
+    DelateBtn1.place(x=1390, y=465)   
+ 
     #【U-Vラインテーブル用　ライン削除ボタン】    
-    DelateBtn1 = tk.Button(root, text="ライン削除", width = 25, bg = "#ff6347" , command = lambda: delete_line(dxf1, MessageWindow))
-    DelateBtn1.place(x=1455, y=465)
+    DelateBtn1 = tk.Button(root, text="ライン削除", width = 15, bg = "#ff6347" , command = lambda: delete_line(dxf1, MessageWindow))
+    DelateBtn1.place(x=1525, y=465)
     
 
     #【オフセット値更新ボタン】    

@@ -1053,33 +1053,17 @@ def offset_line(x, y, d, cut_dir, interp_mode): #ver2.2 interp_mode 追加　ポ
         else:
             i = 0
             while i < len(x):
-                if i < len(x) - 1: 
-                    if x[i] == x[i+1]:
-                        k = np.pi/2.0
-                    else:
-                        k = np.arctan((y[i+1]-y[i])/(x[i+1]-x[i]))
-                    if (x[i] < x[i+1]):
-                        sign = 1
-                    else:
-                        sign = -1
+                if i == 0:
+                    k = np.arctan2((y[1]-y[0]), (x[1]-x[0]))
+
+                elif i == len(x) - 1:
+                    k = np.arctan2((y[i]-y[i-1]), (x[i]-x[i-1]))
                     
-                    if i == 0:
-                        new_x.append(x[0] - d*np.sin(k) * sign * sign_cut_dir)
-                        new_y.append(y[0] + d*np.cos(k) * sign * sign_cut_dir)
-                    else:
-                        new_x.append((x[i]+x[i+1])/2.0 - d*np.sin(k) * sign * sign_cut_dir)
-                        new_y.append((y[i]+y[i+1])/2.0 + d*np.cos(k) * sign * sign_cut_dir)                        
                 else:
-                    if x[i-1] == x[i]:
-                        k = np.pi/2.0
-                    else:
-                        k = np.arctan((y[i]-y[i-1])/(x[i]-x[i-1]))
-                    if (x[i-1] < x[i]):
-                        sign = 1
-                    else:
-                        sign = -1
-                    new_x.append(x[i] - d*np.sin(k) * sign * sign_cut_dir)      
-                    new_y.append(y[i] + d*np.cos(k) * sign * sign_cut_dir)
+                    k = np.arctan2((y[i+1]-y[i-1]), (x[i+1]-x[i-1]))
+
+                new_x.append(x[i] - d*np.sin(k) * sign_cut_dir)      
+                new_y.append(y[i] + d*np.cos(k) * sign_cut_dir)
                 i += 1
     
     new_x = np.array(new_x)

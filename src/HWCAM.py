@@ -39,6 +39,7 @@ from scipy.integrate import quad
 import os.path as op
 import datetime
 import os
+import sys
 
 
 #======================================================================================================================================
@@ -1271,6 +1272,17 @@ def poly_to_spline(poly_obj):
     return np.array([new_point_x, new_point_y]).T
 
 
+def get_curdir():
+    # PyInstallerで実行されているかどうかをチェック
+    if getattr(sys, "frozen", False):
+        # EXEの実行ファイルのパスを取得
+        curdir = os.path.dirname(sys.executable)
+    else:
+        # スクリプトの実行ファイルのパスを取得
+        curdir =  os.path.dirname(os.path.abspath(__file__))
+    return curdir
+
+
 
 #======================================================================================================================================
 #            ボタンにより呼び出される関数
@@ -1357,7 +1369,7 @@ def poly_to_spline(poly_obj):
 
 def open_explorer(dxf_obj, entry, messeage_window):
     fTyp = [("","*")]
-    iDir = os.path.abspath(os.path.dirname(__file__))
+    iDir = get_curdir()
     selected_file_path = tk.filedialog.askopenfilename(filetypes = fTyp,initialdir = iDir)
     entry.delete(0,tk.END)
     entry.insert(tk.END, selected_file_path)
@@ -1807,7 +1819,8 @@ if __name__ == "__main__":
     #            config.csvファイルの読込
     #======================================================================================================================================
     try:
-        file = np.genfromtxt("config.csv", delimiter = ",", skip_header = 1, dtype = np.str)
+        curdir =  get_curdir()
+        file = np.genfromtxt("%s\\config.csv"%curdir, delimiter = ",", skip_header = 1, dtype = str)
         data = file[:,2]
         FILENAME_XY = data[0]
         FILENAME_UV = data[1]

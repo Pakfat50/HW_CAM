@@ -141,6 +141,7 @@ class line_object:
         self.offset_dist = 0
         self.offset_dir = "O"
         self.cut_dir = "F"
+        self.cutspeed = 100
         self.x = x_points
         self.y = y_points
         self.interp_mode = "cubic" #ver.2.2追加 "cubic":3d-spline, "linear":1d-line, ポリラインの指定用
@@ -204,6 +205,10 @@ class line_object:
         if cut_dir == 'F' or cut_dir == 'R':
             self.cut_dir = cut_dir
             self.update()
+        
+            
+    def set_cutspeed(self, cutspeed):
+        self.cutspeed = cutspeed
         
         
     def set_num(self, num):
@@ -1283,6 +1288,19 @@ def get_curdir():
     return curdir
 
 
+def generate_offset_function(x_array, y_array):
+    if x_array[0] > 0:
+        x_array_func = np.append(0, x_array)
+        y_array_func = np.append(y_array[0], y_array)
+    
+    if x_array[-1] < 10000:
+        x_array_func = np.append(x_array, 10000)
+        y_array_func = np.append(y_array, y_array[-1])   
+    
+    offset_function = intp.interp1d(x_array_func, y_array_func, kind = "linear")
+    
+    return offset_function
+
 
 #======================================================================================================================================
 #            ボタンにより呼び出される関数
@@ -1524,6 +1542,102 @@ def make_offset_path(x_array, y_array, u_array, v_array, Z_XY, Z_UV, Z_Mach):
     return new_x, new_y, new_u, new_v
 
 
+def get_offset_and_cut_speed(length_XY, length_UV, Z_XY, Z_UV, Z_Mach, CutSpeed, offset_function):
+    
+    Z_work_mid = (Z_Mach - Z_XY - Z_UV)/2.0 + Z_XY
+    L_XY_work = np.abs(Z_work_mid - Z_XY)
+    L_UV_work = np.abs((Z_Mach - Z_UV) - Z_work_mid)
+    L_XY_Mach = np.abs(Z_work_mid)
+    L_UV_Mach = np.abs(Z_Mach - Z_work_mid)
+    
+    if L_XY_work == 0 or L_UV_work == 0:
+        k_xy = 1.0
+        k_uv = 1.0        
+    else:
+        k_xy = L_XY_Mach/ L_XY_work
+        k_uv = L_UV_Mach/ L_UV_work
+           
+    length_mid = (length_XY + length_UV)/ 2.0
+    dl_XY = length_XY - length_mid
+    dl_UV = length_UV - length_mid
+    
+    length_XY_Mech = k_xy*dl_XY + length_mid
+    length_UV_Mech = k_uv*dl_UV + length_mid
+    
+    length_ratio_XY_Mech = length_XY_Mech/length_mid
+    length_ratio_UV_Mech = length_UV_Mech/length_mid
+    length_ratio_XY_Work = length_XY/length_mid
+    length_ratio_UV_Work = length_UV/length_mid
+
+    cutspeed_XY_Mech = CutSpeed*length_ratio_XY_Mech
+    cutspeed_UV_Mech = CutSpeed*length_ratio_UV_Mech
+    cutspeed_XY_Work = CutSpeed*length_ratio_XY_Work
+    cutspeed_UV_Work = CutSpeed*length_ratio_UV_Work
+    
+    offset_XY_Mech = offset_function(cutspeed_XY_Mech)
+    offset_UV_Mech = offset_function(cutspeed_UV_Mech)
+    offset_XY_Work = offset_function(cutspeed_XY_Work)
+    offset_UV_Work = offset_function(cutspeed_UV_Work)
+    offset_mid = offset_function(CutSpeed)
+    
+    #for debug
+    """   
+    #plt.plot([0, Z_XY, Z_work_mid, Z_Mach-Z_UV, Z_Mach],[length_XY_Mech, length_XY, length_mid, length_UV, length_UV_Mech], "-o")
+    #plt.plot([0, Z_XY, Z_work_mid, Z_Mach-Z_UV, Z_Mach],[cutspeed_XY_Mech, cutspeed_XY_Work, CutSpeed, cutspeed_UV_Work, cutspeed_UV_Mech], "-o")
+    #plt.plot([0, Z_XY, Z_work_mid, Z_Mach-Z_UV, Z_Mach],[offset_XY_Mech, offset_XY_Work, offset_mid, offset_UV_Work, offset_UV_Mech], "-o")    
+    """
+    
+    return offset_XY_Work, offset_UV_Work, cutspeed_XY_Mech, cutspeed_UV_Mech
+
+
+def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, entry_MachDist, entry_CS, offset_function, messeage_window):
+    entry_XYDist_value = entry_XYDist.get()
+    entry_UVDist_value = entry_UVDist.get()
+    entry_MachDist_value = entry_MachDist.get()
+    entry_CS_value = entry_CS.get()    
+
+    a_line_num_list0 = np.array(np.array(dxf_obj0.line_num_list.copy())[np.where(np.array(dxf_obj0.line_num_list.copy()) >= 0)])
+    a_line_num_list1 = np.array(np.array(dxf_obj1.line_num_list.copy())[np.where(np.array(dxf_obj1.line_num_list.copy()) >= 0)])
+    
+    try:
+        Z_XY = float(entry_XYDist_value)
+        Z_UV = float(entry_UVDist_value)
+        Z_Mach = float(entry_MachDist_value)
+        CutSpeed = float(entry_CS_value)  
+            
+        if len(a_line_num_list0) == len(a_line_num_list1):
+            i = 0
+            while i < len(a_line_num_list0):
+                line_num0 = a_line_num_list0[i]
+                line_num1 = a_line_num_list1[i]
+                
+                line0 = dxf_obj0.line_list[line_num0]
+                line1 = dxf_obj1.line_list[line_num1]
+                
+                line0_length = line0.get_length()
+                line1_length = line1.get_length()
+                
+                offset_XY_Work, offset_UV_Work, cutspeed_XY_Mech, cutspeed_UV_Mech = \
+                    get_offset_and_cut_speed(line0_length, line1_length, Z_XY, Z_UV, Z_Mach, \
+                                             CutSpeed, offset_function)
+                line0.set_offset_dist(offset_XY_Work)
+                line1.set_offset_dist(offset_UV_Work)
+                
+                line0.set_cutspeed(cutspeed_XY_Mech)
+                line1.set_cutspeed(cutspeed_UV_Mech)
+                
+                i += 1
+            dxf_obj0.table_reload()
+            dxf_obj1.table_reload()
+            dxf_obj0.plot()
+            dxf_obj1.plot()
+            messeage_window.set_messeage("オフセット値を更新しました。\n")
+        else:
+            messeage_window.set_messeage("XY座標とUV座標でライン数が一致しません。XY：%s本，UV：%s本\n"%(len(a_line_num_list0),len(a_line_num_list1)))
+
+    except:
+        messeage_window.set_messeage("入力値に誤りがあります。オフセット値更新を中止しました。\n")
+
 # Ver2.1変更　引数追加，距離別指定可能
 def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry_XYDist, entry_UVDist, entry_WorkLength, entry_MachDist, entry_CS, entry_dl, header, messeage_window, X_str, Y_str, U_str, V_str):
     entry_ox_value = entry_ox.get()
@@ -1642,7 +1756,8 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
 
     
 #Ver2.1変更　引数追加，距離別指定可能
-def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry_XYDist, entry_UVDist, entry_WorkLength, entry_MachDist, entry_dl, messeage_window):
+def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
+             entry_XYDist, entry_UVDist, entry_WorkLength, entry_MachDist, entry_dl, messeage_window):
         
     PLOT_PER_POINT = 2
     
@@ -1820,27 +1935,33 @@ if __name__ == "__main__":
     #======================================================================================================================================
     try:
         curdir =  get_curdir()
-        file = np.genfromtxt("%s\\config.csv"%curdir, delimiter = ",", skip_header = 1, dtype = str)
-        data = file[:,2]
-        FILENAME_XY = data[0]
-        FILENAME_UV = data[1]
-        OX = float(data[2])
-        OY = float(data[3])
-        EX = float(data[4])
-        EY = float(data[5])
-        DELTA_LENGTH = float(data[6])
-        OFFSET_DIST = float(data[7])
-        CUTSPEED = float(data[8])
-        XY_DIST = float(data[9])
-        UV_DIST = float(data[10])
-        WORK_LENGTH = float(data[11])
-        MACH_DIST = float(data[12])
-        HEADER = data[13].replace("\\n", "\n")
-        X_str = str(data[14])
-        Y_str = str(data[15])
-        U_str = str(data[16])
-        V_str = str(data[17])
+        config_file = np.genfromtxt("%s\\config.csv"%curdir, delimiter = ",", skip_header = 1, dtype = str)
+        config_data = config_file[:,2]
+        FILENAME_XY = config_data[0]
+        FILENAME_UV = config_data[1]
+        OX = float(config_data[2])
+        OY = float(config_data[3])
+        EX = float(config_data[4])
+        EY = float(config_data[5])
+        DELTA_LENGTH = float(config_data[6])
+        OFFSET_DIST = float(config_data[7])
+        CUTSPEED = float(config_data[8])
+        XY_DIST = float(config_data[9])
+        UV_DIST = float(config_data[10])
+        WORK_LENGTH = float(config_data[11])
+        MACH_DIST = float(config_data[12])
+        HEADER = config_data[13].replace("\\n", "\n")
+        X_str = str(config_data[14])
+        Y_str = str(config_data[15])
+        U_str = str(config_data[16])
+        V_str = str(config_data[17])
         MESSEAGE = "config.csvを読み込みました。\n"
+        
+        offset_function_file = np.genfromtxt("%s\\offset_function.csv"%curdir, delimiter = ",", skip_header = 1, dtype = float)
+        x_data = offset_function_file[0,2:]
+        y_data = offset_function_file[1,2:]
+        offset_function = generate_offset_function(x_data, y_data)
+        MESSEAGE = MESSEAGE + "offset_function.csvを読み込みました。\n"
         
     except:
         FILENAME_XY = "ファイル名を入力して下さい。"
@@ -2123,8 +2244,15 @@ if __name__ == "__main__":
     
 
     #【オフセット値更新ボタン】    
-    OffsetBtn = tk.Button(root, text = "更新", height = 1, width = 5, command = lambda: Set_OffsetDist(dxf0, dxf1, OffsetEntry, MessageWindow))
+    OffsetBtn = tk.Button(root, text = "更新", height = 1, width = 5, \
+                          command = lambda: Set_OffsetDist(dxf0, dxf1, OffsetEntry, MessageWindow))
     OffsetBtn.place(x = 1120, y = 618)
+
+
+    #【オフセット値更新ボタン】    
+    OffsetBtn = tk.Button(root, text = "オフセット関数から設定", height = 1, width = 20, \
+                          command = lambda: Set_OffsetDistFromFunction(dxf0, dxf1, XYDistEntry, UVDistEntry, MachDistEntry, CutSpeedEntry, offset_function, MessageWindow))
+    OffsetBtn.place(x = 1190, y = 618)
 
 
     #【自動整列ボタン】    
@@ -2134,13 +2262,15 @@ if __name__ == "__main__":
 
     #Ver2.0 変更　WorkDistWntryを追加
     #【パスチェックボタン】    
-    ChkPassBtn = tk.Button(root, text = "パスチェック", height = 2, width = 12,font=("",15), bg='#3cb371', command = lambda: path_chk(root, dxf0, dxf1, AutoAlignmentEntry_X, AutoAlignmentEntry_Y, CutEndEntry_X, CutEndEntry_Y, XYDistEntry, UVDistEntry, WorkLengthEntry, MachDistEntry, dlEntry, MessageWindow))
+    ChkPassBtn = tk.Button(root, text = "パスチェック", height = 2, width = 12,font=("",15), bg='#3cb371', \
+                           command = lambda: path_chk(root, dxf0, dxf1, AutoAlignmentEntry_X, AutoAlignmentEntry_Y, CutEndEntry_X, CutEndEntry_Y, XYDistEntry, UVDistEntry, WorkLengthEntry, MachDistEntry, dlEntry, MessageWindow))
     ChkPassBtn.place(x = 1480, y = 630)
     
 
     #Ver2.0 変更　MechDistEntry, WorkDistWntryを追加
     #【Gコード生成ボタン】        
-    GenGCodeBtn = tk.Button(root, text = "Gコード生成", height = 2, width = 12,font=("",15), bg='#ff6347', command = lambda: gen_g_code(dxf0, dxf1, AutoAlignmentEntry_X, AutoAlignmentEntry_Y, CutEndEntry_X, CutEndEntry_Y, XYDistEntry, UVDistEntry, WorkLengthEntry, MachDistEntry, CutSpeedEntry, dlEntry, HEADER, MessageWindow, X_str, Y_str, U_str, V_str))
+    GenGCodeBtn = tk.Button(root, text = "Gコード生成", height = 2, width = 12,font=("",15), bg='#ff6347', \
+                            command = lambda: gen_g_code(dxf0, dxf1, AutoAlignmentEntry_X, AutoAlignmentEntry_Y, CutEndEntry_X, CutEndEntry_Y, XYDistEntry, UVDistEntry, WorkLengthEntry, MachDistEntry, CutSpeedEntry, dlEntry, HEADER, MessageWindow, X_str, Y_str, U_str, V_str))
     GenGCodeBtn.place(x = 1480, y = 700)
 
 

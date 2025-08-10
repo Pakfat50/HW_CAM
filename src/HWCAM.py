@@ -132,6 +132,8 @@ LINE_MARGE_NORM_MN = 1  #単位:mm ラインを結合時にラインを結合し
 
 class line_object:
     def __init__(self, x_points, y_points, num):
+        self.x_dxf = np.array(x_points)
+        self.y_dxf = np.array(y_points)
         self.x_raw = np.array(x_points)
         self.y_raw = np.array(y_points)
         self.st = np.array([x_points[0], y_points[0]])
@@ -141,10 +143,13 @@ class line_object:
         self.offset_dist = 0
         self.offset_dir = "O"
         self.cut_dir = "F"
-        self.cutspeed = 100
+        self.cutspeed_work = 100
+        self.cutspeed_mech = 100
         self.x = x_points
         self.y = y_points
         self.interp_mode = "cubic" #ver.2.2追加 "cubic":3d-spline, "linear":1d-line, ポリラインの指定用
+        self.offset_ox = 0
+        self.offset_oy = 0
 
         if len(x_points)<2:
             self.line_type = "point"
@@ -154,14 +159,18 @@ class line_object:
             self.line_type = "spline"
        
         
-    def reset_point(self, x_points, y_points):
-        self.x_raw = np.array(x_points)
-        self.y_raw = np.array(y_points)
-        self.st = np.array([x_points[0], y_points[0]])
-        self.ed = np.array([x_points[-1], y_points[-1]])
+    def reset_point(self, x_points, y_points, offset_ox, offset_oy):
+        self.x_dxf = np.array(x_points)
+        self.y_dxf = np.array(y_points)
+        self.offset_ox = offset_ox
+        self.offset_oy = offset_oy
+        self.x_raw = np.array(x_points) + offset_ox
+        self.y_raw = np.array(y_points) + offset_oy
+        self.st = np.array([x_points[0], y_points[0]]) + offset_ox
+        self.ed = np.array([x_points[-1], y_points[-1]]) + offset_oy
         self.N = max(len(x_points), len(y_points))
-        self.x = x_points
-        self.y = y_points
+        self.x = np.array(x_points) + offset_ox
+        self.y = np.array(y_points) + offset_oy
         self.interp_mode = "cubic" 
 
         if len(x_points)<2:
@@ -207,8 +216,9 @@ class line_object:
             self.update()
         
             
-    def set_cutspeed(self, cutspeed):
-        self.cutspeed = cutspeed
+    def set_cutspeed(self, cutspeed_work, cutspeed_mech):
+        self.cutspeed_work = cutspeed_work
+        self.cutspeed_mech = cutspeed_mech
         
         
     def set_num(self, num):
@@ -379,17 +389,20 @@ class super_table:
             pass
         self.table = ttk.Treeview(self.root, height = self.y_height)
         self.table.place(x = self.x_pos, y = self.y_pos)
-        self.table["column"] = (1,2,3,4)
+        self.table["column"] = (1,2,3,4,5,6)
         self.table["show"] = "headings"
-        self.table.heading(1,text="ライン番号")
+        self.table.heading(1,text="番号")
         self.table.heading(2,text="カット方向")
         self.table.heading(3,text="オフセット方向")
-        self.table.heading(4,text="ラインタイプ")
-        self.table.column(1, width=100)
-        self.table.column(2, width=100)
-        self.table.column(3, width=100)
-        self.table.column(4, width=100)
-    
+        self.table.heading(4,text="オフセット距離")
+        self.table.heading(5,text="タイプ")
+        self.table.heading(6,text="カット速度")
+        self.table.column(1, width=40)
+        self.table.column(2, width=60)
+        self.table.column(3, width=80)
+        self.table.column(4, width=80)
+        self.table.column(5, width=60)
+        self.table.column(6, width=70)
     
 ###############    super_tableクラス   ここまで　　　#########################################################################################
 #######################################################################################################################################
@@ -550,7 +563,9 @@ class dxf_file:
             temp_line_object = line_object(temp_spline_data[:,0], temp_spline_data[:,1], i) 
             self.line_list.append(temp_line_object)
             self.line_num_list.append(i)
-            self.table.table.insert("", "end", values=(temp_line_object.num, temp_line_object.cut_dir, temp_line_object.offset_dir, temp_line_object.line_type))
+            self.table.table.insert("", "end", values=(temp_line_object.num, temp_line_object.cut_dir, \
+                                                       temp_line_object.offset_dir, format(temp_line_object.offset_dist, '.2f'),\
+                                                       temp_line_object.line_type, int(temp_line_object.cutspeed_work)))
             i += 1
  
         #ver2.2追加　円弧，ポリラインの読み込み　ここから
@@ -561,7 +576,9 @@ class dxf_file:
             temp_line_object = line_object(temp_arc_data[:,0], temp_arc_data[:,1], i + i_arc) 
             self.line_list.append(temp_line_object)
             self.line_num_list.append(i + i_arc)
-            self.table.table.insert("", "end", values=(temp_line_object.num, temp_line_object.cut_dir, temp_line_object.offset_dir, temp_line_object.line_type))
+            self.table.table.insert("", "end", values=(temp_line_object.num, temp_line_object.cut_dir, \
+                                                       temp_line_object.offset_dir, format(temp_line_object.offset_dist, '.2f'), \
+                                                           temp_line_object.line_type, int(temp_line_object.cutspeed_work)))
             i_arc += 1        
         i = i + i_arc
 
@@ -573,7 +590,9 @@ class dxf_file:
             temp_line_object.interp_mode = "linear" #poly_lineであることを設定する
             self.line_list.append(temp_line_object)
             self.line_num_list.append(i + i_poly)
-            self.table.table.insert("", "end", values=(temp_line_object.num, temp_line_object.cut_dir, temp_line_object.offset_dir, temp_line_object.line_type))
+            self.table.table.insert("", "end", values=(temp_line_object.num, temp_line_object.cut_dir, \
+                                                       temp_line_object.offset_dir, format(temp_line_object.offset_dist, '.2f'), \
+                                                           temp_line_object.line_type, int(temp_line_object.cutspeed_work)))
             i_poly += 1    
         i = i + i_poly
         #ver2.2追加　ここまで
@@ -590,7 +609,9 @@ class dxf_file:
                 temp_line_object = line_object(temp_line_data[:,0], temp_line_data[:,1], i+k) 
                 self.line_list.append(temp_line_object)
                 self.line_num_list.append(i+k)
-                self.table.table.insert("", "end", values=(temp_line_object.num, temp_line_object.cut_dir, temp_line_object.offset_dir, temp_line_object.line_type))
+                self.table.table.insert("", "end", values=(temp_line_object.num, temp_line_object.cut_dir, \
+                                                           temp_line_object.offset_dir, format(temp_line_object.offset_dist, '.2f'), \
+                                                               temp_line_object.line_type, int(temp_line_object.cutspeed_work)))
                 k += 1
             j += 1
             
@@ -602,7 +623,9 @@ class dxf_file:
             temp_item_num = table_item_list[i]
             line_num = self.line_num_list[item2num(temp_item_num)]
             temp_line_object = self.line_list[line_num]
-            self.table.table.item(temp_item_num, values=(temp_line_object.num, temp_line_object.cut_dir, temp_line_object.offset_dir, temp_line_object.line_type))
+            self.table.table.item(temp_item_num, values=(temp_line_object.num, temp_line_object.cut_dir, \
+                                                         temp_line_object.offset_dir, format(temp_line_object.offset_dist, '.2f'), \
+                                                         temp_line_object.line_type, int(temp_line_object.cutspeed_work)))
             i += 1
 
     
@@ -685,7 +708,9 @@ class dxf_file:
             temp_line_object = self.line_list[line_num]
             temp_line_object.toggle_cut_dir()
             temp_line_object.update()
-            self.table.table.item(temp_item_num, values=(temp_line_object.num, temp_line_object.cut_dir, temp_line_object.offset_dir, temp_line_object.line_type))
+            self.table.table.item(temp_item_num, values=(temp_line_object.num, temp_line_object.cut_dir, \
+                                                         temp_line_object.offset_dir, format(temp_line_object.offset_dist, '.2f'), \
+                                                             temp_line_object.line_type, int(temp_line_object.cutspeed_work)))
             i += 1   
         self.table_reload()
         self.plot()
@@ -700,7 +725,9 @@ class dxf_file:
             temp_line_object = self.line_list[line_num]
             temp_line_object.toggle_offset_dir()
             temp_line_object.update()
-            self.table.table.item(temp_item_num, values=(temp_line_object.num, temp_line_object.cut_dir, temp_line_object.offset_dir, temp_line_object.line_type))
+            self.table.table.item(temp_item_num, values=(temp_line_object.num, temp_line_object.cut_dir, \
+                                                         temp_line_object.offset_dir, format(temp_line_object.offset_dist, '.2f'), \
+                                                             temp_line_object.line_type, int(temp_line_object.cutspeed_work)))
             i += 1      
         self.table_reload()
         self.plot()
@@ -754,10 +781,10 @@ class dxf_file:
         x_c_ed = child_line.ed[0]
         y_c_ed = child_line.ed[1]
         
-        x_p = parent_line.x_raw.tolist()
-        y_p = parent_line.y_raw.tolist()
-        x_c = child_line.x_raw.tolist()
-        y_c = child_line.y_raw.tolist()     
+        x_p = parent_line.x_dxf.tolist()
+        y_p = parent_line.y_dxf.tolist()
+        x_c = child_line.x_dxf.tolist()
+        y_c = child_line.y_dxf.tolist()     
         
         new_x = []
         new_y = []
@@ -795,10 +822,10 @@ class dxf_file:
             # 端点が隣接していない線同士であるので、結合すべきではない。
             return False
         
-        parent_line.reset_point(new_x, new_y)
-        return True
-                
-        
+        parent_line.reset_point(new_x, new_y, parent_line.offset_ox, parent_line.offset_oy)
+        return True    
+    
+    
     def delete_Selected_line(self):
         selected_items = self.table.table.selection()
         i = 0
@@ -899,6 +926,21 @@ class dxf_file:
         self.plot()        
 
 
+    def offset_origin(self, offset_ox, offset_oy):
+        table_item_list = self.table.table.get_children()
+        i = 0
+        while i < len(table_item_list):
+            temp_item_num = table_item_list[i]
+            line_num = self.line_num_list[item2num(temp_item_num)]
+            temp_line_object = self.line_list[line_num]
+            temp_line_object.reset_point(temp_line_object.x_dxf, temp_line_object.y_dxf, offset_ox, offset_oy)
+            temp_line_object.update()
+            i += 1   
+        self.table_reload()
+        self.plot()
+        
+    
+
 ###############   dxf_fileクラス   ここまで　　    　#########################################################################################
 #######################################################################################################################################     
 
@@ -946,7 +988,90 @@ class messeage_window(tk.Text):
 ###############   messeage_windowクラス   ここまで　　    　##################################################################################
 #######################################################################################################################################  
 
+class config:
+    def __init__(self):
+        self.FILENAME_XY = "ファイル名を入力して下さい。"
+        self.FILENAME_UV = "ファイル名を入力して下さい。"
+        self.OX = 0.0
+        self.OY = 0.0
+        self.EX = 0.0
+        self.EY = 0.0
+        self.DELTA_LENGTH = 1.0
+        self.OFFSET_DIST = 0.0
+        self.CUTSPEED = 200
+        self.XY_DIST = 25.0
+        self.UV_DIST = 50.0
+        self.WORK_LENGTH = 425
+        self.MACH_DIST = 500
+        self.HEADER = "T1\nG17 G49 G54 G80 G90 G94 G21 G40 G64\n"
+        self.X_str = 'X'
+        self.Y_str = 'Y'
+        self.U_str = 'Z'
+        self.V_str = 'A'
+        x_data = [1,1000]
+        y_data = [0,0]
+        self.offset_function = generate_offset_function(x_data, y_data)
+        
+    def load_config(self, file_path):
+        try:
+            config_file = np.genfromtxt(file_path, delimiter = ",", skip_header = 1, dtype = str)
+            config_data = config_file[:,2]
+            self.FILENAME_XY = config_data[0]
+            self.FILENAME_UV = config_data[1]
+            self.OX = float(config_data[2])
+            self.OY = float(config_data[3])
+            self.EX = float(config_data[4])
+            self.EY = float(config_data[5])
+            self.DELTA_LENGTH = float(config_data[6])
+            self.OFFSET_DIST = float(config_data[7])
+            self.CUTSPEED = float(config_data[8])
+            self.XY_DIST = float(config_data[9])
+            self.UV_DIST = float(config_data[10])
+            self.WORK_LENGTH = float(config_data[11])
+            self.MACH_DIST = float(config_data[12])
+            self.HEADER = config_data[13].replace("\\n", "\n")
+            self.X_str = str(config_data[14])
+            self.Y_str = str(config_data[15])
+            self.U_str = str(config_data[16])
+            self.V_str = str(config_data[17])
+            self.MESSEAGE = "設定ファイルの読み込み成功\n"
+            
+        except:
+            self.FILENAME_XY = "ファイル名を入力して下さい。"
+            self.FILENAME_UV = "ファイル名を入力して下さい。"
+            self.OX = 0.0
+            self.OY = 0.0
+            self.EX = 0.0
+            self.EY = 0.0
+            self.DELTA_LENGTH = 1.0
+            self.OFFSET_DIST = 0.0
+            self.CUTSPEED = 200
+            self.XY_DIST = 25.0
+            self.UV_DIST = 50.0
+            self.WORK_LENGTH = 425
+            self.MACH_DIST = 500
+            self.HEADER = "T1\nG17 G49 G54 G80 G90 G94 G21 G40 G64\n"
+            self.X_str = 'X'
+            self.Y_str = 'Y'
+            self.U_str = 'Z'
+            self.V_str = 'A'
+            self.MESSEAGE = "設定ファイルの読み込み失敗\n"
+            pass          
 
+    def load_offset_func(self, file_path):
+        try:
+            offset_function_file = np.genfromtxt(file_path, delimiter = ",", skip_header = 1, dtype = str)
+            x_data = offset_function_file[0,3:]
+            y_data = offset_function_file[1,3:]
+            x_data = x_data.astype(np.float)
+            y_data = y_data.astype(np.float)
+            self.offset_function = generate_offset_function(x_data, y_data)
+            self.MESSEAGE = "%sの読み込み成功\n"%file_path
+        except:
+            x_data = [1,1000]
+            y_data = [0,0]
+            self.offset_function = generate_offset_function(x_data, y_data)
+            self.MESSEAGE = "溶け量ファイルの読み込み失敗\n"
 
 #======================================================================================================================================
 #            関数の実装
@@ -1384,13 +1509,58 @@ def generate_offset_function(x_array, y_array):
 #   【機能】 メインウィンドウが閉じられた際，インスタンスを破棄する．
 #
         
-
-def open_explorer(dxf_obj, entry, messeage_window):
+def open_file_explorer(entry):
     fTyp = [("","*")]
     iDir = get_curdir()
-    selected_file_path = tk.filedialog.askopenfilename(filetypes = fTyp,initialdir = iDir)
+    data = tk.filedialog.askopenfilename(filetypes = fTyp,initialdir = iDir)
     entry.delete(0,tk.END)
-    entry.insert(tk.END, selected_file_path)
+    entry.insert(tk.END, data)
+
+
+def load_config(config, config_entry, dlEntry, CutSpeedEntry, XYDistEntry, UVDistEntry, WorkLengthEntry, MachDistEntry, MessageWindow):
+    open_file_explorer(config_entry)
+    
+    config_path = config_entry.get()
+    config.load_config(config_path)
+    
+    #【分割距離入力コンソール】 
+    dlEntry.delete(0,tk.END)
+    dlEntry.insert(tk.END, config.DELTA_LENGTH) 
+
+    #【カット速度入力コンソール】   
+    CutSpeedEntry.delete(0,tk.END)
+    CutSpeedEntry.insert(tk.END, config.CUTSPEED) 
+
+    #【カット面距離入力コンソール1】   
+    XYDistEntry.delete(0,tk.END)
+    XYDistEntry.insert(tk.END, config.XY_DIST)
+
+    #【カット面距離入力コンソール2】   
+    UVDistEntry.delete(0,tk.END)
+    UVDistEntry.insert(tk.END, config.UV_DIST)
+
+    #【XY-UV面距離入力コンソール】 
+    WorkLengthEntry.delete(0,tk.END)
+    WorkLengthEntry.insert(tk.END, config.WORK_LENGTH)
+
+    #【マシン距離入力コンソール】   
+    MachDistEntry.delete(0,tk.END)
+    MachDistEntry.insert(tk.END, config.MACH_DIST)  
+        
+    MessageWindow.set_messeage(config.MESSEAGE)
+    MessageWindow.set_messeage("Gコードの書き出しは「%s」です。\n"%config.HEADER)
+
+
+def load_offset_func(config, offset_func_entry, MessageWindow):
+    open_file_explorer(offset_func_entry)
+    offset_file_path = offset_func_entry.get()
+    config.load_offset_func(offset_file_path)
+    
+    MessageWindow.set_messeage(config.MESSEAGE)
+
+
+def open_dxf_explorer(dxf_obj, entry, messeage_window):
+    open_file_explorer(entry)
     load_file(dxf_obj, entry, messeage_window)
 
 
@@ -1587,7 +1757,7 @@ def get_offset_and_cut_speed(length_XY, length_UV, Z_XY, Z_UV, Z_Mach, CutSpeed,
     #plt.plot([0, Z_XY, Z_work_mid, Z_Mach-Z_UV, Z_Mach],[offset_XY_Mech, offset_XY_Work, offset_mid, offset_UV_Work, offset_UV_Mech], "-o")    
     """
     
-    return offset_XY_Work, offset_UV_Work, cutspeed_XY_Mech, cutspeed_UV_Mech
+    return offset_XY_Work, offset_UV_Work, cutspeed_XY_Work, cutspeed_UV_Work, cutspeed_XY_Mech, cutspeed_UV_Mech
 
 
 def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, entry_MachDist, entry_CS, offset_function, messeage_window):
@@ -1603,8 +1773,8 @@ def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, e
         Z_XY = float(entry_XYDist_value)
         Z_UV = float(entry_UVDist_value)
         Z_Mach = float(entry_MachDist_value)
-        CutSpeed = float(entry_CS_value)  
-            
+        CutSpeed = float(entry_CS_value)
+                    
         if len(a_line_num_list0) == len(a_line_num_list1):
             i = 0
             while i < len(a_line_num_list0):
@@ -1617,14 +1787,14 @@ def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, e
                 line0_length = line0.get_length()
                 line1_length = line1.get_length()
                 
-                offset_XY_Work, offset_UV_Work, cutspeed_XY_Mech, cutspeed_UV_Mech = \
+                offset_XY_Work, offset_UV_Work, cutspeed_XY_Work, cutspeed_UV_Work, cutspeed_XY_Mech, cutspeed_UV_Mech = \
                     get_offset_and_cut_speed(line0_length, line1_length, Z_XY, Z_UV, Z_Mach, \
                                              CutSpeed, offset_function)
                 line0.set_offset_dist(offset_XY_Work)
                 line1.set_offset_dist(offset_UV_Work)
                 
-                line0.set_cutspeed(cutspeed_XY_Mech)
-                line1.set_cutspeed(cutspeed_UV_Mech)
+                line0.set_cutspeed(cutspeed_XY_Work, cutspeed_XY_Mech)
+                line1.set_cutspeed(cutspeed_UV_Work, cutspeed_UV_Mech)
                 
                 i += 1
             dxf_obj0.table_reload()
@@ -1639,7 +1809,7 @@ def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, e
         messeage_window.set_messeage("入力値に誤りがあります。オフセット値更新を中止しました。\n")
 
 # Ver2.1変更　引数追加，距離別指定可能
-def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry_XYDist, entry_UVDist, entry_WorkLength, entry_MachDist, entry_CS, entry_dl, header, messeage_window, X_str, Y_str, U_str, V_str):
+def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry_XYDist, entry_UVDist, entry_WorkLength, entry_MachDist, entry_CS, entry_dl, messeage_window, config):
     entry_ox_value = entry_ox.get()
     entry_oy_value = entry_oy.get()
     entry_ex_value = entry_ex.get()
@@ -1652,7 +1822,7 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
     entry_CS_value = entry_CS.get()
     
     code_line_list = []
-    code_line_list.append(header)
+    code_line_list.append(config.HEADER)
     
     try:
         temp_error_flg = False
@@ -1723,7 +1893,7 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
                 
                 replaced_code_line_list = []
                 for g_code_str in code_line_list:
-                    replaced_code_line_list.append(Replace_G01_code(g_code_str, X_str, Y_str, U_str, V_str))
+                    replaced_code_line_list.append(Replace_G01_code(g_code_str, config.X_str, config.Y_str, config.U_str, config.V_str))
                 
                 line = ""
                 for elem in replaced_code_line_list:
@@ -1921,6 +2091,19 @@ def _destroyWindow():
     root.destroy()
 
 
+def offset_origin(dxf_obj0, dxf_obj1, entry_offset_ox, entry_offset_oy, messeage_window):
+    offset_ox = entry_offset_ox.get()
+    offset_oy = entry_offset_oy.get()
+    
+    try :
+        offset_ox = float(offset_ox)
+        offset_oy = float(offset_oy)
+        dxf_obj0.offset_origin(offset_ox, offset_oy)
+        dxf_obj1.offset_origin(offset_ox, offset_oy)
+        messeage_window.set_messeage("XY,UV座標をX:%s, Y:%sオフセットしました。\n"%(offset_ox, offset_oy))
+    except:
+        messeage_window.set_messeage("オフセット中にエラーが発生しました\n")
+
 
 #======================================================================================================================================
 #            メイン関数
@@ -1933,58 +2116,11 @@ if __name__ == "__main__":
     #======================================================================================================================================
     #            config.csvファイルの読込
     #======================================================================================================================================
-    try:
-        curdir =  get_curdir()
-        config_file = np.genfromtxt("%s\\config.csv"%curdir, delimiter = ",", skip_header = 1, dtype = str)
-        config_data = config_file[:,2]
-        FILENAME_XY = config_data[0]
-        FILENAME_UV = config_data[1]
-        OX = float(config_data[2])
-        OY = float(config_data[3])
-        EX = float(config_data[4])
-        EY = float(config_data[5])
-        DELTA_LENGTH = float(config_data[6])
-        OFFSET_DIST = float(config_data[7])
-        CUTSPEED = float(config_data[8])
-        XY_DIST = float(config_data[9])
-        UV_DIST = float(config_data[10])
-        WORK_LENGTH = float(config_data[11])
-        MACH_DIST = float(config_data[12])
-        HEADER = config_data[13].replace("\\n", "\n")
-        X_str = str(config_data[14])
-        Y_str = str(config_data[15])
-        U_str = str(config_data[16])
-        V_str = str(config_data[17])
-        MESSEAGE = "config.csvを読み込みました。\n"
-        
-        offset_function_file = np.genfromtxt("%s\\offset_function.csv"%curdir, delimiter = ",", skip_header = 1, dtype = float)
-        x_data = offset_function_file[0,2:]
-        y_data = offset_function_file[1,2:]
-        offset_function = generate_offset_function(x_data, y_data)
-        MESSEAGE = MESSEAGE + "offset_function.csvを読み込みました。\n"
-        
-    except:
-        FILENAME_XY = "ファイル名を入力して下さい。"
-        FILENAME_UV = "ファイル名を入力して下さい。"
-        OX = 0.0
-        OY = 0.0
-        EX = 0.0
-        EY = 0.0
-        DELTA_LENGTH = 1.0
-        OFFSET_DIST = 0.0
-        CUTSPEED = 200
-        XY_DIST = 25.0
-        UV_DIST = 50.0
-        WORK_LENGTH = 425
-        MACH_DIST = 500
-        HEADER = "T1\nG17 G49 G54 G80 G90 G94 G21 G40 G64\n"
-        X_str = 'X'
-        Y_str = 'Y'
-        U_str = 'Z'
-        V_str = 'A'
-        MESSEAGE = "config.csvを読み込めませんでした。\n"
-        pass
-    
+
+    curdir =  get_curdir()
+    config = config()
+    config.load_config("%s\\config.csv"%curdir)
+    config.load_offset_func("%s\\offset_function.csv"%curdir)
        
     #======================================================================================================================================
     #            rootインスタンスの生成
@@ -2058,12 +2194,9 @@ if __name__ == "__main__":
     #Ver2.0 位置変更(下に40pix)
     #【メッセージウィンドウ】
     MessageWindow = messeage_window(root, width=110, height = 9)
-    MessageWindow.place(x = 852, y = 805)
-    MessageWindow.set_messeage(MESSEAGE)
-    MessageWindow.set_messeage("Gコードの書き出しは「%s」です。\n"%HEADER)
+    MessageWindow.place(x = 852, y = 815)
     MessageWindowLabel = tk.Label(root, text="メッセージウィンドウ",font=("",12))
-    MessageWindowLabel.place(x = 860, y = 780)
-
+    MessageWindowLabel.place(x = 860, y = 790)
 
 
     #======================================================================================================================================
@@ -2072,105 +2205,126 @@ if __name__ == "__main__":
 
     #【X-Y用 dxfファイル名の入力コンソール】
     FileNameEntry0 = tk.Entry(root, width=50) 
-    FileNameEntry0.insert(tk.END, FILENAME_XY) 
+    FileNameEntry0.insert(tk.END, config.FILENAME_XY) 
     FileNameEntry0.place(x = 852, y = 35)
     
     
     #【U-V用 dxfファイル名の入力コンソール】
     FileNameEntry1 = tk.Entry(root, width=50) 
-    FileNameEntry1.insert(tk.END, FILENAME_UV)   
+    FileNameEntry1.insert(tk.END, config.FILENAME_UV)   
     FileNameEntry1.place(x = 1252, y = 35) 
+
+
+    #【configファイル名の入力コンソール】
+    ConfigFileLabel0 = tk.Label(root, text="設定ファイル",font=("",15))
+    ConfigFileLabel0.place(x = 850, y = 510)
+    ConfigFileEntry = tk.Entry(root, width=50) 
+    ConfigFileEntry.insert(tk.END, "config.csv") 
+    ConfigFileEntry.place(x = 1000, y = 510)
+    
+    
+    #【オフセット関数ファイル名の入力コンソール】
+    OffsetFuncLabel0 = tk.Label(root, text="溶け量ファイル",font=("",15))
+    OffsetFuncLabel0.place(x = 850, y = 540)
+    OffsetFuncEntry = tk.Entry(root, width=50) 
+    OffsetFuncEntry.insert(tk.END, "offset_function.csv")   
+    OffsetFuncEntry.place(x = 1000, y = 540) 
+
+
+    #【原点オフセット入力コンソール】
+    OriginOffsetLabel0 = tk.Label(root, text="図面オフセット",font=("",15))
+    OriginOffsetLabel0.place(x = 850, y = 580)
+    OriginOffsetLabel1 = tk.Label(root, text="X：",font=("",15))
+    OriginOffsetLabel1.place(x = 1000, y = 580)
+    OriginOffsetLabel2 = tk.Label(root, text="Y：",font=("",15))
+    OriginOffsetLabel2.place(x = 1120, y = 580)
+    OriginOffsetEntry_X = tk.Entry(root, width=8,font=("",15)) 
+    OriginOffsetEntry_X.insert(tk.END, 0)       
+    OriginOffsetEntry_X.place(x = 1030, y = 580)   
+    OriginOffsetEntry_Y = tk.Entry(root, width=8,font=("",15))     
+    OriginOffsetEntry_Y.insert(tk.END, 0)
+    OriginOffsetEntry_Y.place(x = 1150, y = 580)    
 
 
     #【切り出し原点入力コンソール】
     AutoAlignmentLabel0 = tk.Label(root, text="切り出し原点",font=("",15))
-    AutoAlignmentLabel0.place(x = 850, y = 510)
+    AutoAlignmentLabel0.place(x = 850, y = 620)
     AutoAlignmentLabel1 = tk.Label(root, text="X：",font=("",15))
-    AutoAlignmentLabel1.place(x = 1000, y = 510)
+    AutoAlignmentLabel1.place(x = 1000, y = 620)
     AutoAlignmentLabel2 = tk.Label(root, text="Y：",font=("",15))
-    AutoAlignmentLabel2.place(x = 1120, y = 510)
+    AutoAlignmentLabel2.place(x = 1120, y = 620)
     AutoAlignmentEntry_X = tk.Entry(root, width=8,font=("",15)) 
-    AutoAlignmentEntry_X.insert(tk.END, OX)       
-    AutoAlignmentEntry_X.place(x = 1030, y = 510)   
+    AutoAlignmentEntry_X.insert(tk.END, config.OX)       
+    AutoAlignmentEntry_X.place(x = 1030, y = 620)   
     AutoAlignmentEntry_Y = tk.Entry(root, width=8,font=("",15))     
-    AutoAlignmentEntry_Y.insert(tk.END, OY)
-    AutoAlignmentEntry_Y.place(x = 1150, y = 510)    
+    AutoAlignmentEntry_Y.insert(tk.END, config.OY)
+    AutoAlignmentEntry_Y.place(x = 1150, y = 620)    
 
 
     #【切り出し終点入力コンソール】
     CutEndLabel0 = tk.Label(root, text="切り出し終点",font=("",15))
-    CutEndLabel0.place(x = 850, y = 540)
+    CutEndLabel0.place(x = 850, y = 650)
     CutEndLabel1 = tk.Label(root, text="X：",font=("",15))
-    CutEndLabel1.place(x = 1000, y = 540)
+    CutEndLabel1.place(x = 1000, y = 650)
     CutEndLabel2 = tk.Label(root, text="Y：",font=("",15))
-    CutEndLabel2.place(x = 1120, y = 540)
+    CutEndLabel2.place(x = 1120, y = 650)
     CutEndEntry_X = tk.Entry(root, width=8,font=("",15)) 
-    CutEndEntry_X.insert(tk.END, EX)       
-    CutEndEntry_X.place(x = 1030, y = 540)   
+    CutEndEntry_X.insert(tk.END, config.EX)       
+    CutEndEntry_X.place(x = 1030, y = 650)   
     CutEndEntry_Y = tk.Entry(root, width=8,font=("",15))     
-    CutEndEntry_Y.insert(tk.END, EY)
-    CutEndEntry_Y.place(x = 1150, y = 540) 
+    CutEndEntry_Y.insert(tk.END, config.EY)
+    CutEndEntry_Y.place(x = 1150, y = 650) 
 
 
     #【分割距離入力コンソール】
     dlLabel = tk.Label(root, text="分割距離[mm]",font=("",15))
-    dlLabel.place(x = 850, y = 580)
+    dlLabel.place(x = 1150, y = 690)
     dlEntry = tk.Entry(root, width=8,font=("",15))     
-    dlEntry.insert(tk.END, DELTA_LENGTH)
-    dlEntry.place(x = 1030, y = 580)       
-
-
-    #【オフセット距離入力コンソール】    
-    OffsetLabel = tk.Label(root, text="オフセット距離[mm]",font=("",15))
-    OffsetLabel.place(x = 850, y = 620)
-    OffsetEntry = tk.Entry(root, width=8,font=("",15))     
-    OffsetEntry.insert(tk.END, OFFSET_DIST)
-    OffsetEntry.place(x = 1030, y = 620)    
+    dlEntry.insert(tk.END, config.DELTA_LENGTH)
+    dlEntry.place(x = 1330, y = 690)       
 
 
     #【カット速度入力コンソール】   
     CutSpeedLabel = tk.Label(root, text="カット速度[mm/分]",font=("",15))
-    CutSpeedLabel.place(x = 850, y = 660)
+    CutSpeedLabel.place(x = 850, y = 690)
     CutSpeedEntry = tk.Entry(root, width=8,font=("",15))     
-    CutSpeedEntry.insert(tk.END, CUTSPEED)
-    CutSpeedEntry.place(x = 1030, y = 660)    
+    CutSpeedEntry.insert(tk.END, config.CUTSPEED)
+    CutSpeedEntry.place(x = 1030, y = 690)    
 
 
     # Ver2.1 変更
     #【カット面距離入力コンソール1】   
     XYDistLabel = tk.Label(root, text="XY面距離[mm]",font=("",15))
-    XYDistLabel.place(x = 850, y = 700)
+    XYDistLabel.place(x = 850, y = 720)
     XYDistEntry = tk.Entry(root, width=8,font=("",15))     
-    XYDistEntry.insert(tk.END, XY_DIST)
-    XYDistEntry.place(x = 1030, y = 700)  
+    XYDistEntry.insert(tk.END, config.XY_DIST)
+    XYDistEntry.place(x = 1030, y = 720)  
 
     # Ver2.1 追加
     #【カット面距離入力コンソール2】   
     UVDistLabel = tk.Label(root, text="UV面距離[mm]",font=("",15))
-    UVDistLabel.place(x = 1150, y = 700)
+    UVDistLabel.place(x = 1150, y = 720)
     UVDistEntry = tk.Entry(root, width=8,font=("",15))     
-    UVDistEntry.insert(tk.END, UV_DIST)
-    UVDistEntry.place(x = 1330, y = 700)  
+    UVDistEntry.insert(tk.END, config.UV_DIST)
+    UVDistEntry.place(x = 1330, y = 720)  
 
 
     #Ver2.1 追加 
     #【XY-UV面距離入力コンソール】   
     WorkLengthLabel = tk.Label(root, text="XY-UV面距離[mm]",font=("",15))
-    WorkLengthLabel.place(x = 850, y = 740)
+    WorkLengthLabel.place(x = 850, y = 750)
     WorkLengthEntry = tk.Entry(root, width=8,font=("",15))     
-    WorkLengthEntry.insert(tk.END, WORK_LENGTH)
-    WorkLengthEntry.place(x = 1030, y = 740)
+    WorkLengthEntry.insert(tk.END, config.WORK_LENGTH)
+    WorkLengthEntry.place(x = 1030, y = 750)
 
 
     #Ver2.1 位置変更 
     #【マシン距離入力コンソール】   
     MachDistLabel = tk.Label(root, text="駆動面距離[mm]",font=("",15))
-    MachDistLabel.place(x = 1150, y = 740)
+    MachDistLabel.place(x = 1150, y = 750)
     MachDistEntry = tk.Entry(root, width=8,font=("",15))     
-    MachDistEntry.insert(tk.END, MACH_DIST)
-    MachDistEntry.place(x = 1330, y = 740)  
-
-
+    MachDistEntry.insert(tk.END, config.MACH_DIST)
+    MachDistEntry.place(x = 1330, y = 750)  
 
 
     #======================================================================================================================================
@@ -2178,11 +2332,11 @@ if __name__ == "__main__":
     #======================================================================================================================================
 
     #【X-Y用 dxfファイル読込用のエクスプローラーを開くボタン】
-    LoadBtn0 = tk.Button(root, text="開く", command = lambda: open_explorer(dxf0, FileNameEntry0, MessageWindow))
+    LoadBtn0 = tk.Button(root, text="開く", command = lambda: open_dxf_explorer(dxf0, FileNameEntry0, MessageWindow))
     LoadBtn0.place(x=1160, y=30)  
 
     #【U-V用 dxfファイル読込用のエクスプローラーを開くボタン】   
-    LoadBtn1 = tk.Button(root, text="開く", command = lambda: open_explorer(dxf1, FileNameEntry1, MessageWindow))
+    LoadBtn1 = tk.Button(root, text="開く", command = lambda: open_dxf_explorer(dxf1, FileNameEntry1, MessageWindow))
     LoadBtn1.place(x=1560, y=30)    
 
     #【X-Y用 dxfファイル名の読込ボタン】
@@ -2192,6 +2346,22 @@ if __name__ == "__main__":
     #【U-V用 dxfファイル名の読込ボタン】   
     LoadBtn1 = tk.Button(root, text="再読込", command = lambda: load_file(dxf1, FileNameEntry1, MessageWindow))
     LoadBtn1.place(x=1600, y=30)    
+
+
+    #【configファイル読込用のエクスプローラーを開くボタン】
+    ConfigLoadBtn0 = tk.Button(root, text="開く", command = lambda: load_config(config, ConfigFileEntry, \
+                                                                              dlEntry, CutSpeedEntry, XYDistEntry, UVDistEntry, \
+                                                                                  WorkLengthEntry, MachDistEntry, MessageWindow))
+    ConfigLoadBtn0.place(x=1320, y=505)  
+
+    #【オフセット関数ファイル読込用のエクスプローラーを開くボタン】   
+    OffsetFuncLoadBtn1 = tk.Button(root, text="開く", command = lambda: load_offset_func(config, OffsetFuncEntry, MessageWindow))
+    OffsetFuncLoadBtn1.place(x=1320, y=535)    
+
+
+    #【原点オフセットボタン】
+    OriginOffsetBtn0 = tk.Button(root, text="オフセット更新", width =15, command = lambda: offset_origin(dxf0, dxf1, OriginOffsetEntry_X, OriginOffsetEntry_Y, MessageWindow))
+    OriginOffsetBtn0.place(x=1255, y=580)   
 
     #【X-Yラインテーブル用　カット方向入れ替えボタン】
     ChangeCutDirBtn0 = tk.Button(root, text="カット方向入替え", width =15, bg = "#3cb371", command = lambda: Change_CutDir(dxf0, MessageWindow))
@@ -2242,36 +2412,29 @@ if __name__ == "__main__":
     DelateBtn1 = tk.Button(root, text="ライン削除", width = 15, bg = "#ff6347" , command = lambda: delete_line(dxf1, MessageWindow))
     DelateBtn1.place(x=1525, y=465)
     
-
     #【オフセット値更新ボタン】    
-    OffsetBtn = tk.Button(root, text = "更新", height = 1, width = 5, \
-                          command = lambda: Set_OffsetDist(dxf0, dxf1, OffsetEntry, MessageWindow))
-    OffsetBtn.place(x = 1120, y = 618)
-
-
-    #【オフセット値更新ボタン】    
-    OffsetBtn = tk.Button(root, text = "オフセット関数から設定", height = 1, width = 20, \
-                          command = lambda: Set_OffsetDistFromFunction(dxf0, dxf1, XYDistEntry, UVDistEntry, MachDistEntry, CutSpeedEntry, offset_function, MessageWindow))
-    OffsetBtn.place(x = 1190, y = 618)
+    OffsetBtn = tk.Button(root, text = "オフセット距離更新", height = 1, width = 19,  bg='#fffacd', \
+                          command = lambda: Set_OffsetDistFromFunction(dxf0, dxf1, XYDistEntry, UVDistEntry, MachDistEntry, CutSpeedEntry, config.offset_function, MessageWindow))
+    OffsetBtn.place(x = 1530, y = 598)
 
 
     #【自動整列ボタン】    
     AutoAlignmentBtn = tk.Button(root, text = "自動整列", height = 1, width = 12,font=("",15), bg='#fffacd', command = lambda: AutoLineSort(dxf0, dxf1, AutoAlignmentEntry_X, AutoAlignmentEntry_Y, MessageWindow))
-    AutoAlignmentBtn.place(x = 1290, y = 505)
+    AutoAlignmentBtn.place(x = 1530, y = 555)
 
 
     #Ver2.0 変更　WorkDistWntryを追加
     #【パスチェックボタン】    
     ChkPassBtn = tk.Button(root, text = "パスチェック", height = 2, width = 12,font=("",15), bg='#3cb371', \
                            command = lambda: path_chk(root, dxf0, dxf1, AutoAlignmentEntry_X, AutoAlignmentEntry_Y, CutEndEntry_X, CutEndEntry_Y, XYDistEntry, UVDistEntry, WorkLengthEntry, MachDistEntry, dlEntry, MessageWindow))
-    ChkPassBtn.place(x = 1480, y = 630)
+    ChkPassBtn.place(x = 1530, y = 630)
     
 
     #Ver2.0 変更　MechDistEntry, WorkDistWntryを追加
     #【Gコード生成ボタン】        
     GenGCodeBtn = tk.Button(root, text = "Gコード生成", height = 2, width = 12,font=("",15), bg='#ff6347', \
-                            command = lambda: gen_g_code(dxf0, dxf1, AutoAlignmentEntry_X, AutoAlignmentEntry_Y, CutEndEntry_X, CutEndEntry_Y, XYDistEntry, UVDistEntry, WorkLengthEntry, MachDistEntry, CutSpeedEntry, dlEntry, HEADER, MessageWindow, X_str, Y_str, U_str, V_str))
-    GenGCodeBtn.place(x = 1480, y = 700)
+                            command = lambda: gen_g_code(dxf0, dxf1, AutoAlignmentEntry_X, AutoAlignmentEntry_Y, CutEndEntry_X, CutEndEntry_Y, XYDistEntry, UVDistEntry, WorkLengthEntry, MachDistEntry, CutSpeedEntry, dlEntry, MessageWindow, config))
+    GenGCodeBtn.place(x = 1530, y = 700)
 
 
 

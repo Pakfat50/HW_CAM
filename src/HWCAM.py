@@ -172,8 +172,8 @@ class config:
             offset_function_file = np.genfromtxt(file_path, delimiter = ",", skip_header = 1, dtype = str)
             x_data = offset_function_file[0,3:]
             y_data = offset_function_file[1,3:]
-            x_data = x_data.astype(np.float)
-            y_data = y_data.astype(np.float)
+            x_data = x_data.astype(float)
+            y_data = y_data.astype(float)
             self.offset_function = generate_offset_function(x_data, y_data)
             self.MESSEAGE = "%sの読み込み成功\n"%file_path
         except:

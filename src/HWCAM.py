@@ -26,1269 +26,189 @@ Created on Sat Jun 27 13:29:53 2020
 # os
 # datetime
 
+# 外部ライブラリ
 import tkinter as tk
-import tkinter.ttk as ttk
-import ezdxf as ez
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from mpl_toolkits.mplot3d import Axes3D
-from scipy import interpolate as intp
 from matplotlib.figure import Figure
-from scipy.integrate import quad
-import os.path as op
 import datetime
 import os
-import sys
+import traceback
 
+# 内部ライブラリ
+from cam_generic_lib import *
+from line_object import *
+from dxf_file import *
+from messeage_window import *
+from cam_global import *
 
-#======================================================================================================================================
-#            グローバル変数
-#======================================================================================================================================
-VERSION = "2.4"         #バージョン
-Z_ERROR = 5.0           #2020.10.13　ver2.1 新規追加  単位：mm Z面の許容誤差 
-LINE_MARGE_NORM_MN = 1  #単位:mm ラインを結合時にラインを結合してよいかを判断するためのライン端点間距離
-
-   
 #======================================================================================================================================
 #            クラスの実装
 #======================================================================================================================================
 
-
 #######################################################################################################################################
-###############    line_objectクラス   ここから　　　#########################################################################################
+###############    configクラス   ここから　　　#########################################################################################
 
 #【説明】
-#　ライン，スプラインを格納するクラスである．
+#　CAMで使用する設定値を格納するクラスである．
 #
 #【親クラス】
 #　なし
 #
 #【メンバ変数】
 #   変数名          型              説明
-#   x_raw           list            x座標点列の初期値　変更されない
-#   y_raw           list            y座標点列の初期値　変更されない
-#   st              list            x_raw, y_rawの 始点 
-#   ed              list            x_raw, y_rawの 終点 
-#   N               int             座標点列の個数
-#   num             int             ラインの番号
-#   offset_dist     float           オフセット距離
-#   offset_dir      char            オフセット方向["O"/ "I"]
-#   cut_dir         char            x, y配列の方向["F"/ "R"]（x_raw，y_rawに対して順方向が"F"，逆方向が"R"）
-#   x               list            オフセット，配列方向を適用したあとの x座標点列
-#   y               list            オフセット，配列方向を適用したあとの y座標点列
+#   FILENAME_XY     string          デフォルトで読み込むXYのdxfファイル名（起動時にのみ変更）
+#   FILENAME_UV     string          デフォルトで読み込むUVのdxfファイル名（起動時にのみ変更）
+#   OX              float           切り出しの始点座標
+#   OY              float           切り出しの始点座標
+#   EX              float           切り出しの終点座標
+#   EY              float           切り出しの終点座標
+#   DELTA_LENGTH    float           G Codeの点群の間隔
+#   OFFSET_DIST     float           オフセット距離
+#   CUTSPEED        float           カット速度
+#   XY_DIST         float           XY断面とマシン駆動面との距離
+#   UV_DIST         float           UV断面とマシン駆動面との距離
+#   WORK_LENGTH     float           ワークの長さ（XY-UV断面距離）
+#   MACH_DIST       float           マシン駆動面の距離
+#   HEADER          string          Gコードの書き出し文字列
+#   X_str           string          G01でのX軸名称
+#   Y_str           string          G01でのY軸名称
+#   U_str           string          G01でのU軸名称
+#   V_str           string          G01でのV軸名称
+#   offset_function object          オフセット距離の算出に使用する関数オブジェクト
 #
 #【実装メソッド】
-#   __init__(list x_points, list y_points, int num)
-#   【引数】 x_points, y_points, num
-#   【戻り値】　なし
-#   【機能】 初期化処理を実行する．x座標点列x_points, y座標点列y_points　を，x_raw，y_rawおよびx, yに代入する．ライン名をnumに設定する．
-#
-#   update()
-#   【引数】　なし
-#   【戻り値】　なし
-#   【機能】 cut_dir, offset_dir, offset_distの現在値をもとに，x, yの配列を再生成する
-#
-#   set_offset_dir(char offset_dir)
-#   【引数】 offset_dir
-#   【戻り値】　なし
-#   【機能】　メンバ変数であるoffset_dirを入力値に設定する．offset_dirが"O", "I"以外は処理しない．
-#
-#   set_offset_dist(float offset_dist)
-#   【引数】 offset_dist
-#   【戻り値】 なし
-#   【機能】 メンバ変数であるoffset_distを入力値に設定する．
-#
-#   set_cut_dir(char cut_dir)
-#   【引数】 cut_dir 
-#   【戻り値】 なし
-#   【機能】 メンバ変数であるcut_dirtを入力値に設定する．cut_dirが"F", "R"以外は処理しない．
-#
-#   set_num(int num)
-#   【引数】　num 
-#   【戻り値】　なし
-#   【機能】 メンバ変数であるnumを入力値に設定する．
-#
-#   toggle_cut_dir()
+#   __init__()
 #   【引数】 なし
 #   【戻り値】　なし
-#   【機能】　カット方向を逆転させる
+#   【機能】 メンバ変数をデフォルト値に設定する
 #
-#   toggle_offset_dir()
-#   【引数】　なし
+#   load_config(string file_path)
+#   【引数】 file_path
 #   【戻り値】　なし
-#   【機能】　オフセット方向を逆転させる
+#   【機能】 file_pathで与えられるcsvファイルを開き、csvファイルから読み込んだ値をメンバ変数に設定する。問題があればデフォルト値を設定する
 #
-#   calc_length_array(str mode = "offset")
-#   【引数】 mode（オプション）
-#   【戻り値】　list length_array
-#   【機能】　x, yのスプラインに沿った線長を，配列として返す．mode = "raw"の場合，x_raw，y_rawのスプラインに沿った線長を配列として返す．
-#
-#   get_length(str mode = "offset")
-#   【引数】 mode（オプション）
-#   【戻り値】 float length
-#   【機能】 x, yのスプラインに沿った線長を返す．mode = "raw"の場合，x_raw，y_rawのスプラインに沿った線長を返す．
+#   load_offset_func(string　file_path)
+#   【引数】　string　file_path
+#   【戻り値】　なし
+#   【機能】 file_pathで与えられるcsvファイルを開き、csvファイルから読み込んだ値からoffset_functionを更新する。問題があればデフォルト値を設定する
 
 
-class line_object:
-    def __init__(self, x_points, y_points, num):
-        self.x_raw = np.array(x_points)
-        self.y_raw = np.array(y_points)
-        self.st = np.array([x_points[0], y_points[0]])
-        self.ed = np.array([x_points[-1], y_points[-1]])
-        self.N = max(len(x_points), len(y_points))
-        self.num = num
-        self.offset_dist = 0
-        self.offset_dir = "O"
-        self.cut_dir = "F"
-        self.x = x_points
-        self.y = y_points
-        self.interp_mode = "cubic" #ver.2.2追加 "cubic":3d-spline, "linear":1d-line, ポリラインの指定用
-
-        if len(x_points)<2:
-            self.line_type = "point"
-        if len(x_points)==2:
-            self.line_type = "line"
-        if len(x_points)>2:
-            self.line_type = "spline"
-       
+class config:
+    def __init__(self):
+        self.FILENAME_XY = "ファイル名を入力して下さい。"
+        self.FILENAME_UV = "ファイル名を入力して下さい。"
+        self.OX = 0.0
+        self.OY = 0.0
+        self.EX = 0.0
+        self.EY = 0.0
+        self.DELTA_LENGTH = 1.0
+        self.OFFSET_DIST = 0.0
+        self.CUTSPEED = 200
+        self.XY_DIST = 25.0
+        self.UV_DIST = 50.0
+        self.WORK_LENGTH = 425
+        self.MACH_DIST = 500
+        self.HEADER = "T1\nG17 G49 G54 G80 G90 G94 G21 G40 G64\n"
+        self.X_str = 'X'
+        self.Y_str = 'Y'
+        self.U_str = 'Z'
+        self.V_str = 'A'
+        x_data = [1,1000]
+        y_data = [0,0]
+        self.offset_function = generate_offset_function(x_data, y_data)
         
-    def reset_point(self, x_points, y_points):
-        self.x_raw = np.array(x_points)
-        self.y_raw = np.array(y_points)
-        self.st = np.array([x_points[0], y_points[0]])
-        self.ed = np.array([x_points[-1], y_points[-1]])
-        self.N = max(len(x_points), len(y_points))
-        self.x = x_points
-        self.y = y_points
-        self.interp_mode = "cubic" 
-
-        if len(x_points)<2:
-            self.line_type = "point"
-        if len(x_points)==2:
-            self.line_type = "line"
-        if len(x_points)>2:
-            self.line_type = "spline"        
-    
-    
-    def update(self):
-        if self.cut_dir == "R":
-            temp_x = self.x_raw[::-1]
-            temp_y = self.y_raw[::-1]
-        else:
-            temp_x = self.x_raw
-            temp_y = self.y_raw
-        
-        if self.offset_dir == "I":
-            self.x, self.y = offset_line(temp_x, temp_y, self.offset_dist, self.cut_dir, self.interp_mode) 
-            
-        else:
-            self.x, self.y = offset_line(temp_x, temp_y, -self.offset_dist, self.cut_dir, self.interp_mode)
-    
-    
-    def set_offset_dir(self, offset_dir):
-        if offset_dir == 'O' or offset_dir == 'I':
-            self.offset_dir = offset_dir
-            self.update()
-        
-        
-    def set_offset_dist(self, offset_dist):
-        try:             
-            self.offset_dist = float(offset_dist)
-            self.update()
-        except:
-            pass
-    
-    
-    def set_cut_dir(self, cut_dir):
-        if cut_dir == 'F' or cut_dir == 'R':
-            self.cut_dir = cut_dir
-            self.update()
-        
-        
-    def set_num(self, num):
+    def load_config(self, file_path):
         try:
-            self.num = int(num)
+            config_file = np.genfromtxt(file_path, delimiter = ",", skip_header = 1, dtype = str)
+            config_data = config_file[:,2]
+            self.FILENAME_XY = config_data[0]
+            self.FILENAME_UV = config_data[1]
+            self.OX = float(config_data[2])
+            self.OY = float(config_data[3])
+            self.EX = float(config_data[4])
+            self.EY = float(config_data[5])
+            self.DELTA_LENGTH = float(config_data[6])
+            self.OFFSET_DIST = float(config_data[7])
+            self.CUTSPEED = float(config_data[8])
+            self.XY_DIST = float(config_data[9])
+            self.UV_DIST = float(config_data[10])
+            self.WORK_LENGTH = float(config_data[11])
+            self.MACH_DIST = float(config_data[12])
+            self.HEADER = config_data[13].replace("\\n", "\n")
+            self.X_str = str(config_data[14])
+            self.Y_str = str(config_data[15])
+            self.U_str = str(config_data[16])
+            self.V_str = str(config_data[17])
+            self.MESSEAGE = "設定ファイルの読み込み成功\n"
+            
         except:
-            pass
-    
-    
-    def toggle_cut_dir(self):
-        if self.cut_dir == "F":
-            self.cut_dir = "R"
-        else:
-            self.cut_dir = "F"
-    
-    
-    def toggle_offset_dir(self):
-        if self.offset_dir == "O":
-            self.offset_dir = "I"
-        else:
-            self.offset_dir = "O"
+            traceback.print_exc()
+            self.FILENAME_XY = "ファイル名を入力して下さい。"
+            self.FILENAME_UV = "ファイル名を入力して下さい。"
+            self.OX = 0.0
+            self.OY = 0.0
+            self.EX = 0.0
+            self.EY = 0.0
+            self.DELTA_LENGTH = 1.0
+            self.OFFSET_DIST = 0.0
+            self.CUTSPEED = 200
+            self.XY_DIST = 25.0
+            self.UV_DIST = 50.0
+            self.WORK_LENGTH = 425
+            self.MACH_DIST = 500
+            self.HEADER = "T1\nG17 G49 G54 G80 G90 G94 G21 G40 G64\n"
+            self.X_str = 'X'
+            self.Y_str = 'Y'
+            self.U_str = 'Z'
+            self.V_str = 'A'
+            self.MESSEAGE = "設定ファイルの読み込み失敗\n"
+            pass          
 
-        
-    def calc_length_array(self, mode = "offset"):
-        
-        length_array = [0]
-        
-        if mode == "raw":
-            x = self.x_raw
-            y = self.y_raw
-        
-        else:
-            x = self.x
-            y = self.y           
-            
-        if self.line_type == "point":
-            length_array = []
-        
-        if self.line_type == "line":
-            dl = np.sqrt((x[0]-x[1])**2 + (y[0]-y[1])**2)
-            length_array.append(dl)
-        
-        if self.line_type == "spline":
-            dl = 0
-            dt = 1
-            s_l = 0
-            t_p = np.linspace(0, dt * len(x), len(x))
-
-            fx_t = intp.CubicSpline(t_p, x)
-            fy_t = intp.CubicSpline(t_p, y)
-            
-            dfx_t = fx_t.derivative(1)
-            dfy_t = fy_t.derivative(1)
-            
-            fdl = lambda t: np.sqrt(dfx_t(t)**2 + dfy_t(t)**2)
-            
-            i = 0
-            while i < len(t_p) - 1:
-                dl = quad(fdl, t_p[i], t_p[i+1])
-                s_l += dl[0]
-                length_array.append(s_l)
-                i += 1
-            
-        return np.array(length_array)
-    
-    
-    def get_length(self, mode = "offset"):
-        
-        length = 0
-        
-        if mode == "raw":
-            x = self.x_raw
-            y = self.y_raw
-        
-        else:
-            x = self.x
-            y = self.y           
-            
-        if self.line_type == "point":
-            length = 0
-        
-        if self.line_type == "line":
-            length = np.sqrt((x[0]-x[1])**2 + (y[0]-y[1])**2)
-        
-        if self.line_type == "spline":
-            dl = 0
-            dt = 1
-            s_l = 0
-            t_p = np.linspace(0, dt * len(x), len(x))
-
-            fx_t = intp.CubicSpline(t_p, x)
-            fy_t = intp.CubicSpline(t_p, y)
-            
-            dfx_t = fx_t.derivative(1)
-            dfy_t = fy_t.derivative(1)
-            
-            fdl = lambda t: np.sqrt(dfx_t(t)**2 + dfy_t(t)**2)
-            
-            i = 0
-            while i < len(t_p) - 1:
-                dl = quad(fdl, t_p[i], t_p[i+1])
-                s_l += dl[0]
-                i += 1
-            length = s_l
-        
-        return length
-
-###############    line_objectクラス   ここまで　　　#########################################################################################
-#######################################################################################################################################
-
-
-
-#######################################################################################################################################
-###############    super_tableクラス   ここから　　　#########################################################################################
-        
-#【説明】
-#　ラインのテーブルを作成するクラスである．tk.treeのインスタンスを格納する．tk.treeを初期化する方法がtreeの再生成しかないため，生成に必要な情報をメンバ変数として保存し，
-#　reset()関数がコールされた際にtableを削除，再生成する．注意：tk.treeは親クラスではない．
-#
-#【親クラス】
-#　なし
-#
-#【メンバ変数】
-#   変数名          型              説明
-#   x_pos           int            テーブルの配置位置 X座標
-#   y_pos           int            テーブルの配置位置 Y座標
-#   root            tk.Frame       テーブル先のフレーム
-#   y_height        int            テーブル先の高さ（行）
-#   parent          int            テーブルの親子設定[0 / 1]（1：親，0：子）
-#   table           tk.tree        テーブルのインスタンス
-#
-#【実装メソッド】
-#   __init__(tk.Frame root, int y_height, int x, int y)
-#   【引数】 root, y_height, x, y
-#   【戻り値】　なし
-#   【機能】 クラスを初期化する．
-#
-#   set_parent(int parent):
-#   【引数】　parent
-#   【戻り値】　なし
-#   【機能】 parentを入力値に変更する
-#
-#   reset()
-#   【引数】 なし
-#   【戻り値】　なし
-#   【機能】　既存のtableインスタンスを破棄する．その後再生成する．テーブルのヘッダなどを設定する．
-
-    
-class super_table:
-    def __init__(self, root, y_height, x, y):
-        self.x_pos = x
-        self.y_pos = y
-        self.root = root
-        self.y_height = y_height
-        self.parent = 0
-        self.reset()
-    
-    
-    def set_parent(self, parent):
-        if parent == 1 or parent == 0:
-            self.parent = parent
-    
-    
-    def reset(self):
+    def load_offset_func(self, file_path):
         try:
-            self.table.destroy()
+            offset_function_file = np.genfromtxt(file_path, delimiter = ",", skip_header = 1, dtype = str)
+            x_data = offset_function_file[0,3:]
+            y_data = offset_function_file[1,3:]
+            x_data = x_data.astype(float)
+            y_data = y_data.astype(float)
+            self.offset_function = generate_offset_function(x_data, y_data)
+            self.MESSEAGE = "%sの読み込み成功\n"%file_path
         except:
-            pass
-        self.table = ttk.Treeview(self.root, height = self.y_height)
-        self.table.place(x = self.x_pos, y = self.y_pos)
-        self.table["column"] = (1,2,3,4)
-        self.table["show"] = "headings"
-        self.table.heading(1,text="ライン番号")
-        self.table.heading(2,text="カット方向")
-        self.table.heading(3,text="オフセット方向")
-        self.table.heading(4,text="ラインタイプ")
-        self.table.column(1, width=100)
-        self.table.column(2, width=100)
-        self.table.column(3, width=100)
-        self.table.column(4, width=100)
-    
-    
-###############    super_tableクラス   ここまで　　　#########################################################################################
-#######################################################################################################################################
-
-
-
-#######################################################################################################################################
-###############   dxf_fileクラス   ここから　　    　#########################################################################################
-
-#【説明】
-#　dxfファイルに関連する，line_object，super_tableなどを格納する．main関数以外ではトップレベルモジュールである．
-#
-#【親クラス】
-#　なし
-#
-#【メンバ変数】
-#   変数名          型                   説明
-#   ax              Axes                グラフのプロットエリアのインスタンス
-#   canvas          FigureCanvasTkAgg   グラフを配置しているフレームのインスタンス
-#   table           super_table         x_raw, y_rawの 始点 
-#   x_table         super_table         x_raw, y_rawの 終点 
-#   name            str                 グラフに表示する名前"X-Y", "U-V"など
-#   line_list       list                line_objectをすべて格納するリスト
-#   line_num_list   list                テーブル番号とline_objectを対応付けるリスト
-#   selected_line   int                 テーブルにて選択されたラインの番号
-#   filename        str                 dxfファイルの名称
-#
-#【実装メソッド】
-#   __init__(Axes ax, FigureCanvasTkAgg canvas, super_table table, super_table x_table, str name)
-#   【引数】 x_points, y_points, num
-#   【戻り値】　なし
-#   【機能】 初期化処理を実行する．ax，canvas，table，x_table，nameを自身のメンバ変数に格納する，またline_list，line_num_listを空のリストとして作成する．
-#　　　　　　　　またselected_numを0として作成する．
-#
-#   load_file(str filename)
-#   【引数】　なし
-#   【戻り値】　なし
-#   【機能】 filenameをメンバ変数にかくのうし，他のメンバ変数を初期化する，新しいdxfファイルを読み込む．reload()，plot()をコールする，
-#　　　　　　　　テーブルの選択イベントと，selectedをバインドする．
-#
-#   reload()
-#   【引数】 なし
-#   【戻り値】　なし
-#   【機能】　filemameのdxfファイルを読み込み，lineとsplineの座標点列を取得する．座標点列からline_objectを生成し，line_listに追加する．
-#　　　　　　　　line_num_listに自身の番号を追加する．（初期値はline_object.numと同じ）　tabelにline_objectの情報を追加する．
-#
-#   table_reload()
-#   【引数】 なし
-#   【戻り値】 なし
-#   【機能】 tableに表示する情報を，line_objectのメンバ変数が持つ情報に更新する，
-#
-#   plot()
-#   【引数】 なし 
-#   【戻り値】 なし
-#   【機能】 グラフを更新する．グラフは，selected_line以外を透明度を低下させて描画する．グラフは，selected_lineの始点からカット方向ベクトルを描画する．
-#　　　　　　　　グラフは，offset_distが 0以外である場合，オフセット方向ベクトルを描画する．グラフは，item_num_listの値が0以上の場合にのみプロットする．
-#
-#   set_selected_line(int selected_line)
-#   【引数】 selected_line
-#   【戻り値】　なし
-#   【機能】 メンバ変数であるselected_lineを入力値に設定する．plot()をコールする．
-#
-#   selected(event)
-#   【引数】 event
-#   【戻り値】　なし
-#   【機能】　テーブルの選択イベントが発生した場合，本関数がコールされる．バインドはload_dile()で設定される．本関数ではset_selected_lineをコールする．
-#　　　　　　　　table.parent=1かつ x_table.parent=0の場合，tableで選択された行と同じ行を，x_tableに選択させる．(X-YテーブルとU-Vテーブルの連動選択時の処理である．）
-#
-#   set_offset_dist(float offset_dist)
-#   【引数】　offset_dist
-#   【戻り値】　なし
-#   【機能】　tableに表示されているライン全てのoffset_distを入力値に更新する．plot()，table_reload()をコールし，グラフ，表を更新する．
-#
-#   Change_CutDir()
-#   【引数】 なし
-#   【戻り値】　なし
-#   【機能】　tableで選択されているラインの向きをすべて逆転させる．plot()，table_reload()をコールし，グラフ，表を更新する．
-#
-#   Change_OffsetDir()
-#   【引数】 なし
-#   【戻り値】 なし
-#   【機能】 tableで選択されているラインのオフセット方向をすべて逆転させる．plot()，table_reload()をコールし，グラフ，表を更新する．
-#
-#   Swap_Selected_line()
-#   【引数】 なし 
-#   【戻り値】 list selected_items
-#   【機能】 tableで選択されている２本のラインのカット順を入れ替える．選択が2本である場合，Swap_lineをコールする．plot()，table_reload()をコールし，グラフ，表を更新する．
-#　　　　　　　　戻り値として，選択されたラインの番号をリストとして返す．（上位関数で入れ替えが成功したかを通知するために使用する．）
-#
-#   Swap_line(int item_num0, int item_num1):
-#   【引数】　int item_num0, item_num1
-#   【戻り値】　なし
-#   【機能】 入力された2本のラインについて，line_num_listの値を入れ替える．set_selected_lineをコールし，line_num1をselected_lineに設定する．
-#
-#   delete_Selected_line()
-#   【引数】 なし
-#   【戻り値】　なし
-#   【機能】　tableで選択されているラインをすべて非表示とする．delete_lineをコールする．plot()，table_reload()をコールし，グラフ，表を更新する．
-#
-#   delete_line(int item_num)
-#   【引数】　int item_num
-#   【戻り値】　なし
-#   【機能】　item_numに対応するラインのlin_num_listの値を-1に上書きする．tableからitem_numを削除する．
-#
-#   reverse_all()
-#   【引数】 なし
-#   【戻り値】　なし
-#   【機能】　テーブルで表示しているラインの順番を逆転させ，カット方向を逆転させる．
-#
-#   SortLine(float ox0, float oy0)
-#   【引数】 
-#   【戻り値】 なし
-#   【機能】 テーブルで表示しているラインを下記のルールに基づき並び替え，要すればカット方向，オフセット方向を変更する．
-#　　　　　　　　1. ox, oyから最も近い位置にあるライン端を検索する
-#　　　　　　　　2. 1.のライン端を有するラインを，カット番号0に設定する.1.のライン端がラインの終端である場合，カット方向，オフセット方向を逆転させる．
-#　　　　　　　　3. 1.のライン端の逆端から最も近い位置にあるライン端を検索する．        
-#　　　　　　　　4.　3.のライン端を有するラインを，カット番号1に設定する．3.のライン端がラインの終端である場合，カット方向，オフセット方向を逆転させる.
-#　　　　　　　　5. 3.のライン端から最も近い位置にあるライン端を検索する．
-#　　　　　　　　6. 3～5を，テーブルに表示されている全てのラインに対して実施する．
-#　　　　　　　　
-
-class dxf_file:
-    def __init__(self, ax, canvas, table, x_table, name):
-        self.ax = ax
-        self.canvas = canvas
-        self.table = table
-        self.x_table = x_table
-        self.name = name
-        self.line_list = []
-        self.line_num_list = []
-        self.selected_line = 0
-    
-    
-    def load_file(self, filename):
-        self.table.reset()
-        self.filename = filename
-        self.line_list = []
-        self.line_num_list = []
-        self.selected_line = 0
-        self.reload()
-        self.plot()
-        self.table.table.bind("<<TreeviewSelect>>", self.selected)
-        self.table.table.loaded_item_num = len(self.table.table.get_children())
-
-
-    def reload(self):
-        dwg = ez.readfile(self.filename)
-        modelspace = dwg.modelspace()
-        line_obj = modelspace.query('LINE')
-        spline_obj = modelspace.query('SPLINE')
-        arc_obj = modelspace.query('ARC') #ver2.2追加
-        poly_obj = modelspace.query('LWPOLYLINE') #ver2.2追加
-        
-        i = 0
-        while i < len(spline_obj):
-            temp_spline = spline_obj[i]
-            temp_spline_data = np.array(temp_spline.control_points)[:]
-            temp_line_object = line_object(temp_spline_data[:,0], temp_spline_data[:,1], i) 
-            self.line_list.append(temp_line_object)
-            self.line_num_list.append(i)
-            self.table.table.insert("", "end", values=(temp_line_object.num, temp_line_object.cut_dir, temp_line_object.offset_dir, temp_line_object.line_type))
-            i += 1
- 
-        #ver2.2追加　円弧，ポリラインの読み込み　ここから
-        i_arc = 0        
-        while i_arc < len(arc_obj):
-            temp_arc = arc_obj[i_arc]
-            temp_arc_data = arc_to_spline(temp_arc)
-            temp_line_object = line_object(temp_arc_data[:,0], temp_arc_data[:,1], i + i_arc) 
-            self.line_list.append(temp_line_object)
-            self.line_num_list.append(i + i_arc)
-            self.table.table.insert("", "end", values=(temp_line_object.num, temp_line_object.cut_dir, temp_line_object.offset_dir, temp_line_object.line_type))
-            i_arc += 1        
-        i = i + i_arc
-
-        i_poly = 0
-        while i_poly < len(poly_obj):
-            temp_poly = poly_obj[i_poly]
-            temp_poly_data = poly_to_spline(temp_poly)
-            temp_line_object = line_object(temp_poly_data[:,0], temp_poly_data[:,1], i + i_poly) 
-            temp_line_object.interp_mode = "linear" #poly_lineであることを設定する
-            self.line_list.append(temp_line_object)
-            self.line_num_list.append(i + i_poly)
-            self.table.table.insert("", "end", values=(temp_line_object.num, temp_line_object.cut_dir, temp_line_object.offset_dir, temp_line_object.line_type))
-            i_poly += 1    
-        i = i + i_poly
-        #ver2.2追加　ここまで
-
-        j = 0
-        k = 0
-        while j < len(line_obj):
-            temp_line = line_obj[j]
-            temp_line_data = []
-            temp_line_data.append(temp_line.dxf.start)
-            temp_line_data.append(temp_line.dxf.end)
-            temp_line_data = np.array(temp_line_data)[:,0:2]
-            if norm(temp_line_data[0,0],temp_line_data[0,1],temp_line_data[1,0],temp_line_data[1,1]) != 0:
-                temp_line_object = line_object(temp_line_data[:,0], temp_line_data[:,1], i+k) 
-                self.line_list.append(temp_line_object)
-                self.line_num_list.append(i+k)
-                self.table.table.insert("", "end", values=(temp_line_object.num, temp_line_object.cut_dir, temp_line_object.offset_dir, temp_line_object.line_type))
-                k += 1
-            j += 1
-            
-
-    def table_reload(self):
-        table_item_list = self.table.table.get_children()
-        i = 0
-        while i < len(table_item_list):
-            temp_item_num = table_item_list[i]
-            line_num = self.line_num_list[item2num(temp_item_num)]
-            temp_line_object = self.line_list[line_num]
-            self.table.table.item(temp_item_num, values=(temp_line_object.num, temp_line_object.cut_dir, temp_line_object.offset_dir, temp_line_object.line_type))
-            i += 1
-
-    
-    def plot(self):
-        self.ax.clear()
-        self.ax.set_title(self.name)
-        self.ax.set_aspect('equal')
-        i = 0
-        while i < len(self.line_num_list):
-            line_num = self.line_num_list[i]
-            if line_num >= 0:
-                temp_line_object = self.line_list[line_num]
-                temp_line_object.update()
-                if temp_line_object.line_type == "line":
-                    col = "b"
-                else:
-                    col = "b"
-                    
-                if line_num == self.selected_line:
-                    self.ax.plot(temp_line_object.x, temp_line_object.y, color = col)
-                    X,Y = temp_line_object.x[0], temp_line_object.y[0]
-                    U,V = temp_line_object.x[1], temp_line_object.y[1]
-                    self.ax.quiver(X,Y,U-X,V-Y,color = col)
-                    if temp_line_object.cut_dir == "F":
-                        X,Y = temp_line_object.x_raw[0], temp_line_object.y_raw[0]
-                        U,V = temp_line_object.x[0], temp_line_object.y[0]
-                    else:
-                        X,Y = temp_line_object.x_raw[-1], temp_line_object.y_raw[-1]
-                        U,V = temp_line_object.x[0], temp_line_object.y[0]            
-                    if norm(X,Y,U,V) != 0:
-                        self.ax.quiver(X,Y,U-X,V-Y,color = "y") #ver2.2 バグ修正 Y を y に変更
-                else :
-                    self.ax.plot(temp_line_object.x, temp_line_object.y ,color = col, alpha = 0.2)    
-            i += 1
-        self.canvas.draw()
-        
-        
-    def set_selected_line(self, selected_line):
-        self.selected_line = selected_line
-        self.plot()
-    
-    
-    def selected(self, event):
-        selected_items = self.table.table.selection()
-        if not selected_items:
-            return None
-        item_num = item2num(selected_items[0])
-        item_index = self.table.table.get_children().index(selected_items[0])
-        line_num = self.line_num_list[item_num]
-        if self.table.parent == 1:
-            if self.x_table.parent == 0:            
-                try:
-                    x_item = self.x_table.table.get_children()[item_index]
-                    self.x_table.table.selection_set(x_item)
-                    self.x_table.table.see(x_item)
-                except:
-                    pass
-        self.set_selected_line(line_num)
-        
-        
-    def set_offset_dist(self, offset_dist):
-        table_item_list = self.table.table.get_children()
-        i = 0
-        while i < len(table_item_list):
-            temp_item_num = table_item_list[i]
-            line_num = self.line_num_list[item2num(temp_item_num)]
-            temp_line_object = self.line_list[line_num]
-            temp_line_object.offset_dist = offset_dist
-            temp_line_object.update()
-            i += 1   
-        self.table_reload()
-        self.plot()
-    
-    def Change_CutDir(self):
-        selected_items = self.table.table.selection()
-        i = 0
-        while i < len(selected_items):
-            temp_item_num = selected_items[i]
-            line_num = self.line_num_list[item2num(temp_item_num)]
-            temp_line_object = self.line_list[line_num]
-            temp_line_object.toggle_cut_dir()
-            temp_line_object.update()
-            self.table.table.item(temp_item_num, values=(temp_line_object.num, temp_line_object.cut_dir, temp_line_object.offset_dir, temp_line_object.line_type))
-            i += 1   
-        self.table_reload()
-        self.plot()
-    
-    
-    def Change_OffsetDir(self):
-        selected_items = self.table.table.selection()
-        i = 0
-        while i < len(selected_items):
-            temp_item_num = selected_items[i]
-            line_num = self.line_num_list[item2num(temp_item_num)]
-            temp_line_object = self.line_list[line_num]
-            temp_line_object.toggle_offset_dir()
-            temp_line_object.update()
-            self.table.table.item(temp_item_num, values=(temp_line_object.num, temp_line_object.cut_dir, temp_line_object.offset_dir, temp_line_object.line_type))
-            i += 1      
-        self.table_reload()
-        self.plot()
-
-
-    def Swap_Selected_line(self):
-        selected_items = self.table.table.selection()
-        if len(selected_items) == 2:
-            swap_line_num0 = item2num(selected_items[0])
-            swap_line_num1 = item2num(selected_items[1])
-            self.Swap_line(swap_line_num0, swap_line_num1)
-            self.table_reload()
-            self.plot()
-        return selected_items
-    
-
-    def Swap_line(self, item_num0, item_num1):
-        self.line_num_list[item_num0], self.line_num_list[item_num1] = self.line_num_list[item_num1], self.line_num_list[item_num0] 
-        self.set_selected_line(item_num1)    
-
-
-    def Merge_Selected_line(self):
-        selected_items = self.table.table.selection()
-        if len(selected_items) == 2:
-            parent_line_num = item2num(selected_items[0])
-            child_line_num = item2num(selected_items[1])
-            if self.Merge_line(parent_line_num, child_line_num) == True:
-                self.delete_line(selected_items[1])
-                self.table_reload()
-                self.plot()
-                return [selected_items[0]]
-            
-        elif len(selected_items) == 1:
-            return []
-        
-        else:
-            return selected_items
-
-
-    def Merge_line(self, parent_item_num, child_item_num):
-        parent_line = self.line_list[parent_item_num]
-        child_line = self.line_list[child_item_num]
-        
-        x_p_st = parent_line.st[0]
-        y_p_st = parent_line.st[1]
-        x_c_st = child_line.st[0]
-        y_c_st = child_line.st[1]
-
-        x_p_ed = parent_line.ed[0]
-        y_p_ed = parent_line.ed[1]
-        x_c_ed = child_line.ed[0]
-        y_c_ed = child_line.ed[1]
-        
-        x_p = parent_line.x_raw.tolist()
-        y_p = parent_line.y_raw.tolist()
-        x_c = child_line.x_raw.tolist()
-        y_c = child_line.y_raw.tolist()     
-        
-        new_x = []
-        new_y = []
-
-        if norm(x_p_ed, y_p_ed, x_c_st, y_c_st) < LINE_MARGE_NORM_MN:
-            # 親ラインに子ラインを接続
-            new_x.extend(x_p)
-            new_y.extend(y_p)
-            new_x.extend(x_c)
-            new_y.extend(y_c)
-        elif norm(x_p_ed, y_p_ed, x_c_ed, y_c_ed) < LINE_MARGE_NORM_MN:
-            # 子ラインを反転させたのち、親ラインに子ラインを接続
-            x_c.reverse()
-            y_c.reverse()
-            new_x.extend(x_p)
-            new_y.extend(y_p)
-            new_x.extend(x_c)
-            new_y.extend(y_c)
-        elif norm(x_p_st, y_p_st, x_c_ed, y_c_ed) < LINE_MARGE_NORM_MN:
-            # 子ラインに親ラインを接続
-            new_x.extend(x_c)
-            new_y.extend(y_c)
-            new_x.extend(x_p)
-            new_y.extend(y_p)
-        elif norm(x_p_st, y_p_st, x_c_st, y_c_st) < LINE_MARGE_NORM_MN:
-            # 子ラインを反転させたのち、子ラインに親ラインに接続
-            x_c.reverse()
-            y_c.reverse()
-            new_x.extend(x_c)
-            new_y.extend(y_c)
-            new_x.extend(x_p)
-            new_y.extend(y_p)
-            
-        else:
-            # 端点が隣接していない線同士であるので、結合すべきではない。
-            return False
-        
-        parent_line.reset_point(new_x, new_y)
-        return True
-                
-        
-    def delete_Selected_line(self):
-        selected_items = self.table.table.selection()
-        i = 0
-        while i < len(selected_items):
-            self.delete_line(selected_items[i])
-            i += 1             
-        self.table_reload()
-        self.plot()
-        
-        
-    def delete_line(self, item_num):
-        line_num = self.line_num_list[item2num(item_num)]
-        index = self.line_num_list.index(line_num)
-        if self.line_num_list[index] >= 0:            
-            self.line_num_list[index] = -1
-        self.table.table.delete(item_num)
-    
-    
-    def reverse_all(self):
-        alaivable_line_num_list = np.array(np.array(self.line_num_list.copy())[np.where(np.array(self.line_num_list.copy()) >= 0)])
-        new_line_num_list = alaivable_line_num_list[-1::-1]
-        
-        i = 0
-        j = 0
-        while i < len(self.line_num_list):
-            if self.line_num_list[i] >= 0:
-                temp_num = new_line_num_list[j]
-                temp_line = self.line_list[temp_num]
-                temp_line.toggle_cut_dir()
-                self.line_num_list[i] = temp_num                
-                j += 1
-                i += 1
-            else:
-                i += 1
-        
-        self.table_reload()
-        self.plot()        
-        
-    
-    def SortLine(self, ox0, oy0):
-        i = 0
-        norm_mn = np.inf
-        temp_cut_dir = 'F'
-        x0 = ox0
-        y0 = oy0
-        alaivable_line_num_list = sorted(np.array(self.line_num_list.copy())[np.where(np.array(self.line_num_list.copy()) >= 0)])
-        new_line_num_list = []
-
-        while i < len(alaivable_line_num_list) :
-            norm_mn = np.inf
-            j = 0
-            while j < len(alaivable_line_num_list):
-                num1 = alaivable_line_num_list[j]
-                if num1 in new_line_num_list:
-                    pass
-                
-                else:
-                    temp_line1 = self.line_list[num1]
-                    temp_norm_st = norm(x0, y0, temp_line1.st[0], temp_line1.st[1])
-                    temp_norm_ed = norm(x0, y0, temp_line1.ed[0], temp_line1.ed[1])
-                    if min(temp_norm_st, temp_norm_ed) < norm_mn:
-                        temp_line_num1 = num1
-                        norm_mn = min(temp_norm_st, temp_norm_ed)                      
-                        if temp_norm_st < temp_norm_ed:
-                            temp_cut_dir = 'F'
-                        else:
-                            temp_cut_dir = 'R'
-                j += 1
-                
-            temp_line1 = self.line_list[temp_line_num1]
-            if temp_cut_dir == 'F':
-                x0 = temp_line1.ed[0]
-                y0 = temp_line1.ed[1]
-                if temp_line1.cut_dir != temp_cut_dir:
-                    temp_line1.toggle_offset_dir()
-                    
-            if temp_cut_dir == 'R':
-                x0 = temp_line1.st[0]
-                y0 = temp_line1.st[1]
-                if temp_line1.cut_dir != temp_cut_dir:
-                    temp_line1.toggle_offset_dir()
-                        
-            temp_line1.set_cut_dir(temp_cut_dir)
-            new_line_num_list.append(temp_line_num1)
-            i += 1
-        
-        i = 0
-        j = 0
-        while i < len(self.line_num_list):
-            if self.line_num_list[i] >= 0:
-                self.line_num_list[i] = new_line_num_list[j]
-                j += 1
-                i += 1
-            else:
-                i += 1
-        
-        self.table_reload()
-        self.plot()        
-
-
-###############   dxf_fileクラス   ここまで　　    　#########################################################################################
-#######################################################################################################################################     
-
-
-
-#######################################################################################################################################
-###############   messeage_windowクラス   ここから　　    　##################################################################################
-
-#【説明】
-#　tk.Textクラスに，set_messeageメソッドを追加したクラスである．
-#
-#【親クラス】
-#　tk.Text
-#
-#【メンバ変数】
-#   変数名          型                   説明
-#   root            tk.Frame            textウィンドウを配置するフレームのインスタンス
-#   width           int                 textウィンドウの幅（文字数で指定）
-#   height          int                 textウィンドウの高さ（文字列数で指定）
-#
-#【実装メソッド】
-#   __init__(tk.Frame root, int width, int height)
-#   【引数】 root, width, height
-#   【戻り値】　なし
-#   【機能】 初期化処理を実行する．メンバ変数width，heightを入力値に設定する．
-#
-#   set_messeage(str messeage):
-#   【引数】　str messeage
-#   【戻り値】　なし
-#   【機能】 textウインドウの最下列にmesseageを挿入する．最下列を表示する．
-#　　　　　　　　
-#
-
-class messeage_window(tk.Text):
-    def __init__(self, root, width, height):
-        self.width = width
-        self.height = height
-        super().__init__(root, width = self.width, height = self.height)
-    
-    def set_messeage(self, messeage):
-        self.insert("end", messeage)
-        self.see(self.index('end'))
-
-
-###############   messeage_windowクラス   ここまで　　    　##################################################################################
-#######################################################################################################################################  
-
-
-
-#======================================================================================================================================
-#            関数の実装
-#======================================================================================================================================
-
-
-
-#======================================================================================================================================
-#            汎用関数
-#======================================================================================================================================
-#
-#   offset_line(list x, list y, float d, str cut_dir, str interp_mode)
-#   【引数】　x, y, d, cut_dir
-#   【戻り値】　new_x, new_y
-#   【機能】 x,y の座標点列をdだけオフセットした点列を作成する．カット方向により，オフセット方向が変わらないように，cut_dirによってオフセット方向を変更する．
-#　　　　　　　　アルゴリズムは下記を実装する．(円弧補間は不要なので省略している)
-#          https://stackoverflow.com/questions/32772638/python-how-to-get-the-x-y-coordinates-of-a-offset-spline-from-a-x-y-list-of-poi
-#　　　　　　　　
-#   norm(float x0, float y0, float x, float y)
-#   【引数】 x0, y0, x, y
-#   【戻り値】　float 距離
-#   【機能】　(x0,y0) と(x,y)の距離を計算する．
-#
-#   norm_3d(float x0, float y0, float z0, float x, float y, float z)
-#   【引数】 x0, y0, z0, x, y, z
-#   【戻り値】 float 距離
-#   【機能】 (x0,y0,z0) と(x,y,z)の距離を計算する
-#
-#   item2num(str item_num)
-#   【引数】 item_num
-#   【戻り値】 int num
-#   【機能】 tk.treeのItem番号（I***，***がアイテム番号）から***を抽出し，int型に変換して出力する．***は16進法である．
-#
-#   generate_arc_length_points(line_object line_object, int N)
-#   【引数】 line_object, N
-#   【戻り値】　list x_p, y_p
-#   【機能】 line_objectのx, y点列をスプライン補完し，これをN等分した点列を作成する．
-#        
-#   generate_arc_length_points4line(float x_st, float  y_st, float x_ed, float y_ed, int N)
-#   【引数】　x_st, y_st, x_ed, y_ed, N
-#   【戻り値】　list x_p, y_p
-#   【機能】 (x_st, y_st), (x_ed, y_ed)を両端に持つ直線を，N等分した点列を作成する．
-#
-#   plot_3d_cut_path(Axes ax, list x, list y, list u, list v, float Z, int n_plot)
-#   【引数】 ax, x, y, u, v, Z, n_plot
-#   【戻り値】　list point_dist_list
-#   【機能】　axにx,y,u,vをプロットする．x,y平面とu,v平面の距離はZとする．各(x,y),(u,v)の点の距離を計算し，point_dist_list配列として出力する．
-#
-#   file_chk(str filename)
-#   【引数】 file_name
-#   【戻り値】 int 成功可否(1：読み取り成功, 0:拡張子が.dxfでない, -1:ファイル存在せず)
-#   【機能】 指定されたfilenameのファイルが存在するか，拡張子が.dxfかをチェックする．
-#
-#   gen_g_code_line_str(list x, list y, list u, list v)
-#   【引数】 x, y, u, v
-#   【戻り値】 list code_str
-#   【機能】 x, y, u, vの各座標からgコードを生成する．gコードはX,Y,Z,A軸を使用するとする，gコードは「G01 X** Y** U** V**」のフォーマットとする．（G01は移動指令）
-#
-#   arc_to_spline(ezdxf.entities.Arc arc_obj)
-#   【引数】 arc_obj
-#   【戻り値】 np.array [xp, yp]
-#   【機能】 円弧からスプラインの点列を作成する．点数は10degにつき1点とする．点数は最少で3点以上となる．
-#
-#   poly_to_spline(ezdxf.entities.LWPolyline poly_obj)
-#   【引数】 poly_obj
-#   【戻り値】 np.array [xp, yp]
-#   【機能】 ポリラインから点列を作成する．
-#
-
-def offset_line(x, y, d, cut_dir, interp_mode): #ver2.2 interp_mode 追加　ポリラインの場合，オフセット点を中点ではなく，点列を使用するため
-    new_x = []
-    new_y = []
-    k = 0
-    sign = 1
-    sign_cut_dir = 1
-    
-    if cut_dir == "R":
-        sign_cut_dir = -1
-    
-    if len(x) < 2: 
-        return x, y
-
-    if len(x) == 2:
-        if x[0] == x[1]:
-            k = np.pi/2.0
-        else:
-            k = np.arctan((y[1]-y[0])/(x[1]-x[0]))
-        
-        new_x.append(x[0] - d*np.sin(k))
-        new_x.append(x[1] - d*np.sin(k))
-        new_y.append(y[0] + d*np.cos(k))
-        new_y.append(y[1] + d*np.cos(k))
-
-    if len(x) > 2:
-        if interp_mode == "linear" and len(x)%2 == 0:
-            num = 0
-            while num < len(x)/2:
-                i = num * 2
-                if x[i] == x[i+1]:
-                    k = np.pi/2.0
-                else:
-                    k = np.arctan((y[i+1]-y[i])/(x[i+1]-x[i]))
-
-                new_x.append(x[i]   - d*np.sin(k))
-                new_x.append(x[i+1] - d*np.sin(k))
-                new_y.append(y[i]   + d*np.cos(k))
-                new_y.append(y[i+1] + d*np.cos(k))
-
-                num += 1
-            
-        else:
-            i = 0
-            while i < len(x):
-                if i == 0:
-                    k = np.arctan2((y[1]-y[0]), (x[1]-x[0]))
-
-                elif i == len(x) - 1:
-                    k = np.arctan2((y[i]-y[i-1]), (x[i]-x[i-1]))
-                    
-                else:
-                    k = np.arctan2((y[i+1]-y[i-1]), (x[i+1]-x[i-1]))
-
-                new_x.append(x[i] - d*np.sin(k) * sign_cut_dir)      
-                new_y.append(y[i] + d*np.cos(k) * sign_cut_dir)
-                i += 1
-    
-    new_x = np.array(new_x)
-    new_y = np.array(new_y)
-    
-    return new_x, new_y
-
-
-def norm(x0, y0, x, y):
-    return np.sqrt((x-x0)**2 + (y-y0)**2)
-
-
-def norm_3d(x0, y0, z0, x, y, z):
-    return np.sqrt((x-x0)**2 + (y-y0)**2 + (z-z0)**2)
-
-
-def item2num(item_num):
-    temp = item_num.replace("I","")
-    temp = '0x0%s'%temp
-    num = int(temp,0) - 1    
-    return num
-
-
-def generate_arc_length_points(line_object, N):
-    
-    N = int(N)
-    if N < 2:
-        N = 2
-
-    length_array = line_object.calc_length_array()
-    sum_length = length_array[-1]
-    
-    t_p = length_array/sum_length
-    
-    x = line_object.x
-    y = line_object.y
-    
-    if line_object.line_type == "point":  
-        x_p = x
-        y_p = y
-        
-    if line_object.line_type == "line":  
-        fx_t = intp.interp1d(t_p, x, kind = "linear")
-        fy_t = intp.interp1d(t_p, y, kind = "linear")
-            
-        t_p_arc = np.linspace(t_p[0], t_p[-1], N)
-        
-        x_p = fx_t(t_p_arc)
-        y_p = fy_t(t_p_arc)
-
-    if line_object.line_type == "spline":
-        if line_object.interp_mode == "linear":
-            fx_t = intp.interp1d(t_p, x, kind = "linear")
-            fy_t = intp.interp1d(t_p, y, kind = "linear")
-                
-            t_p_arc = np.linspace(t_p[0], t_p[-1], N)
-            
-            t_p_arc_add_orgine_point = np.append(t_p, t_p_arc)
-            t_p_arc_add_orgine_point = np.sort(t_p_arc_add_orgine_point)              
-                    
-            x_p = fx_t(t_p_arc_add_orgine_point)
-            y_p = fy_t(t_p_arc_add_orgine_point)
-            
-
-        else:
-            fx_t = intp.CubicSpline(t_p, x)
-            fy_t = intp.CubicSpline(t_p, y)
-            
-            t_p_arc = np.linspace(t_p[0], t_p[-1], N)
-            
-            x_p = fx_t(t_p_arc)
-            y_p = fy_t(t_p_arc)
-    
-    return x_p, y_p
-    
-
-def generate_arc_length_points4line(x_st, y_st, x_ed, y_ed, N):
-    
-    t_p = np.array([0,1])
-    fx_t = intp.interp1d(t_p, [x_st, x_ed], kind = "linear")
-    fy_t = intp.interp1d(t_p, [y_st, y_ed], kind = "linear")
-        
-    t_p_arc = np.linspace(t_p[0], t_p[-1], N)
-    
-    x_p = fx_t(t_p_arc)
-    y_p = fy_t(t_p_arc)
-    
-    return x_p, y_p
-
-
-# Ver2.1変更 　引数追加
-def plot_3d_cut_path(ax, x, y, u, v, xm, ym, um, vm, z_xy, z_uv, z_m, n_plot):
-    
-    point_dist_list = []
-    
-    try:
-        if len(x) == len(y) == len(u) == len(v) == len(xm) == len(ym) == len(um) == len(vm):
-            zm = np.ones(len(x)) * 0.0
-            z = np.ones(len(x)) * z_xy
-            w = np.ones(len(x)) * z_m - z_uv
-            wm = np.ones(len(x)) * z_m
-            
-            ax.plot(x, y, z, 'k')
-            ax.plot(u, v, w, 'k')
-            
-            ax.plot(xm, ym, zm, 'k')
-            ax.plot(um, vm, wm, 'k')
-            
-            
-            if n_plot < 1:
-                n_plot = 1
-            
-            num_per_plot = int(len(x)/n_plot)
-            if num_per_plot < 1:
-                num_per_plot = 1
-                
-            i = 0
-            j = 0
-            while i < len(x):
-                if j > num_per_plot:
-                    ax.plot([x[i],u[i]], [y[i],v[i]],  [z_xy, z_m - z_uv], color = 'r', alpha = 0.5)
-                    ax.plot([x[i],xm[i]],[y[i],ym[i]], [z_xy, 0] , color = 'b', alpha = 0.5)
-                    ax.plot([u[i],um[i]],[v[i],vm[i]], [z_m - z_uv, z_m], color = 'b', alpha = 0.5)
-                    
-                    j = 0
-                temp_norm = norm_3d(xm[i], ym[i], 0, um[i], vm[i], z_m)
-                point_dist_list.append(temp_norm)
-                j += 1
-                i += 1
-            
-            return np.array(point_dist_list)                  
-            
-        
-        else:
-            return np.array([])
-    except:
-        return np.array([])
-        pass
-
-
-def file_chk(filename):
-    if op.exists(filename) == True:
-        if filename.split('.')[-1] == "dxf":
-            return 1
-        else:
-            return 0
-    else:
-        return -1
-
-
-#Ver2.0　変更 Gコード出力形式
-def gen_g_code_line_str(x,y,u,v):
-    code_str = ""
-    if len(x) == len(y) == len(u) == len(v):
-        i = 0
-        while i < len(x):
-            code_str += "G01 X%s Y%s U%s V%s\n"%(x[i], y[i], u[i], v[i])
-            i += 1
-        return code_str
-
-
-#ver2.2 追加　円弧をスプライン化する機能の追加
-def arc_to_spline(arc_obj): #ezdxf arcオブジェクト
-    
-    radius = arc_obj.dxf.radius
-    x_center_point  = arc_obj.dxf.center[0]
-    y_center_point  = arc_obj.dxf.center[1]
-    start_angle     = arc_obj.dxf.start_angle
-    end_angle       = arc_obj.dxf.end_angle
-    
-    if end_angle < start_angle:
-        end_angle += 360
-        
-    num_point = int(np.abs(end_angle - start_angle)/10.0)
-    if num_point < 3:
-        num_point = 3
-    angle_array = np.radians(np.linspace(start_angle, end_angle, num_point))
-    x_p = radius * np.cos(angle_array) + x_center_point
-    y_p = radius * np.sin(angle_array) + y_center_point
-    
-    return np.array([x_p, y_p]).T
-
-
-#ver2.2　追加 ポリラインを点列化する機能の追加 
-def poly_to_spline(poly_obj):
-    point_x = np.array(poly_obj.get_points())[:,0]
-    point_y = np.array(poly_obj.get_points())[:,1]
-    new_point_x = [point_x[0]]
-    new_point_y = [point_y[0]]
-    
-    i = 1
-    while i < len(point_x)-1:
-        new_point_x.append(point_x[i])
-        new_point_x.append(point_x[i])
-        
-        new_point_y.append(point_y[i])
-        new_point_y.append(point_y[i])
-        
-        i += 1
-
-    new_point_x.append(point_x[-1])
-    new_point_y.append(point_y[-1])
-    
-    return np.array([new_point_x, new_point_y]).T
-
-
-def get_curdir():
-    # PyInstallerで実行されているかどうかをチェック
-    if getattr(sys, "frozen", False):
-        # EXEの実行ファイルのパスを取得
-        curdir = os.path.dirname(sys.executable)
-    else:
-        # スクリプトの実行ファイルのパスを取得
-        curdir =  os.path.dirname(os.path.abspath(__file__))
-    return curdir
-
+            traceback.print_exc()
+            x_data = [1,1000]
+            y_data = [0,0]
+            self.offset_function = generate_offset_function(x_data, y_data)
+            self.MESSEAGE = "溶け量ファイルの読み込み失敗\n"
 
 
 #======================================================================================================================================
 #            ボタンにより呼び出される関数
 #======================================================================================================================================
 #
-#   open_explorer(dxf_file　dxf_obj, tk.Entry entry, messeage_window messeage_window)
+#   open_file_explorer(entry)
+#   【引数】　entry
+#   【戻り値】　なし
+#   【機能】 エクスプローラーを使ってファイルパスを指定し、パスをEntryにセットする。
+#
+#   load_config(config, config_entry, dlEntry, CutSpeedEntry, XYDistEntry, UVDistEntry, WorkLengthEntry, MachDistEntry, MessageWindow)
+#   【引数】　config, config_entry, dlEntry, CutSpeedEntry, XYDistEntry, UVDistEntry, WorkLengthEntry, MachDistEntry, MessageWindow
+#   【戻り値】　なし
+#   【機能】 open_file_explorerを用いて、config_entryにconfigファイルのパスを設定する
+#           configクラスのload_configメソッドを使用して、configファイルのパスを読みこみ、configオブジェクトの値を更新する
+#           dlEntry, CutSpeedEntry, XYDistEntry, UVDistEntry, WorkLengthEntry, MachDistEntryの値を、configオブジェクトの値に更新する
+#           MessageWindowにconfig.load_configの結果およびGコードの書き出しを出力する
+#
+#   load_offset_func(config, offset_func_entry, MessageWindow)
+#   【引数】　config, offset_func_entry, MessageWindow
+#   【戻り値】　なし
+#   【機能】 open_file_explorerを用いて、offset_func_entryに溶け量ファイルのパスを設定する
+#           configクラスのload_offset_funcメソッドを使用して、溶け量ファイルのパスを読みこみ、configオブジェクトのoffset_functionのメンバーを更新する
+#           MessageWindowにconfig.load_offset_funcの結果を出力する
+# 
+#   open_dxf_explorer(dxf_obj, entry, messeage_window)
 #   【引数】　dxf_obj, entry, messeage_window
 #   【戻り値】　なし
 #   【機能】 エクスプローラーを使ってファイルパスを読みこむ。パスをEntryにセットしたうえで、load_fileによりファイルを読み込む。
@@ -1317,7 +237,12 @@ def get_curdir():
 #   【引数】 dxf_obj, messeage_window
 #   【戻り値】　なし
 #   【機能】 dxf_obj.Change_OffsetDirをコールし，選択したラインのオフセット方向を入れ替える．入れ替え結果をmesseage_windowに表示する．
-#        
+#   
+#   Merge_line(dxf_obj,  messeage_window)
+#   【引数】　dxf_obj,  messeage_window
+#   【戻り値】　なし
+#   【機能】 テーブルで選択された２本のラインを結合する。後に選択した方のラインは削除する
+#     
 #   Set_OffsetDist(dxf_file　dxf_obj0, dxf_file　dxf_obj1, tk.Entry entry, messeage_window messeage_window)
 #   【引数】　dxf_obj0, dxf_obj1, entry, messeage_window
 #   【戻り値】　なし
@@ -1337,6 +262,31 @@ def get_curdir():
 #   【引数】　dxf_obj, messeage_window
 #   【戻り値】　なし
 #   【機能】 dxf_obj.reverse_allをコールし，カット順を逆転させる．結果をmesseage_windowに表示する．
+#
+#   Replace_G01_code(g_code_str, X_str, Y_str, U_str, V_str)
+#   【引数】g_code_str, X_str, Y_str, U_str, V_str
+#   【戻り値】g_code_str
+#   【機能】g_code_strのX,Y,U,Vの座標文字をX_str, Y_str, U_str, V_strで指定されるものに置換する
+#
+#   make_offset_path(x_array, y_array, u_array, v_array, Z_XY, Z_UV, Z_Mach)
+#   【引数】x_array, y_array, u_array, v_array, Z_XY, Z_UV, Z_Mach
+#   【戻り値】new_x, new_y, new_u, new_v
+#   【機能】ワーク上のXY, UV座標点列（x_array, y_array, u_array, v_array）から、マシン駆動面上の座標点列を作成し、出力する
+#
+#   get_offset_and_cut_speed(length_XY, length_UV, Z_XY, Z_UV, Z_Mach, CutSpeed, offset_function)
+#   【引数】length_XY, length_UV, Z_XY, Z_UV, Z_Mach, CutSpeed, offset_function
+#   【戻り値】offset_XY_Work, offset_UV_Work, cutspeed_XY_Work, cutspeed_UV_Work, cutspeed_XY_Mech, cutspeed_UV_Mech
+#   【機能】(1) XY断面の線長とUV断面の線長から、ワークの中間点での線長を算出する
+#          (2) ワークの中間点でのカット速度が、CutSpeedとするとして、(1)の線長比から、XY、UV断面でのカット速度(cutspeed_XY_Work, cutspeed_UV_Work)を算出する
+#          (3) offset_functionを用いて、XY、UV断面のカット速度における溶け量を推定し、これをキャンセルするようにオフセット量（offset_XY_Work, offset_UV_Work）を設定する。
+#              ※マシン駆動面上での座標点列作成は、その他の線郡と同様に、gen_g_code側にて行う
+#          (4) ワーク端面（XY面, UV面）とマシン駆動面との距離（Z_XY, Z_UV, Z_Mach）から、cutspeed_XY_Work, cutspeed_UV_Workを実現するマシン駆動面速度（cutspeed_XY_Mech, cutspeed_UV_Mech）を算出する
+#
+#   Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, entry_MachDist, entry_CS, offset_function, messeage_window)
+#   【引数】dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, entry_MachDist, entry_CS, offset_function, messeage_window
+#   【戻り値】なし
+#   【機能】dxf_obj0, dxf_obj1の対応する線から、XY断面の線長、UV断面の線長を取得し、get_offset_and_cut_speedにより線ごとにオフセット距離、カット速度を取得する
+#          取得したオフセット距離、カット速度を線（line Object）に設定し、オフセット距離を更新する
 #
 #   gen_g_code(dxf_file　dxf_obj0, dxf_file　dxf_obj1, tk.Entry entry_ox, tk.Entry entry_oy, tk.Entry entry_ex, tk.Entry entry_ey, tk.Entry entry_CS, tk.Entry entry_dl, str header, messeage_window messeage_window)
 #   【引数】 dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry_CS, entry_dl, header, messeage_window
@@ -1365,14 +315,63 @@ def get_curdir():
 #   【戻り値】 なし
 #   【機能】 メインウィンドウが閉じられた際，インスタンスを破棄する．
 #
-        
+#   offset_origin(dxf_obj0, dxf_obj1, entry_offset_ox, entry_offset_oy, messeage_window)
+#   【引数】 dxf_obj0, dxf_obj1, entry_offset_ox, entry_offset_oy, messeage_window
+#   【戻り値】 なし
+#   【機能】 entry_offset_ox, entry_offset_oyから原点のオフセット量を取得し、dxf_obj0、dxf_obj1のoffset_originメソッドを使用して、すべての線の座標を原点のオフセット量だけ移動する
 
-def open_explorer(dxf_obj, entry, messeage_window):
+def open_file_explorer(entry):
     fTyp = [("","*")]
     iDir = get_curdir()
-    selected_file_path = tk.filedialog.askopenfilename(filetypes = fTyp,initialdir = iDir)
+    data = tk.filedialog.askopenfilename(filetypes = fTyp,initialdir = iDir)
     entry.delete(0,tk.END)
-    entry.insert(tk.END, selected_file_path)
+    entry.insert(tk.END, data)
+
+
+def load_config(config, config_entry, dlEntry, CutSpeedEntry, XYDistEntry, UVDistEntry, WorkLengthEntry, MachDistEntry, MessageWindow):
+    open_file_explorer(config_entry)
+    
+    config_path = config_entry.get()
+    config.load_config(config_path)
+    
+    #【分割距離入力コンソール】 
+    dlEntry.delete(0,tk.END)
+    dlEntry.insert(tk.END, config.DELTA_LENGTH) 
+
+    #【カット速度入力コンソール】   
+    CutSpeedEntry.delete(0,tk.END)
+    CutSpeedEntry.insert(tk.END, config.CUTSPEED) 
+
+    #【カット面距離入力コンソール1】   
+    XYDistEntry.delete(0,tk.END)
+    XYDistEntry.insert(tk.END, config.XY_DIST)
+
+    #【カット面距離入力コンソール2】   
+    UVDistEntry.delete(0,tk.END)
+    UVDistEntry.insert(tk.END, config.UV_DIST)
+
+    #【XY-UV面距離入力コンソール】 
+    WorkLengthEntry.delete(0,tk.END)
+    WorkLengthEntry.insert(tk.END, config.WORK_LENGTH)
+
+    #【マシン距離入力コンソール】   
+    MachDistEntry.delete(0,tk.END)
+    MachDistEntry.insert(tk.END, config.MACH_DIST)  
+        
+    MessageWindow.set_messeage(config.MESSEAGE)
+    MessageWindow.set_messeage("Gコードの書き出しは「%s」です。\n"%config.HEADER)
+
+
+def load_offset_func(config, offset_func_entry, MessageWindow):
+    open_file_explorer(offset_func_entry)
+    offset_file_path = offset_func_entry.get()
+    config.load_offset_func(offset_file_path)
+    
+    MessageWindow.set_messeage(config.MESSEAGE)
+
+
+def open_dxf_explorer(dxf_obj, entry, messeage_window):
+    open_file_explorer(entry)
     load_file(dxf_obj, entry, messeage_window)
 
 
@@ -1425,18 +424,17 @@ def Set_OffsetDist(dxf_obj0, dxf_obj1, entry, messeage_window):
         dxf_obj1.set_offset_dist(OffsetDist)
         messeage_window.set_messeage("オフセット距離を%sに設定しました。\n"%OffsetDist)
     except:
+        traceback.print_exc()
         messeage_window.set_messeage("実数値を入力して下さい。\n")
         pass
 
 
 def Merge_line(dxf_obj, messeage_window):
-    selected_items = dxf_obj.Merge_Selected_line()
-    if len(selected_items) == 1:
+    error, selected_items = dxf_obj.Merge_Selected_line()
+    if error == 0:
         messeage_window.set_messeage("%s番目のラインに結合しました。\n"%item2num(selected_items[0]))
-    elif len(selected_items) == 2:
+    elif error == 2:
         messeage_window.set_messeage("２つの近接したラインを選択して下さい。ラインの端点間の距離が遠すぎます。\n")
-    elif len(selected_items) == 0:
-        messeage_window.set_messeage("２つのラインを選択してください。1本しかラインが選択されていません。\n")
     else:
         messeage_window.set_messeage("２つのラインを選択して下さい。%s本のラインが選択されています。\n"%len(selected_items))
         
@@ -1457,6 +455,7 @@ def AutoLineSort(dxf_obj0, dxf_obj1, entry_x, entry_y, messeage_window):
         dxf_obj1.SortLine(ox, oy)
         messeage_window.set_messeage("自動整列しました。\n")
     except:
+        traceback.print_exc()
         messeage_window.set_messeage("実数値を入力して下さい。\n")
         pass
 
@@ -1524,8 +523,106 @@ def make_offset_path(x_array, y_array, u_array, v_array, Z_XY, Z_UV, Z_Mach):
     return new_x, new_y, new_u, new_v
 
 
+def get_offset_and_cut_speed(length_XY, length_UV, Z_XY, Z_UV, Z_Mach, CutSpeed, offset_function):
+    
+    Z_work_mid = (Z_Mach - Z_XY - Z_UV)/2.0 + Z_XY
+    L_XY_work = np.abs(Z_work_mid - Z_XY)
+    L_UV_work = np.abs((Z_Mach - Z_UV) - Z_work_mid)
+    L_XY_Mach = np.abs(Z_work_mid)
+    L_UV_Mach = np.abs(Z_Mach - Z_work_mid)
+    
+    if L_XY_work == 0 or L_UV_work == 0:
+        k_xy = 1.0
+        k_uv = 1.0        
+    else:
+        k_xy = L_XY_Mach/ L_XY_work
+        k_uv = L_UV_Mach/ L_UV_work
+           
+    length_mid = (length_XY + length_UV)/ 2.0
+    dl_XY = length_XY - length_mid
+    dl_UV = length_UV - length_mid
+    
+    length_XY_Mech = k_xy*dl_XY + length_mid
+    length_UV_Mech = k_uv*dl_UV + length_mid
+    
+    length_ratio_XY_Mech = length_XY_Mech/length_mid
+    length_ratio_UV_Mech = length_UV_Mech/length_mid
+    length_ratio_XY_Work = length_XY/length_mid
+    length_ratio_UV_Work = length_UV/length_mid
+
+    cutspeed_XY_Mech = CutSpeed*length_ratio_XY_Mech
+    cutspeed_UV_Mech = CutSpeed*length_ratio_UV_Mech
+    cutspeed_XY_Work = CutSpeed*length_ratio_XY_Work
+    cutspeed_UV_Work = CutSpeed*length_ratio_UV_Work
+    
+    offset_XY_Mech = offset_function(cutspeed_XY_Mech)
+    offset_UV_Mech = offset_function(cutspeed_UV_Mech)
+    offset_XY_Work = offset_function(cutspeed_XY_Work)
+    offset_UV_Work = offset_function(cutspeed_UV_Work)
+    offset_mid = offset_function(CutSpeed)
+    
+    #for debug
+    """   
+    #plt.plot([0, Z_XY, Z_work_mid, Z_Mach-Z_UV, Z_Mach],[length_XY_Mech, length_XY, length_mid, length_UV, length_UV_Mech], "-o")
+    #plt.plot([0, Z_XY, Z_work_mid, Z_Mach-Z_UV, Z_Mach],[cutspeed_XY_Mech, cutspeed_XY_Work, CutSpeed, cutspeed_UV_Work, cutspeed_UV_Mech], "-o")
+    #plt.plot([0, Z_XY, Z_work_mid, Z_Mach-Z_UV, Z_Mach],[offset_XY_Mech, offset_XY_Work, offset_mid, offset_UV_Work, offset_UV_Mech], "-o")    
+    """
+    
+    return offset_XY_Work, offset_UV_Work, cutspeed_XY_Work, cutspeed_UV_Work, cutspeed_XY_Mech, cutspeed_UV_Mech
+
+
+def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, entry_MachDist, entry_CS, offset_function, messeage_window):
+    entry_XYDist_value = entry_XYDist.get()
+    entry_UVDist_value = entry_UVDist.get()
+    entry_MachDist_value = entry_MachDist.get()
+    entry_CS_value = entry_CS.get()    
+
+    # 削除済みの線は、インデックスが-1となっているので、有効な線（インデックスが0以上の線）のみを抽出する
+    a_line_num_list0 = np.array(np.array(dxf_obj0.line_num_list.copy())[np.where(np.array(dxf_obj0.line_num_list.copy()) >= 0)])
+    a_line_num_list1 = np.array(np.array(dxf_obj1.line_num_list.copy())[np.where(np.array(dxf_obj1.line_num_list.copy()) >= 0)])
+    
+    try:
+        Z_XY = float(entry_XYDist_value)
+        Z_UV = float(entry_UVDist_value)
+        Z_Mach = float(entry_MachDist_value)
+        CutSpeed = float(entry_CS_value)
+                    
+        if len(a_line_num_list0) == len(a_line_num_list1):
+            i = 0
+            while i < len(a_line_num_list0):
+                line_num0 = a_line_num_list0[i]
+                line_num1 = a_line_num_list1[i]
+                
+                line0 = dxf_obj0.line_list[line_num0]
+                line1 = dxf_obj1.line_list[line_num1]
+                
+                line0_length = line0.get_length()
+                line1_length = line1.get_length()
+                
+                offset_XY_Work, offset_UV_Work, cutspeed_XY_Work, cutspeed_UV_Work, cutspeed_XY_Mech, cutspeed_UV_Mech = \
+                    get_offset_and_cut_speed(line0_length, line1_length, Z_XY, Z_UV, Z_Mach, \
+                                             CutSpeed, offset_function)
+                line0.set_offset_dist(offset_XY_Work)
+                line1.set_offset_dist(offset_UV_Work)
+                
+                line0.set_cutspeed(cutspeed_XY_Work, cutspeed_XY_Mech)
+                line1.set_cutspeed(cutspeed_UV_Work, cutspeed_UV_Mech)
+                
+                i += 1
+            dxf_obj0.table_reload()
+            dxf_obj1.table_reload()
+            dxf_obj0.plot()
+            dxf_obj1.plot()
+            messeage_window.set_messeage("オフセット値を更新しました。\n")
+        else:
+            messeage_window.set_messeage("XY座標とUV座標でライン数が一致しません。XY：%s本，UV：%s本\n"%(len(a_line_num_list0),len(a_line_num_list1)))
+
+    except:
+        traceback.print_exc()
+        messeage_window.set_messeage("入力値に誤りがあります。オフセット値更新を中止しました。\n")
+
 # Ver2.1変更　引数追加，距離別指定可能
-def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry_XYDist, entry_UVDist, entry_WorkLength, entry_MachDist, entry_CS, entry_dl, header, messeage_window, X_str, Y_str, U_str, V_str):
+def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry_XYDist, entry_UVDist, entry_WorkLength, entry_MachDist, entry_CS, entry_dl, messeage_window, config):
     entry_ox_value = entry_ox.get()
     entry_oy_value = entry_oy.get()
     entry_ex_value = entry_ex.get()
@@ -1538,7 +635,7 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
     entry_CS_value = entry_CS.get()
     
     code_line_list = []
-    code_line_list.append(header)
+    code_line_list.append(config.HEADER)
     
     try:
         temp_error_flg = False
@@ -1554,6 +651,7 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
         dl = float(entry_dl_value)
         CS = float(entry_CS_value)
 
+
         if np.abs(Z_XY + Z_UV + Z_Work - Z_Mach) > np.abs(Z_ERROR):
             if (Z_XY + Z_UV + Z_Work - Z_Mach) > 0.0:
                 messeage_window.set_messeage("【警告】\nXY面距離，UV面距離，加工物サイズの和が，駆動面距離に対して%s mm 長いです。（許容誤差：%s mm）\n入力値を確認してください。\n\n"%((Z_XY + Z_UV + Z_Work - Z_Mach), np.abs(Z_ERROR)))
@@ -1567,16 +665,22 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
         if Z_UV > Z_Mach:
             messeage_window.set_messeage("【警告】\nUV面距離が駆動面距離に対して%s mm 長いです。\n入力値を確認してください。\n\n"%(Z_UV - Z_Mach))
             temp_error_flg = True
-
        
         if dl < 0.1:
             dl = 0.1
         #Ver2.0　変更 Gコード出力形式
-        code_line_list.append("F%s\n"%CS)
-        code_line_list.append("G01 X%f Y%f U%f V%f\n"%(ox, oy, ox, oy))
+        code_line_list.append("G01 X%f Y%f U%f V%f F%s\n"%(ox, oy, ox, oy, CS))
         
         a_line_num_list0 = np.array(np.array(dxf_obj0.line_num_list.copy())[np.where(np.array(dxf_obj0.line_num_list.copy()) >= 0)])
         a_line_num_list1 = np.array(np.array(dxf_obj1.line_num_list.copy())[np.where(np.array(dxf_obj1.line_num_list.copy()) >= 0)])
+
+        x_array = np.array([ox])
+        y_array = np.array([oy])
+        u_array = np.array([ox])
+        v_array = np.array([oy])
+        
+        xy_offset_dist = []
+        uv_offset_dist = []
         
         if temp_error_flg == False:
             if len(a_line_num_list0) == len(a_line_num_list1):
@@ -1590,6 +694,9 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
                     
                     line0_length = line0.get_length()
                     line1_length = line1.get_length()
+    
+                    xy_offset_dist.append(line0.offset_dist)
+                    uv_offset_dist.append(line1.offset_dist)
                     
                     N = int(max(line0_length, line1_length)/ dl)
                     if N < 2:
@@ -1597,11 +704,40 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
                     
                     x, y = generate_arc_length_points(line0, N)
                     u, v = generate_arc_length_points(line1, N)
+                    cut_speed = max(line0.cutspeed_mech, line1.cutspeed_mech)
+                    
+                    if (i != 0) and (i != len(a_line_num_list0)):
+                        # 始点と終点以外は、フィレット補完する
+                        l0_x = [x_array[-2], x_array[-1]]
+                        l0_y = [y_array[-2], y_array[-1]]
+                        l1_x = [x[0], x[1]]
+                        l1_y = [y[0], y[1]]
+                        
+                        l0_u = [u_array[-2], u_array[-1]]
+                        l0_v = [v_array[-2], v_array[-1]]
+                        l1_u = [u[0], u[1]]
+                        l1_v = [v[0], v[1]]   
+                        
+                        x_f, y_f = generate_offset_interporate_point(l0_x, l0_y, l1_x, l1_y, xy_offset_dist[-1], xy_offset_dist[-2])
+                        u_f, v_f = generate_offset_interporate_point(l0_u, l0_v, l1_u, l1_v, uv_offset_dist[-1], uv_offset_dist[-2])        
+                        
+                        #オフセット面の作成
+                        x_m_f, y_m_f, u_m_f, v_m_f = make_offset_path(x_f, y_f, u_f, v_f, Z_XY, Z_UV, Z_Mach)
+                        code_line_list.append(gen_g_code_line_str(x_m_f, y_m_f, u_m_f, v_m_f, cut_speed))
+                    
+                        x_array = np.concatenate([x_array, x_f], 0)
+                        y_array = np.concatenate([y_array, y_f], 0)
+                        u_array = np.concatenate([u_array, u_f], 0)
+                        v_array = np.concatenate([v_array, v_f], 0)      
                     
                     #オフセット面の作成
                     x_m, y_m, u_m, v_m = make_offset_path(x, y, u, v, Z_XY, Z_UV, Z_Mach)
+                    code_line_list.append(gen_g_code_line_str(x_m, y_m, u_m, v_m, cut_speed))
                     
-                    code_line_list.append(gen_g_code_line_str(x_m, y_m, u_m, v_m))
+                    x_array = np.concatenate([x_array, x], 0)
+                    y_array = np.concatenate([y_array, y], 0)
+                    u_array = np.concatenate([u_array, u], 0)
+                    v_array = np.concatenate([v_array, v], 0)
                     
                     i += 1
                 #Ver2.0　変更 Gコード出力形式
@@ -1609,7 +745,7 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
                 
                 replaced_code_line_list = []
                 for g_code_str in code_line_list:
-                    replaced_code_line_list.append(Replace_G01_code(g_code_str, X_str, Y_str, U_str, V_str))
+                    replaced_code_line_list.append(Replace_G01_code(g_code_str, config.X_str, config.Y_str, config.U_str, config.V_str))
                 
                 line = ""
                 for elem in replaced_code_line_list:
@@ -1637,12 +773,14 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
         if temp_error_flg == True:
             messeage_window.set_messeage("入力値に誤りがあります。Gコード生成を中止しました。\n\n")
     except:
+        traceback.print_exc()
         messeage_window.set_messeage("Gコード生成途中でエラーが発生しました。\n\n")
         pass
 
     
 #Ver2.1変更　引数追加，距離別指定可能
-def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry_XYDist, entry_UVDist, entry_WorkLength, entry_MachDist, entry_dl, messeage_window):
+def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
+             entry_XYDist, entry_UVDist, entry_WorkLength, entry_MachDist, entry_dl, messeage_window):
         
     PLOT_PER_POINT = 2
     
@@ -1690,6 +828,9 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, e
         u_array = np.array([ox])
         v_array = np.array([oy])
         
+        xy_offset_dist = []
+        uv_offset_dist = []
+        
         if dl < 0.1:
             dl = 0.1
         
@@ -1708,6 +849,9 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, e
                 line0_length = line0.get_length()
                 line1_length = line1.get_length()
                 
+                xy_offset_dist.append(line0.offset_dist)
+                uv_offset_dist.append(line1.offset_dist)
+                
                 N = int(max(line0_length, line1_length)/ dl)
                 if N < 2:
                     N = 2
@@ -1715,21 +859,42 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, e
                 x, y = generate_arc_length_points(line0, N)
                 u, v = generate_arc_length_points(line1, N)
                 
-                norm_line2line0 = norm(x_array[-1], y_array[-1], x[0], y[0])
-                norm_line2line1 = norm(u_array[-1], v_array[-1], u[0], v[0])
-                
-                if norm_line2line0 > dl*PLOT_PER_POINT  or  norm_line2line1 > dl*PLOT_PER_POINT:
-                    N_interp_line2line = int(max(norm_line2line0, norm_line2line1) / dl / PLOT_PER_POINT)
+                if (i != 0) and (i != len(a_line_num_list0)):
+                    # 始点と終点以外は、フィレット補完する
+                    l0_x = [x_array[-2], x_array[-1]]
+                    l0_y = [y_array[-2], y_array[-1]]
+                    l1_x = [x[0], x[1]]
+                    l1_y = [y[0], y[1]]
                     
-                    if N_interp_line2line < 2:
-                        N_interp_line2line = 2
+                    l0_u = [u_array[-2], u_array[-1]]
+                    l0_v = [v_array[-2], v_array[-1]]
+                    l1_u = [u[0], u[1]]
+                    l1_v = [v[0], v[1]]   
                     
-                    xp, yp = generate_arc_length_points4line(x_array[-1], y_array[-1], x[0], y[0], N_interp_line2line)
-                    up, vp = generate_arc_length_points4line(u_array[-1], v_array[-1], u[0], v[0], N_interp_line2line)
-                    x_array = np.concatenate([x_array, xp], 0)
-                    y_array = np.concatenate([y_array, yp], 0)
-                    u_array = np.concatenate([u_array, up], 0)
-                    v_array = np.concatenate([v_array, vp], 0)
+                    x_f, y_f = generate_offset_interporate_point(l0_x, l0_y, l1_x, l1_y, xy_offset_dist[-1], xy_offset_dist[-2])
+                    u_f, v_f = generate_offset_interporate_point(l0_u, l0_v, l1_u, l1_v, uv_offset_dist[-1], uv_offset_dist[-2])
+
+                    x_array = np.concatenate([x_array, x_f], 0)
+                    y_array = np.concatenate([y_array, y_f], 0)
+                    u_array = np.concatenate([u_array, u_f], 0)
+                    v_array = np.concatenate([v_array, v_f], 0)                    
+                    
+                else:
+                    norm_line2line0 = norm(x_array[-1], y_array[-1], x[0], y[0])
+                    norm_line2line1 = norm(u_array[-1], v_array[-1], u[0], v[0])
+                    
+                    if norm_line2line0 > dl*PLOT_PER_POINT  or  norm_line2line1 > dl*PLOT_PER_POINT:
+                        N_interp_line2line = int(max(norm_line2line0, norm_line2line1) / dl / PLOT_PER_POINT)
+                        
+                        if N_interp_line2line < 2:
+                            N_interp_line2line = 2
+                        
+                        xp, yp = generate_arc_length_points4line(x_array[-1], y_array[-1], x[0], y[0], N_interp_line2line)
+                        up, vp = generate_arc_length_points4line(u_array[-1], v_array[-1], u[0], v[0], N_interp_line2line)
+                        x_array = np.concatenate([x_array, xp], 0)
+                        y_array = np.concatenate([y_array, yp], 0)
+                        u_array = np.concatenate([u_array, up], 0)
+                        v_array = np.concatenate([v_array, vp], 0)
                     
                 
                 x_array = np.concatenate([x_array, x], 0)
@@ -1797,6 +962,7 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, e
             messeage_window.set_messeage("XY座標とUV座標でライン数が一致しません。XY：%s本，UV：%s本\n"%(len(a_line_num_list0), len(a_line_num_list1)))
         
     except:
+        traceback.print_exc()
         messeage_window.set_messeage("パスチェック中にエラーが発生しました。\n")
         pass      
 
@@ -1805,6 +971,20 @@ def _destroyWindow():
     root.quit()
     root.destroy()
 
+
+def offset_origin(dxf_obj0, dxf_obj1, entry_offset_ox, entry_offset_oy, messeage_window):
+    offset_ox = entry_offset_ox.get()
+    offset_oy = entry_offset_oy.get()
+    
+    try :
+        offset_ox = float(offset_ox)
+        offset_oy = float(offset_oy)
+        dxf_obj0.offset_origin(offset_ox, offset_oy)
+        dxf_obj1.offset_origin(offset_ox, offset_oy)
+        messeage_window.set_messeage("XY,UV座標をX:%s, Y:%sオフセットしました。\n"%(offset_ox, offset_oy))
+    except:
+        traceback.print_exc()
+        messeage_window.set_messeage("オフセット中にエラーが発生しました\n")
 
 
 #======================================================================================================================================
@@ -1818,52 +998,11 @@ if __name__ == "__main__":
     #======================================================================================================================================
     #            config.csvファイルの読込
     #======================================================================================================================================
-    try:
-        curdir =  get_curdir()
-        file = np.genfromtxt("%s\\config.csv"%curdir, delimiter = ",", skip_header = 1, dtype = str)
-        data = file[:,2]
-        FILENAME_XY = data[0]
-        FILENAME_UV = data[1]
-        OX = float(data[2])
-        OY = float(data[3])
-        EX = float(data[4])
-        EY = float(data[5])
-        DELTA_LENGTH = float(data[6])
-        OFFSET_DIST = float(data[7])
-        CUTSPEED = float(data[8])
-        XY_DIST = float(data[9])
-        UV_DIST = float(data[10])
-        WORK_LENGTH = float(data[11])
-        MACH_DIST = float(data[12])
-        HEADER = data[13].replace("\\n", "\n")
-        X_str = str(data[14])
-        Y_str = str(data[15])
-        U_str = str(data[16])
-        V_str = str(data[17])
-        MESSEAGE = "config.csvを読み込みました。\n"
-        
-    except:
-        FILENAME_XY = "ファイル名を入力して下さい。"
-        FILENAME_UV = "ファイル名を入力して下さい。"
-        OX = 0.0
-        OY = 0.0
-        EX = 0.0
-        EY = 0.0
-        DELTA_LENGTH = 1.0
-        OFFSET_DIST = 0.0
-        CUTSPEED = 200
-        XY_DIST = 25.0
-        UV_DIST = 50.0
-        WORK_LENGTH = 425
-        MACH_DIST = 500
-        HEADER = "T1\nG17 G49 G54 G80 G90 G94 G21 G40 G64\n"
-        X_str = 'X'
-        Y_str = 'Y'
-        U_str = 'Z'
-        V_str = 'A'
-        MESSEAGE = "config.csvを読み込めませんでした。\n"
-        pass
-    
+
+    curdir =  get_curdir()
+    config = config()
+    config.load_config("%s\\config.csv"%curdir)
+    config.load_offset_func("%s\\offset_function.csv"%curdir)
        
     #======================================================================================================================================
     #            rootインスタンスの生成
@@ -1937,12 +1076,9 @@ if __name__ == "__main__":
     #Ver2.0 位置変更(下に40pix)
     #【メッセージウィンドウ】
     MessageWindow = messeage_window(root, width=110, height = 9)
-    MessageWindow.place(x = 852, y = 805)
-    MessageWindow.set_messeage(MESSEAGE)
-    MessageWindow.set_messeage("Gコードの書き出しは「%s」です。\n"%HEADER)
+    MessageWindow.place(x = 852, y = 815)
     MessageWindowLabel = tk.Label(root, text="メッセージウィンドウ",font=("",12))
-    MessageWindowLabel.place(x = 860, y = 780)
-
+    MessageWindowLabel.place(x = 860, y = 790)
 
 
     #======================================================================================================================================
@@ -1951,105 +1087,126 @@ if __name__ == "__main__":
 
     #【X-Y用 dxfファイル名の入力コンソール】
     FileNameEntry0 = tk.Entry(root, width=50) 
-    FileNameEntry0.insert(tk.END, FILENAME_XY) 
+    FileNameEntry0.insert(tk.END, config.FILENAME_XY) 
     FileNameEntry0.place(x = 852, y = 35)
     
     
     #【U-V用 dxfファイル名の入力コンソール】
     FileNameEntry1 = tk.Entry(root, width=50) 
-    FileNameEntry1.insert(tk.END, FILENAME_UV)   
+    FileNameEntry1.insert(tk.END, config.FILENAME_UV)   
     FileNameEntry1.place(x = 1252, y = 35) 
+
+
+    #【configファイル名の入力コンソール】
+    ConfigFileLabel0 = tk.Label(root, text="設定ファイル",font=("",15))
+    ConfigFileLabel0.place(x = 850, y = 510)
+    ConfigFileEntry = tk.Entry(root, width=50) 
+    ConfigFileEntry.insert(tk.END, "config.csv") 
+    ConfigFileEntry.place(x = 1000, y = 510)
+    
+    
+    #【オフセット関数ファイル名の入力コンソール】
+    OffsetFuncLabel0 = tk.Label(root, text="溶け量ファイル",font=("",15))
+    OffsetFuncLabel0.place(x = 850, y = 540)
+    OffsetFuncEntry = tk.Entry(root, width=50) 
+    OffsetFuncEntry.insert(tk.END, "offset_function.csv")   
+    OffsetFuncEntry.place(x = 1000, y = 540) 
+
+
+    #【原点オフセット入力コンソール】
+    OriginOffsetLabel0 = tk.Label(root, text="図面オフセット",font=("",15))
+    OriginOffsetLabel0.place(x = 850, y = 580)
+    OriginOffsetLabel1 = tk.Label(root, text="X：",font=("",15))
+    OriginOffsetLabel1.place(x = 1000, y = 580)
+    OriginOffsetLabel2 = tk.Label(root, text="Y：",font=("",15))
+    OriginOffsetLabel2.place(x = 1120, y = 580)
+    OriginOffsetEntry_X = tk.Entry(root, width=8,font=("",15)) 
+    OriginOffsetEntry_X.insert(tk.END, 0)       
+    OriginOffsetEntry_X.place(x = 1030, y = 580)   
+    OriginOffsetEntry_Y = tk.Entry(root, width=8,font=("",15))     
+    OriginOffsetEntry_Y.insert(tk.END, 0)
+    OriginOffsetEntry_Y.place(x = 1150, y = 580)    
 
 
     #【切り出し原点入力コンソール】
     AutoAlignmentLabel0 = tk.Label(root, text="切り出し原点",font=("",15))
-    AutoAlignmentLabel0.place(x = 850, y = 510)
+    AutoAlignmentLabel0.place(x = 850, y = 620)
     AutoAlignmentLabel1 = tk.Label(root, text="X：",font=("",15))
-    AutoAlignmentLabel1.place(x = 1000, y = 510)
+    AutoAlignmentLabel1.place(x = 1000, y = 620)
     AutoAlignmentLabel2 = tk.Label(root, text="Y：",font=("",15))
-    AutoAlignmentLabel2.place(x = 1120, y = 510)
+    AutoAlignmentLabel2.place(x = 1120, y = 620)
     AutoAlignmentEntry_X = tk.Entry(root, width=8,font=("",15)) 
-    AutoAlignmentEntry_X.insert(tk.END, OX)       
-    AutoAlignmentEntry_X.place(x = 1030, y = 510)   
+    AutoAlignmentEntry_X.insert(tk.END, config.OX)       
+    AutoAlignmentEntry_X.place(x = 1030, y = 620)   
     AutoAlignmentEntry_Y = tk.Entry(root, width=8,font=("",15))     
-    AutoAlignmentEntry_Y.insert(tk.END, OY)
-    AutoAlignmentEntry_Y.place(x = 1150, y = 510)    
+    AutoAlignmentEntry_Y.insert(tk.END, config.OY)
+    AutoAlignmentEntry_Y.place(x = 1150, y = 620)    
 
 
     #【切り出し終点入力コンソール】
     CutEndLabel0 = tk.Label(root, text="切り出し終点",font=("",15))
-    CutEndLabel0.place(x = 850, y = 540)
+    CutEndLabel0.place(x = 850, y = 650)
     CutEndLabel1 = tk.Label(root, text="X：",font=("",15))
-    CutEndLabel1.place(x = 1000, y = 540)
+    CutEndLabel1.place(x = 1000, y = 650)
     CutEndLabel2 = tk.Label(root, text="Y：",font=("",15))
-    CutEndLabel2.place(x = 1120, y = 540)
+    CutEndLabel2.place(x = 1120, y = 650)
     CutEndEntry_X = tk.Entry(root, width=8,font=("",15)) 
-    CutEndEntry_X.insert(tk.END, EX)       
-    CutEndEntry_X.place(x = 1030, y = 540)   
+    CutEndEntry_X.insert(tk.END, config.EX)       
+    CutEndEntry_X.place(x = 1030, y = 650)   
     CutEndEntry_Y = tk.Entry(root, width=8,font=("",15))     
-    CutEndEntry_Y.insert(tk.END, EY)
-    CutEndEntry_Y.place(x = 1150, y = 540) 
+    CutEndEntry_Y.insert(tk.END, config.EY)
+    CutEndEntry_Y.place(x = 1150, y = 650) 
 
 
     #【分割距離入力コンソール】
     dlLabel = tk.Label(root, text="分割距離[mm]",font=("",15))
-    dlLabel.place(x = 850, y = 580)
+    dlLabel.place(x = 1150, y = 690)
     dlEntry = tk.Entry(root, width=8,font=("",15))     
-    dlEntry.insert(tk.END, DELTA_LENGTH)
-    dlEntry.place(x = 1030, y = 580)       
-
-
-    #【オフセット距離入力コンソール】    
-    OffsetLabel = tk.Label(root, text="オフセット距離[mm]",font=("",15))
-    OffsetLabel.place(x = 850, y = 620)
-    OffsetEntry = tk.Entry(root, width=8,font=("",15))     
-    OffsetEntry.insert(tk.END, OFFSET_DIST)
-    OffsetEntry.place(x = 1030, y = 620)    
+    dlEntry.insert(tk.END, config.DELTA_LENGTH)
+    dlEntry.place(x = 1330, y = 690)       
 
 
     #【カット速度入力コンソール】   
     CutSpeedLabel = tk.Label(root, text="カット速度[mm/分]",font=("",15))
-    CutSpeedLabel.place(x = 850, y = 660)
+    CutSpeedLabel.place(x = 850, y = 690)
     CutSpeedEntry = tk.Entry(root, width=8,font=("",15))     
-    CutSpeedEntry.insert(tk.END, CUTSPEED)
-    CutSpeedEntry.place(x = 1030, y = 660)    
+    CutSpeedEntry.insert(tk.END, config.CUTSPEED)
+    CutSpeedEntry.place(x = 1030, y = 690)    
 
 
     # Ver2.1 変更
     #【カット面距離入力コンソール1】   
     XYDistLabel = tk.Label(root, text="XY面距離[mm]",font=("",15))
-    XYDistLabel.place(x = 850, y = 700)
+    XYDistLabel.place(x = 850, y = 720)
     XYDistEntry = tk.Entry(root, width=8,font=("",15))     
-    XYDistEntry.insert(tk.END, XY_DIST)
-    XYDistEntry.place(x = 1030, y = 700)  
+    XYDistEntry.insert(tk.END, config.XY_DIST)
+    XYDistEntry.place(x = 1030, y = 720)  
 
     # Ver2.1 追加
     #【カット面距離入力コンソール2】   
     UVDistLabel = tk.Label(root, text="UV面距離[mm]",font=("",15))
-    UVDistLabel.place(x = 1150, y = 700)
+    UVDistLabel.place(x = 1150, y = 720)
     UVDistEntry = tk.Entry(root, width=8,font=("",15))     
-    UVDistEntry.insert(tk.END, UV_DIST)
-    UVDistEntry.place(x = 1330, y = 700)  
+    UVDistEntry.insert(tk.END, config.UV_DIST)
+    UVDistEntry.place(x = 1330, y = 720)  
 
 
     #Ver2.1 追加 
     #【XY-UV面距離入力コンソール】   
     WorkLengthLabel = tk.Label(root, text="XY-UV面距離[mm]",font=("",15))
-    WorkLengthLabel.place(x = 850, y = 740)
+    WorkLengthLabel.place(x = 850, y = 750)
     WorkLengthEntry = tk.Entry(root, width=8,font=("",15))     
-    WorkLengthEntry.insert(tk.END, WORK_LENGTH)
-    WorkLengthEntry.place(x = 1030, y = 740)
+    WorkLengthEntry.insert(tk.END, config.WORK_LENGTH)
+    WorkLengthEntry.place(x = 1030, y = 750)
 
 
     #Ver2.1 位置変更 
     #【マシン距離入力コンソール】   
     MachDistLabel = tk.Label(root, text="駆動面距離[mm]",font=("",15))
-    MachDistLabel.place(x = 1150, y = 740)
+    MachDistLabel.place(x = 1150, y = 750)
     MachDistEntry = tk.Entry(root, width=8,font=("",15))     
-    MachDistEntry.insert(tk.END, MACH_DIST)
-    MachDistEntry.place(x = 1330, y = 740)  
-
-
+    MachDistEntry.insert(tk.END, config.MACH_DIST)
+    MachDistEntry.place(x = 1330, y = 750)  
 
 
     #======================================================================================================================================
@@ -2057,11 +1214,11 @@ if __name__ == "__main__":
     #======================================================================================================================================
 
     #【X-Y用 dxfファイル読込用のエクスプローラーを開くボタン】
-    LoadBtn0 = tk.Button(root, text="開く", command = lambda: open_explorer(dxf0, FileNameEntry0, MessageWindow))
+    LoadBtn0 = tk.Button(root, text="開く", command = lambda: open_dxf_explorer(dxf0, FileNameEntry0, MessageWindow))
     LoadBtn0.place(x=1160, y=30)  
 
     #【U-V用 dxfファイル読込用のエクスプローラーを開くボタン】   
-    LoadBtn1 = tk.Button(root, text="開く", command = lambda: open_explorer(dxf1, FileNameEntry1, MessageWindow))
+    LoadBtn1 = tk.Button(root, text="開く", command = lambda: open_dxf_explorer(dxf1, FileNameEntry1, MessageWindow))
     LoadBtn1.place(x=1560, y=30)    
 
     #【X-Y用 dxfファイル名の読込ボタン】
@@ -2071,6 +1228,22 @@ if __name__ == "__main__":
     #【U-V用 dxfファイル名の読込ボタン】   
     LoadBtn1 = tk.Button(root, text="再読込", command = lambda: load_file(dxf1, FileNameEntry1, MessageWindow))
     LoadBtn1.place(x=1600, y=30)    
+
+
+    #【configファイル読込用のエクスプローラーを開くボタン】
+    ConfigLoadBtn0 = tk.Button(root, text="開く", command = lambda: load_config(config, ConfigFileEntry, \
+                                                                              dlEntry, CutSpeedEntry, XYDistEntry, UVDistEntry, \
+                                                                                  WorkLengthEntry, MachDistEntry, MessageWindow))
+    ConfigLoadBtn0.place(x=1320, y=505)  
+
+    #【オフセット関数ファイル読込用のエクスプローラーを開くボタン】   
+    OffsetFuncLoadBtn1 = tk.Button(root, text="開く", command = lambda: load_offset_func(config, OffsetFuncEntry, MessageWindow))
+    OffsetFuncLoadBtn1.place(x=1320, y=535)    
+
+
+    #【原点オフセットボタン】
+    OriginOffsetBtn0 = tk.Button(root, text="オフセット更新", width =15, command = lambda: offset_origin(dxf0, dxf1, OriginOffsetEntry_X, OriginOffsetEntry_Y, MessageWindow))
+    OriginOffsetBtn0.place(x=1255, y=580)   
 
     #【X-Yラインテーブル用　カット方向入れ替えボタン】
     ChangeCutDirBtn0 = tk.Button(root, text="カット方向入替え", width =15, bg = "#3cb371", command = lambda: Change_CutDir(dxf0, MessageWindow))
@@ -2121,27 +1294,29 @@ if __name__ == "__main__":
     DelateBtn1 = tk.Button(root, text="ライン削除", width = 15, bg = "#ff6347" , command = lambda: delete_line(dxf1, MessageWindow))
     DelateBtn1.place(x=1525, y=465)
     
-
     #【オフセット値更新ボタン】    
-    OffsetBtn = tk.Button(root, text = "更新", height = 1, width = 5, command = lambda: Set_OffsetDist(dxf0, dxf1, OffsetEntry, MessageWindow))
-    OffsetBtn.place(x = 1120, y = 618)
+    OffsetBtn = tk.Button(root, text = "オフセット距離更新", height = 1, width = 19,  bg='#fffacd', \
+                          command = lambda: Set_OffsetDistFromFunction(dxf0, dxf1, XYDistEntry, UVDistEntry, MachDistEntry, CutSpeedEntry, config.offset_function, MessageWindow))
+    OffsetBtn.place(x = 1530, y = 598)
 
 
     #【自動整列ボタン】    
     AutoAlignmentBtn = tk.Button(root, text = "自動整列", height = 1, width = 12,font=("",15), bg='#fffacd', command = lambda: AutoLineSort(dxf0, dxf1, AutoAlignmentEntry_X, AutoAlignmentEntry_Y, MessageWindow))
-    AutoAlignmentBtn.place(x = 1290, y = 505)
+    AutoAlignmentBtn.place(x = 1530, y = 555)
 
 
     #Ver2.0 変更　WorkDistWntryを追加
     #【パスチェックボタン】    
-    ChkPassBtn = tk.Button(root, text = "パスチェック", height = 2, width = 12,font=("",15), bg='#3cb371', command = lambda: path_chk(root, dxf0, dxf1, AutoAlignmentEntry_X, AutoAlignmentEntry_Y, CutEndEntry_X, CutEndEntry_Y, XYDistEntry, UVDistEntry, WorkLengthEntry, MachDistEntry, dlEntry, MessageWindow))
-    ChkPassBtn.place(x = 1480, y = 630)
+    ChkPassBtn = tk.Button(root, text = "パスチェック", height = 2, width = 12,font=("",15), bg='#3cb371', \
+                           command = lambda: path_chk(root, dxf0, dxf1, AutoAlignmentEntry_X, AutoAlignmentEntry_Y, CutEndEntry_X, CutEndEntry_Y, XYDistEntry, UVDistEntry, WorkLengthEntry, MachDistEntry, dlEntry, MessageWindow))
+    ChkPassBtn.place(x = 1530, y = 630)
     
 
     #Ver2.0 変更　MechDistEntry, WorkDistWntryを追加
     #【Gコード生成ボタン】        
-    GenGCodeBtn = tk.Button(root, text = "Gコード生成", height = 2, width = 12,font=("",15), bg='#ff6347', command = lambda: gen_g_code(dxf0, dxf1, AutoAlignmentEntry_X, AutoAlignmentEntry_Y, CutEndEntry_X, CutEndEntry_Y, XYDistEntry, UVDistEntry, WorkLengthEntry, MachDistEntry, CutSpeedEntry, dlEntry, HEADER, MessageWindow, X_str, Y_str, U_str, V_str))
-    GenGCodeBtn.place(x = 1480, y = 700)
+    GenGCodeBtn = tk.Button(root, text = "Gコード生成", height = 2, width = 12,font=("",15), bg='#ff6347', \
+                            command = lambda: gen_g_code(dxf0, dxf1, AutoAlignmentEntry_X, AutoAlignmentEntry_Y, CutEndEntry_X, CutEndEntry_Y, XYDistEntry, UVDistEntry, WorkLengthEntry, MachDistEntry, CutSpeedEntry, dlEntry, MessageWindow, config))
+    GenGCodeBtn.place(x = 1530, y = 700)
 
 
 

@@ -27,8 +27,10 @@ from cam_global import *
 #
 #【メンバ変数】
 #   変数名          型              説明
-#   x_raw           list            x座標点列の初期値　変更されない
-#   y_raw           list            y座標点列の初期値　変更されない
+#   x_dxf           list            dxfファイルから読み込んだx座標点列　変更されない
+#   y_dxf           list            dxfファイルから読み込んだy座標点列　変更されない
+#   x_raw           list            x座標点列の初期値　原点オフセットを除き、変更されない
+#   y_raw           list            y座標点列の初期値　原点オフセットを除き、変更されない
 #   st              list            x_raw, y_rawの 始点 
 #   ed              list            x_raw, y_rawの 終点 
 #   N               int             座標点列の個数
@@ -36,14 +38,23 @@ from cam_global import *
 #   offset_dist     float           オフセット距離
 #   offset_dir      char            オフセット方向["O"/ "I"]
 #   cut_dir         char            x, y配列の方向["F"/ "R"]（x_raw，y_rawに対して順方向が"F"，逆方向が"R"）
+#   cutspeed_work   float           ワーク面（XY or UV断面）でのカット速度
+#   cutspeed_mech   float           マシン駆動面でのカット速度
 #   x               list            オフセット，配列方向を適用したあとの x座標点列
 #   y               list            オフセット，配列方向を適用したあとの y座標点列
+#   offset_ox       float           原点のx方向オフセット量
+#   offset_oy       float           原点のy方向オフセット量
 #
 #【実装メソッド】
 #   __init__(list x_points, list y_points, int num)
 #   【引数】 x_points, y_points, num
 #   【戻り値】　なし
 #   【機能】 初期化処理を実行する．x座標点列x_points, y座標点列y_points　を，x_raw，y_rawおよびx, yに代入する．ライン名をnumに設定する．
+#
+#   reset_point(list x_points, list y_points, float offset_ox, float offset_oy)
+#   【引数】 x_points, y_points, offset_ox, offset_oy
+#   【戻り値】　なし
+#   【機能】 x_dxf、y_dxf座標点列を更新し、それら以外の座標点列をoffset_ox、offset_oyで指定される量だけオフセットする
 #
 #   update()
 #   【引数】　なし
@@ -64,6 +75,11 @@ from cam_global import *
 #   【引数】 cut_dir 
 #   【戻り値】 なし
 #   【機能】 メンバ変数であるcut_dirtを入力値に設定する．cut_dirが"F", "R"以外は処理しない．
+#
+#   set_cutspeed(float cutspeed_work, float cutspeed_mech)
+#   【引数】 cutspeed_work, cutspeed_mech
+#   【戻り値】 なし
+#   【機能】 メンバ変数であるcutspeed_work, cutspeed_mechを入力値に設定する．
 #
 #   set_num(int num)
 #   【引数】　num 

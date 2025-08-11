@@ -63,10 +63,10 @@ from cam_global import *
 #   【戻り値】 int 成功可否(1：読み取り成功, 0:拡張子が.dxfでない, -1:ファイル存在せず)
 #   【機能】 指定されたfilenameのファイルが存在するか，拡張子が.dxfかをチェックする．
 #
-#   gen_g_code_line_str(list x, list y, list u, list v)
-#   【引数】 x, y, u, v
+#   gen_g_code_line_str(list x, list y, list u, list v, float cut_speed)
+#   【引数】 x, y, u, v, cut_speed
 #   【戻り値】 list code_str
-#   【機能】 x, y, u, vの各座標からgコードを生成する．gコードはX,Y,Z,A軸を使用するとする，gコードは「G01 X** Y** U** V**」のフォーマットとする．（G01は移動指令）
+#   【機能】 x, y, u, vの各座標および移動速度指令からgコードを生成する．gコードはX,Y,Z,A軸を使用するとする，gコードは「G01 X** Y** U** V** F**」のフォーマットとする．（G01は移動指令）
 #
 #   arc_to_spline(ezdxf.entities.Arc arc_obj)
 #   【引数】 arc_obj
@@ -78,6 +78,27 @@ from cam_global import *
 #   【戻り値】 np.array [xp, yp]
 #   【機能】 ポリラインから点列を作成する．
 #
+#   get_curdir()
+#   【引数】 なし
+#   【戻り値】 curdir
+#   【機能】 メイン関数が実行されているディレクトリを取得し、出力する
+#
+#   generate_offset_function(list x_array, list y_array)
+#   【引数】 x_array, y_array
+#   【戻り値】 offset_function
+#   【機能】 x_array、y_arrayを線形補完し、offset_functionを作成する。0～10000のカット速度の範囲で対応できるように、x_arrayの範囲外は0次補完する
+#
+#   get_cross_point(float p1_x, float p1_y, float p2_x, float p2_y, float p3_x, pfloat 3_y, float p4_x, float p4_y)
+#   【引数】 p1_x, p1_y, p2_x, p2_y, p3_x, p3_y, p4_x, p4_y
+#   【戻り値】 c1_x, c1_y
+#   【機能】 4点（p1,p2,p3,p4）の交点座標（c1_x, c1_y）を算出する
+#
+#   enerate_offset_interporate_point(list l0_x, list l0_y, list l1_x, list l1_y, float l0_offset, float l1_offset)
+#   【引数】 l0_x, l0_y, l1_x, l1_y, l0_offset, l1_offset
+#   【戻り値】 x_intp, y_intp
+#   【機能】 l0の終端およびl1の始点を、l0_offset, l1_offsetの小さい方のRでフィレット補完する点群を作成する
+
+
 
 def offset_line(x, y, d, cut_dir, interp_mode): #ver2.2 interp_mode 追加　ポリラインの場合，オフセット点を中点ではなく，点列を使用するため
     new_x = []
@@ -379,30 +400,39 @@ def get_cross_point(p1_x, p1_y, p2_x, p2_y, p3_x, p3_y, p4_x, p4_y):
 
 
 def generate_offset_interporate_point(l0_x, l0_y, l1_x, l1_y, l0_offset, l1_offset):
-    # https://w3e.kanazawa-it.ac.jp/math/category/vector/henkan-tex.cgi?target=/math/category/vector/naiseki-wo-fukumu-kihonsiki.html&pcview=2
     try:
+        # l0とl1のなす角sitaを内積により求める
+        # https://w3e.kanazawa-it.ac.jp/math/category/vector/henkan-tex.cgi?target=/math/category/vector/naiseki-wo-fukumu-kihonsiki.html&pcview=2
         a1 = l0_x[1] - l0_x[0]
         a2 = l0_y[1] - l0_y[0]
         b1 = l1_x[0] - l1_x[1]
         b2 = l1_y[0] - l1_y[1]
             
         sita = np.arccos( (a1*b1 + a2*b2)/(np.sqrt(a1**2 + a2**2) * np.sqrt(b1**2 + b2**2)) ) / 2.0
+
+        # l0がx軸となす角をarctan2により求める
         beta = np.arctan2(a2, a1)
         
+        # フィレットのRをオフセット距離から決定する（Rが大きいと、線端とフィレット補完点がオーバーラップしうるため、小さい方をRとする）
         R = min(l0_offset, l1_offset)
         
+        # l0とl1の交点を求める
         cx, cy = get_cross_point(l0_x[0], l0_y[0], l1_x[0], l1_y[0], l0_x[1], l0_y[1], l1_x[1], l1_y[1])
         
+        # 幾何より、l0延長線上のフィレット開始点（p1）および、フィレットの中心座標（p0）を求める
         p1_x = cx - R * (1/np.tan(sita)) * np.cos(-beta) 
         p1_y = cy + R * (1/np.tan(sita)) * np.sin(-beta) 
         
         p0_x = p1_x - R*np.sin(-beta)
         p0_y = p1_y - R*np.cos(-beta)
-    
+
+        # 補完点郡の作成に用いる、sitaの配列を作成する。
         sita_array = np.linspace(np.pi/2 + beta, 2*sita + beta - np.pi/2, N_FILLET_INTERPORATE)
     
+        # 幾何より、補完点列を作成する
         x_intp = R*np.cos(sita_array) + p0_x
         y_intp = R*np.sin(sita_array) + p0_y
+        
     except:
         traceback.print_exc()
         #内積・外積が計算できない場合は、補完しない直線を返す

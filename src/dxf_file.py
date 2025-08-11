@@ -183,6 +183,18 @@ class super_table:
 #   【戻り値】　なし
 #   【機能】 入力された2本のラインについて，line_num_listの値を入れ替える．set_selected_lineをコールし，line_num1をselected_lineに設定する．
 #
+#   Merge_Selected_line()
+#   【引数】 なし
+#   【戻り値】　error, selected_items
+#   【機能】　tableで選択されているラインが２本のみの場合、この２本を結合する。error（0: 成功, 1: 選択数が誤り, 2: 隣接していない）と、その時選択されているラインを取得する
+#
+#   Merge_line(char parent_item_num, char child_item_num)
+#   【引数】 なし
+#   【戻り値】　結合可否（boolean)
+#   【機能】　parent_item_numで指定された線（parent_line）に、child_item_numで指定された線（child_line）を結合する
+#            parent_lineとchild_lineの端点が一致するように線の向きを変更したうえで結合する。端点が一致しない場合、エラーとしてFalseを出力する
+#            端点が一致する場合、parent_lineの座標点列（x_dxf, y_dxf）を結合した座標点に更新する（よって結合するのは、原点オフセット前のx_dxf, y_dxfとする）
+#
 #   delete_Selected_line()
 #   【引数】 なし
 #   【戻り値】　なし
@@ -208,7 +220,11 @@ class super_table:
 #　　　　　　　　4.　3.のライン端を有するラインを，カット番号1に設定する．3.のライン端がラインの終端である場合，カット方向，オフセット方向を逆転させる.
 #　　　　　　　　5. 3.のライン端から最も近い位置にあるライン端を検索する．
 #　　　　　　　　6. 3～5を，テーブルに表示されている全てのラインに対して実施する．
-#　　　　　　　　
+#　
+#   offset_origin(float offset_ox, float offset_oy)
+#   【引数】 offset_ox, offset_oy
+#   【戻り値】　なし
+#   【機能】　テーブルで表示しているラインの座標点を、offset_ox, offset_oyで指定される分だけオフセットする．　　　　　　　
 
 class dxf_file:
     def __init__(self, ax, canvas, table, x_table, name):

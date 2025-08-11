@@ -40,14 +40,16 @@ import os.path as op
 import datetime
 import os
 import sys
+import traceback
 
 
 #======================================================================================================================================
 #            グローバル変数
 #======================================================================================================================================
-VERSION = "2.4"         #バージョン
-Z_ERROR = 5.0           #2020.10.13　ver2.1 新規追加  単位：mm Z面の許容誤差 
-LINE_MARGE_NORM_MN = 1  #単位:mm ラインを結合時にラインを結合してよいかを判断するためのライン端点間距離
+VERSION = "3.0"           #バージョン
+Z_ERROR = 5.0             #2020.10.13　ver2.1 新規追加  単位：mm Z面の許容誤差 
+LINE_MARGE_NORM_MN = 1    #単位:mm ラインを結合時にラインを結合してよいかを判断するためのライン端点間距離
+N_FILLET_INTERPORATE = 10 #オフセットした線間を補完するフィレットの座標点数
 
    
 #======================================================================================================================================
@@ -751,6 +753,7 @@ class dxf_file:
 
     def Merge_Selected_line(self):
         selected_items = self.table.table.selection()
+        error = 0   # 0: 成功, 1: 選択数が誤り, 2: 隣接していない
         if len(selected_items) == 2:
             parent_line_num = item2num(selected_items[0])
             child_line_num = item2num(selected_items[1])
@@ -758,13 +761,19 @@ class dxf_file:
                 self.delete_line(selected_items[1])
                 self.table_reload()
                 self.plot()
-                return [selected_items[0]]
+                error = 0
+                return error, [selected_items[0]]
+            else:
+                error = 2
+                return error, selected_items
             
         elif len(selected_items) == 1:
-            return []
+            error = 1
+            return error, [selected_items]
         
         else:
-            return selected_items
+            error = 1
+            return error, selected_items
 
 
     def Merge_line(self, parent_item_num, child_item_num):
@@ -1347,12 +1356,14 @@ def file_chk(filename):
 
 
 #Ver2.0　変更 Gコード出力形式
-def gen_g_code_line_str(x,y,u,v):
+def gen_g_code_line_str(x,y,u,v, cut_speed):
     code_str = ""
     if len(x) == len(y) == len(u) == len(v):
         i = 0
         while i < len(x):
-            code_str += "G01 X%s Y%s U%s V%s\n"%(x[i], y[i], u[i], v[i])
+            code_str += "G01 X%s Y%s U%s V%s F%s\n"%(format(x[i], '.6f'), format(y[i], '.6f'), \
+                                                     format(u[i], '.6f'), format(v[i], '.6f'), \
+                                                         format(cut_speed, '.1f'))
             i += 1
         return code_str
 
@@ -1425,6 +1436,68 @@ def generate_offset_function(x_array, y_array):
     offset_function = intp.interp1d(x_array_func, y_array_func, kind = "linear")
     
     return offset_function
+
+
+def get_cross_point(p1_x, p1_y, p2_x, p2_y, p3_x, p3_y, p4_x, p4_y):
+    # https://imagingsolution.blog.fc2.com/blog-entry-137.html
+    s1 = ((p4_x - p2_x) * (p1_y - p2_y) - (p4_y - p2_y) * (p1_x - p2_x)) / 2.0
+    s2 = ((p4_x - p2_x) * (p2_y - p3_y) - (p4_y - p2_y) * (p2_x - p3_x)) / 2.0
+    
+    c1_x = p1_x + (p3_x - p1_x) * (s1 / (s1 + s2))
+    c1_y = p1_y + (p3_y - p1_y) * (s1 / (s1 + s2))
+    
+    return c1_x, c1_y
+
+
+def generate_offset_interporate_point(l0_x, l0_y, l1_x, l1_y, l0_offset, l1_offset):
+    # https://w3e.kanazawa-it.ac.jp/math/category/vector/henkan-tex.cgi?target=/math/category/vector/naiseki-wo-fukumu-kihonsiki.html&pcview=2
+    try:
+        a1 = l0_x[1] - l0_x[0]
+        a2 = l0_y[1] - l0_y[0]
+        b1 = l1_x[0] - l1_x[1]
+        b2 = l1_y[0] - l1_y[1]
+            
+        sita = np.arccos( (a1*b1 + a2*b2)/(np.sqrt(a1**2 + a2**2) * np.sqrt(b1**2 + b2**2)) ) / 2.0
+        beta = np.arctan2(a2, a1)
+        
+        R = min(l0_offset, l1_offset)
+        
+        cx, cy = get_cross_point(l0_x[0], l0_y[0], l1_x[0], l1_y[0], l0_x[1], l0_y[1], l1_x[1], l1_y[1])
+        
+        p1_x = cx - R * (1/np.tan(sita)) * np.cos(-beta) 
+        p1_y = cy + R * (1/np.tan(sita)) * np.sin(-beta) 
+        
+        p0_x = p1_x - R*np.sin(-beta)
+        p0_y = p1_y - R*np.cos(-beta)
+    
+        sita_array = np.linspace(np.pi/2 + beta, 2*sita + beta - np.pi/2, N_FILLET_INTERPORATE)
+    
+        x_intp = R*np.cos(sita_array) + p0_x
+        y_intp = R*np.sin(sita_array) + p0_y
+    except:
+        traceback.print_exc()
+        #内積・外積が計算できない場合は、補完しない直線を返す
+        x_intp = np.array([l0_x[1], l1_x[0]])
+        y_intp = np.array([l0_y[1], l1_y[0]])     
+        pass
+        
+    
+    #for debug
+    """
+    print(np.degrees(sita), np.degrees(beta))
+    plt.plot(cx, cy, "ro")
+    plt.plot(p1_x, p1_y, "bo")
+    plt.plot(p0_x, p0_y, "go")
+    plt.plot(l0_x, l0_y, "-o")
+    plt.plot(l1_x, l1_y, "-o")
+    plt.plot(x_intp, y_intp)
+    ax = plt.gca()
+    ax.set_aspect('equal', adjustable='box')
+    """
+    
+    return x_intp, y_intp
+    
+
 
 
 #======================================================================================================================================
@@ -1618,13 +1691,11 @@ def Set_OffsetDist(dxf_obj0, dxf_obj1, entry, messeage_window):
 
 
 def Merge_line(dxf_obj, messeage_window):
-    selected_items = dxf_obj.Merge_Selected_line()
-    if len(selected_items) == 1:
+    error, selected_items = dxf_obj.Merge_Selected_line()
+    if error == 0:
         messeage_window.set_messeage("%s番目のラインに結合しました。\n"%item2num(selected_items[0]))
-    elif len(selected_items) == 2:
+    elif error == 2:
         messeage_window.set_messeage("２つの近接したラインを選択して下さい。ラインの端点間の距離が遠すぎます。\n")
-    elif len(selected_items) == 0:
-        messeage_window.set_messeage("２つのラインを選択してください。1本しかラインが選択されていません。\n")
     else:
         messeage_window.set_messeage("２つのラインを選択して下さい。%s本のラインが選択されています。\n"%len(selected_items))
         
@@ -1838,6 +1909,7 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
         dl = float(entry_dl_value)
         CS = float(entry_CS_value)
 
+
         if np.abs(Z_XY + Z_UV + Z_Work - Z_Mach) > np.abs(Z_ERROR):
             if (Z_XY + Z_UV + Z_Work - Z_Mach) > 0.0:
                 messeage_window.set_messeage("【警告】\nXY面距離，UV面距離，加工物サイズの和が，駆動面距離に対して%s mm 長いです。（許容誤差：%s mm）\n入力値を確認してください。\n\n"%((Z_XY + Z_UV + Z_Work - Z_Mach), np.abs(Z_ERROR)))
@@ -1851,16 +1923,22 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
         if Z_UV > Z_Mach:
             messeage_window.set_messeage("【警告】\nUV面距離が駆動面距離に対して%s mm 長いです。\n入力値を確認してください。\n\n"%(Z_UV - Z_Mach))
             temp_error_flg = True
-
        
         if dl < 0.1:
             dl = 0.1
         #Ver2.0　変更 Gコード出力形式
-        code_line_list.append("F%s\n"%CS)
-        code_line_list.append("G01 X%f Y%f U%f V%f\n"%(ox, oy, ox, oy))
+        code_line_list.append("G01 X%f Y%f U%f V%f F%s\n"%(ox, oy, ox, oy, CS))
         
         a_line_num_list0 = np.array(np.array(dxf_obj0.line_num_list.copy())[np.where(np.array(dxf_obj0.line_num_list.copy()) >= 0)])
         a_line_num_list1 = np.array(np.array(dxf_obj1.line_num_list.copy())[np.where(np.array(dxf_obj1.line_num_list.copy()) >= 0)])
+
+        x_array = np.array([ox])
+        y_array = np.array([oy])
+        u_array = np.array([ox])
+        v_array = np.array([oy])
+        
+        xy_offset_dist = []
+        uv_offset_dist = []
         
         if temp_error_flg == False:
             if len(a_line_num_list0) == len(a_line_num_list1):
@@ -1874,6 +1952,9 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
                     
                     line0_length = line0.get_length()
                     line1_length = line1.get_length()
+    
+                    xy_offset_dist.append(line0.offset_dist)
+                    uv_offset_dist.append(line1.offset_dist)
                     
                     N = int(max(line0_length, line1_length)/ dl)
                     if N < 2:
@@ -1881,11 +1962,40 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
                     
                     x, y = generate_arc_length_points(line0, N)
                     u, v = generate_arc_length_points(line1, N)
+                    cut_speed = max(line0.cutspeed_mech, line1.cutspeed_mech)
+                    
+                    if (i != 0) and (i != len(a_line_num_list0)):
+                        # 始点と終点以外は、フィレット補完する
+                        l0_x = [x_array[-2], x_array[-1]]
+                        l0_y = [y_array[-2], y_array[-1]]
+                        l1_x = [x[0], x[1]]
+                        l1_y = [y[0], y[1]]
+                        
+                        l0_u = [u_array[-2], u_array[-1]]
+                        l0_v = [v_array[-2], v_array[-1]]
+                        l1_u = [u[0], u[1]]
+                        l1_v = [v[0], v[1]]   
+                        
+                        x_f, y_f = generate_offset_interporate_point(l0_x, l0_y, l1_x, l1_y, xy_offset_dist[-1], xy_offset_dist[-2])
+                        u_f, v_f = generate_offset_interporate_point(l0_u, l0_v, l1_u, l1_v, uv_offset_dist[-1], uv_offset_dist[-2])        
+                        
+                        #オフセット面の作成
+                        x_m_f, y_m_f, u_m_f, v_m_f = make_offset_path(x_f, y_f, u_f, v_f, Z_XY, Z_UV, Z_Mach)
+                        code_line_list.append(gen_g_code_line_str(x_m_f, y_m_f, u_m_f, v_m_f, cut_speed))
+                    
+                        x_array = np.concatenate([x_array, x_f], 0)
+                        y_array = np.concatenate([y_array, y_f], 0)
+                        u_array = np.concatenate([u_array, u_f], 0)
+                        v_array = np.concatenate([v_array, v_f], 0)      
                     
                     #オフセット面の作成
                     x_m, y_m, u_m, v_m = make_offset_path(x, y, u, v, Z_XY, Z_UV, Z_Mach)
+                    code_line_list.append(gen_g_code_line_str(x_m, y_m, u_m, v_m, cut_speed))
                     
-                    code_line_list.append(gen_g_code_line_str(x_m, y_m, u_m, v_m))
+                    x_array = np.concatenate([x_array, x], 0)
+                    y_array = np.concatenate([y_array, y], 0)
+                    u_array = np.concatenate([u_array, u], 0)
+                    v_array = np.concatenate([v_array, v], 0)
                     
                     i += 1
                 #Ver2.0　変更 Gコード出力形式
@@ -1975,6 +2085,9 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
         u_array = np.array([ox])
         v_array = np.array([oy])
         
+        xy_offset_dist = []
+        uv_offset_dist = []
+        
         if dl < 0.1:
             dl = 0.1
         
@@ -1993,6 +2106,9 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
                 line0_length = line0.get_length()
                 line1_length = line1.get_length()
                 
+                xy_offset_dist.append(line0.offset_dist)
+                uv_offset_dist.append(line1.offset_dist)
+                
                 N = int(max(line0_length, line1_length)/ dl)
                 if N < 2:
                     N = 2
@@ -2000,21 +2116,42 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
                 x, y = generate_arc_length_points(line0, N)
                 u, v = generate_arc_length_points(line1, N)
                 
-                norm_line2line0 = norm(x_array[-1], y_array[-1], x[0], y[0])
-                norm_line2line1 = norm(u_array[-1], v_array[-1], u[0], v[0])
-                
-                if norm_line2line0 > dl*PLOT_PER_POINT  or  norm_line2line1 > dl*PLOT_PER_POINT:
-                    N_interp_line2line = int(max(norm_line2line0, norm_line2line1) / dl / PLOT_PER_POINT)
+                if (i != 0) and (i != len(a_line_num_list0)):
+                    # 始点と終点以外は、フィレット補完する
+                    l0_x = [x_array[-2], x_array[-1]]
+                    l0_y = [y_array[-2], y_array[-1]]
+                    l1_x = [x[0], x[1]]
+                    l1_y = [y[0], y[1]]
                     
-                    if N_interp_line2line < 2:
-                        N_interp_line2line = 2
+                    l0_u = [u_array[-2], u_array[-1]]
+                    l0_v = [v_array[-2], v_array[-1]]
+                    l1_u = [u[0], u[1]]
+                    l1_v = [v[0], v[1]]   
                     
-                    xp, yp = generate_arc_length_points4line(x_array[-1], y_array[-1], x[0], y[0], N_interp_line2line)
-                    up, vp = generate_arc_length_points4line(u_array[-1], v_array[-1], u[0], v[0], N_interp_line2line)
-                    x_array = np.concatenate([x_array, xp], 0)
-                    y_array = np.concatenate([y_array, yp], 0)
-                    u_array = np.concatenate([u_array, up], 0)
-                    v_array = np.concatenate([v_array, vp], 0)
+                    x_f, y_f = generate_offset_interporate_point(l0_x, l0_y, l1_x, l1_y, xy_offset_dist[-1], xy_offset_dist[-2])
+                    u_f, v_f = generate_offset_interporate_point(l0_u, l0_v, l1_u, l1_v, uv_offset_dist[-1], uv_offset_dist[-2])
+
+                    x_array = np.concatenate([x_array, x_f], 0)
+                    y_array = np.concatenate([y_array, y_f], 0)
+                    u_array = np.concatenate([u_array, u_f], 0)
+                    v_array = np.concatenate([v_array, v_f], 0)                    
+                    
+                else:
+                    norm_line2line0 = norm(x_array[-1], y_array[-1], x[0], y[0])
+                    norm_line2line1 = norm(u_array[-1], v_array[-1], u[0], v[0])
+                    
+                    if norm_line2line0 > dl*PLOT_PER_POINT  or  norm_line2line1 > dl*PLOT_PER_POINT:
+                        N_interp_line2line = int(max(norm_line2line0, norm_line2line1) / dl / PLOT_PER_POINT)
+                        
+                        if N_interp_line2line < 2:
+                            N_interp_line2line = 2
+                        
+                        xp, yp = generate_arc_length_points4line(x_array[-1], y_array[-1], x[0], y[0], N_interp_line2line)
+                        up, vp = generate_arc_length_points4line(u_array[-1], v_array[-1], u[0], v[0], N_interp_line2line)
+                        x_array = np.concatenate([x_array, xp], 0)
+                        y_array = np.concatenate([y_array, yp], 0)
+                        u_array = np.concatenate([u_array, up], 0)
+                        v_array = np.concatenate([v_array, vp], 0)
                     
                 
                 x_array = np.concatenate([x_array, x], 0)
@@ -2082,6 +2219,7 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
             messeage_window.set_messeage("XY座標とUV座標でライン数が一致しません。XY：%s本，UV：%s本\n"%(len(a_line_num_list0), len(a_line_num_list1)))
         
     except:
+        traceback.print_exc()
         messeage_window.set_messeage("パスチェック中にエラーが発生しました。\n")
         pass      
 

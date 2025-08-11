@@ -442,10 +442,7 @@ class dxf_file:
         error = 0   # 0: 成功, 1: 選択数が誤り, 2: 隣接していない
         if len(selected_items) == 2:
             
-            parent_line_num = item2num(selected_items[0])
-            child_line_num = item2num(selected_items[1])
-
-            if self.Merge_line(parent_line_num, child_line_num) == True:
+            if self.Merge_line(selected_items[0], selected_items[1]) == True:
                 self.delete_line(selected_items[1])
                 self.table_reload()
                 self.plot()
@@ -465,8 +462,8 @@ class dxf_file:
 
 
     def Merge_line(self, parent_item_num, child_item_num):
-        parent_line_num = self.line_num_list[parent_item_num]
-        child_line_num = self.line_num_list[child_item_num]
+        parent_line_num = self.line_num_list[item2num(parent_item_num)]
+        child_line_num = self.line_num_list[item2num(child_item_num)]
         parent_line = self.line_list[parent_line_num]
         child_line = self.line_list[child_line_num]
         

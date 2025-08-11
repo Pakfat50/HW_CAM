@@ -1,0 +1,429 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Aug 11 15:37:04 2025
+
+@author: hirar
+"""
+# 外部ライブラリ
+import numpy as np
+from matplotlib import pyplot as plt
+from scipy import interpolate as intp
+import os.path as op
+import os
+import sys
+import traceback
+
+# 内部ライブラリ
+from cam_global import *
+
+
+#======================================================================================================================================
+#            汎用関数
+#======================================================================================================================================
+#
+#   offset_line(list x, list y, float d, str cut_dir, str interp_mode)
+#   【引数】　x, y, d, cut_dir
+#   【戻り値】　new_x, new_y
+#   【機能】 x,y の座標点列をdだけオフセットした点列を作成する．カット方向により，オフセット方向が変わらないように，cut_dirによってオフセット方向を変更する．
+#　　　　　　　　アルゴリズムは下記を実装する．(円弧補間は不要なので省略している)
+#          https://stackoverflow.com/questions/32772638/python-how-to-get-the-x-y-coordinates-of-a-offset-spline-from-a-x-y-list-of-poi
+#　　　　　　　　
+#   norm(float x0, float y0, float x, float y)
+#   【引数】 x0, y0, x, y
+#   【戻り値】　float 距離
+#   【機能】　(x0,y0) と(x,y)の距離を計算する．
+#
+#   norm_3d(float x0, float y0, float z0, float x, float y, float z)
+#   【引数】 x0, y0, z0, x, y, z
+#   【戻り値】 float 距離
+#   【機能】 (x0,y0,z0) と(x,y,z)の距離を計算する
+#
+#   item2num(str item_num)
+#   【引数】 item_num
+#   【戻り値】 int num
+#   【機能】 tk.treeのItem番号（I***，***がアイテム番号）から***を抽出し，int型に変換して出力する．***は16進法である．
+#
+#   generate_arc_length_points(line_object line_object, int N)
+#   【引数】 line_object, N
+#   【戻り値】　list x_p, y_p
+#   【機能】 line_objectのx, y点列をスプライン補完し，これをN等分した点列を作成する．
+#        
+#   generate_arc_length_points4line(float x_st, float  y_st, float x_ed, float y_ed, int N)
+#   【引数】　x_st, y_st, x_ed, y_ed, N
+#   【戻り値】　list x_p, y_p
+#   【機能】 (x_st, y_st), (x_ed, y_ed)を両端に持つ直線を，N等分した点列を作成する．
+#
+#   plot_3d_cut_path(Axes ax, list x, list y, list u, list v, float Z, int n_plot)
+#   【引数】 ax, x, y, u, v, Z, n_plot
+#   【戻り値】　list point_dist_list
+#   【機能】　axにx,y,u,vをプロットする．x,y平面とu,v平面の距離はZとする．各(x,y),(u,v)の点の距離を計算し，point_dist_list配列として出力する．
+#
+#   file_chk(str filename)
+#   【引数】 file_name
+#   【戻り値】 int 成功可否(1：読み取り成功, 0:拡張子が.dxfでない, -1:ファイル存在せず)
+#   【機能】 指定されたfilenameのファイルが存在するか，拡張子が.dxfかをチェックする．
+#
+#   gen_g_code_line_str(list x, list y, list u, list v)
+#   【引数】 x, y, u, v
+#   【戻り値】 list code_str
+#   【機能】 x, y, u, vの各座標からgコードを生成する．gコードはX,Y,Z,A軸を使用するとする，gコードは「G01 X** Y** U** V**」のフォーマットとする．（G01は移動指令）
+#
+#   arc_to_spline(ezdxf.entities.Arc arc_obj)
+#   【引数】 arc_obj
+#   【戻り値】 np.array [xp, yp]
+#   【機能】 円弧からスプラインの点列を作成する．点数は10degにつき1点とする．点数は最少で3点以上となる．
+#
+#   poly_to_spline(ezdxf.entities.LWPolyline poly_obj)
+#   【引数】 poly_obj
+#   【戻り値】 np.array [xp, yp]
+#   【機能】 ポリラインから点列を作成する．
+#
+
+def offset_line(x, y, d, cut_dir, interp_mode): #ver2.2 interp_mode 追加　ポリラインの場合，オフセット点を中点ではなく，点列を使用するため
+    new_x = []
+    new_y = []
+    k = 0
+    sign_cut_dir = 1
+    
+    if cut_dir == "R":
+        sign_cut_dir = -1
+    
+    if len(x) < 2: 
+        return x, y
+
+    if len(x) == 2:
+        if x[0] == x[1]:
+            k = np.pi/2.0
+        else:
+            k = np.arctan((y[1]-y[0])/(x[1]-x[0]))
+        
+        new_x.append(x[0] - d*np.sin(k))
+        new_x.append(x[1] - d*np.sin(k))
+        new_y.append(y[0] + d*np.cos(k))
+        new_y.append(y[1] + d*np.cos(k))
+
+    if len(x) > 2:
+        if interp_mode == "linear" and len(x)%2 == 0:
+            num = 0
+            while num < len(x)/2:
+                i = num * 2
+                if x[i] == x[i+1]:
+                    k = np.pi/2.0
+                else:
+                    k = np.arctan((y[i+1]-y[i])/(x[i+1]-x[i]))
+
+                new_x.append(x[i]   - d*np.sin(k))
+                new_x.append(x[i+1] - d*np.sin(k))
+                new_y.append(y[i]   + d*np.cos(k))
+                new_y.append(y[i+1] + d*np.cos(k))
+
+                num += 1
+            
+        else:
+            i = 0
+            while i < len(x):
+                if i == 0:
+                    k = np.arctan2((y[1]-y[0]), (x[1]-x[0]))
+
+                elif i == len(x) - 1:
+                    k = np.arctan2((y[i]-y[i-1]), (x[i]-x[i-1]))
+                    
+                else:
+                    k = np.arctan2((y[i+1]-y[i-1]), (x[i+1]-x[i-1]))
+
+                new_x.append(x[i] - d*np.sin(k) * sign_cut_dir)      
+                new_y.append(y[i] + d*np.cos(k) * sign_cut_dir)
+                i += 1
+    
+    new_x = np.array(new_x)
+    new_y = np.array(new_y)
+    
+    return new_x, new_y
+
+
+def norm(x0, y0, x, y):
+    return np.sqrt((x-x0)**2 + (y-y0)**2)
+
+
+def norm_3d(x0, y0, z0, x, y, z):
+    return np.sqrt((x-x0)**2 + (y-y0)**2 + (z-z0)**2)
+
+
+def item2num(item_num):
+    temp = item_num.replace("I","")
+    temp = '0x0%s'%temp
+    num = int(temp,0) - 1    
+    return num
+
+
+def generate_arc_length_points(line_object, N):
+    
+    N = int(N)
+    if N < 2:
+        N = 2
+
+    length_array = line_object.calc_length_array()
+    sum_length = length_array[-1]
+    
+    t_p = length_array/sum_length
+    
+    x = line_object.x
+    y = line_object.y
+    
+    if line_object.line_type == "point":  
+        x_p = x
+        y_p = y
+        
+    if line_object.line_type == "line":  
+        fx_t = intp.interp1d(t_p, x, kind = "linear")
+        fy_t = intp.interp1d(t_p, y, kind = "linear")
+            
+        t_p_arc = np.linspace(t_p[0], t_p[-1], N)
+        
+        x_p = fx_t(t_p_arc)
+        y_p = fy_t(t_p_arc)
+
+    if line_object.line_type == "spline":
+        if line_object.interp_mode == "linear":
+            fx_t = intp.interp1d(t_p, x, kind = "linear")
+            fy_t = intp.interp1d(t_p, y, kind = "linear")
+                
+            t_p_arc = np.linspace(t_p[0], t_p[-1], N)
+            
+            t_p_arc_add_orgine_point = np.append(t_p, t_p_arc)
+            t_p_arc_add_orgine_point = np.sort(t_p_arc_add_orgine_point)              
+                    
+            x_p = fx_t(t_p_arc_add_orgine_point)
+            y_p = fy_t(t_p_arc_add_orgine_point)
+            
+
+        else:
+            fx_t = intp.CubicSpline(t_p, x)
+            fy_t = intp.CubicSpline(t_p, y)
+            
+            t_p_arc = np.linspace(t_p[0], t_p[-1], N)
+            
+            x_p = fx_t(t_p_arc)
+            y_p = fy_t(t_p_arc)
+    
+    return x_p, y_p
+    
+
+def generate_arc_length_points4line(x_st, y_st, x_ed, y_ed, N):
+    
+    t_p = np.array([0,1])
+    fx_t = intp.interp1d(t_p, [x_st, x_ed], kind = "linear")
+    fy_t = intp.interp1d(t_p, [y_st, y_ed], kind = "linear")
+        
+    t_p_arc = np.linspace(t_p[0], t_p[-1], N)
+    
+    x_p = fx_t(t_p_arc)
+    y_p = fy_t(t_p_arc)
+    
+    return x_p, y_p
+
+
+# Ver2.1変更 　引数追加
+def plot_3d_cut_path(ax, x, y, u, v, xm, ym, um, vm, z_xy, z_uv, z_m, n_plot):
+    
+    point_dist_list = []
+    
+    try:
+        if len(x) == len(y) == len(u) == len(v) == len(xm) == len(ym) == len(um) == len(vm):
+            zm = np.ones(len(x)) * 0.0
+            z = np.ones(len(x)) * z_xy
+            w = np.ones(len(x)) * z_m - z_uv
+            wm = np.ones(len(x)) * z_m
+            
+            ax.plot(x, y, z, 'k')
+            ax.plot(u, v, w, 'k')
+            
+            ax.plot(xm, ym, zm, 'k')
+            ax.plot(um, vm, wm, 'k')
+            
+            
+            if n_plot < 1:
+                n_plot = 1
+            
+            num_per_plot = int(len(x)/n_plot)
+            if num_per_plot < 1:
+                num_per_plot = 1
+                
+            i = 0
+            j = 0
+            while i < len(x):
+                if j > num_per_plot:
+                    ax.plot([x[i],u[i]], [y[i],v[i]],  [z_xy, z_m - z_uv], color = 'r', alpha = 0.5)
+                    ax.plot([x[i],xm[i]],[y[i],ym[i]], [z_xy, 0] , color = 'b', alpha = 0.5)
+                    ax.plot([u[i],um[i]],[v[i],vm[i]], [z_m - z_uv, z_m], color = 'b', alpha = 0.5)
+                    
+                    j = 0
+                temp_norm = norm_3d(xm[i], ym[i], 0, um[i], vm[i], z_m)
+                point_dist_list.append(temp_norm)
+                j += 1
+                i += 1
+            
+            return np.array(point_dist_list)                  
+            
+        
+        else:
+            return np.array([])
+    except:
+        traceback.print_exc()
+        return np.array([])
+        pass
+
+
+def file_chk(filename):
+    if op.exists(filename) == True:
+        if filename.split('.')[-1] == "dxf":
+            return 1
+        else:
+            return 0
+    else:
+        return -1
+
+
+#Ver2.0　変更 Gコード出力形式
+def gen_g_code_line_str(x,y,u,v, cut_speed):
+    code_str = ""
+    if len(x) == len(y) == len(u) == len(v):
+        i = 0
+        while i < len(x):
+            code_str += "G01 X%s Y%s U%s V%s F%s\n"%(format(x[i], '.6f'), format(y[i], '.6f'), \
+                                                     format(u[i], '.6f'), format(v[i], '.6f'), \
+                                                         format(cut_speed, '.1f'))
+            i += 1
+        return code_str
+
+
+#ver2.2 追加　円弧をスプライン化する機能の追加
+def arc_to_spline(arc_obj): #ezdxf arcオブジェクト
+    
+    radius = arc_obj.dxf.radius
+    x_center_point  = arc_obj.dxf.center[0]
+    y_center_point  = arc_obj.dxf.center[1]
+    start_angle     = arc_obj.dxf.start_angle
+    end_angle       = arc_obj.dxf.end_angle
+    
+    if end_angle < start_angle:
+        end_angle += 360
+        
+    num_point = int(np.abs(end_angle - start_angle)/10.0)
+    if num_point < 3:
+        num_point = 3
+    angle_array = np.radians(np.linspace(start_angle, end_angle, num_point))
+    x_p = radius * np.cos(angle_array) + x_center_point
+    y_p = radius * np.sin(angle_array) + y_center_point
+    
+    return np.array([x_p, y_p]).T
+
+
+#ver2.2　追加 ポリラインを点列化する機能の追加 
+def poly_to_spline(poly_obj):
+    point_x = np.array(poly_obj.get_points())[:,0]
+    point_y = np.array(poly_obj.get_points())[:,1]
+    new_point_x = [point_x[0]]
+    new_point_y = [point_y[0]]
+    
+    i = 1
+    while i < len(point_x)-1:
+        new_point_x.append(point_x[i])
+        new_point_x.append(point_x[i])
+        
+        new_point_y.append(point_y[i])
+        new_point_y.append(point_y[i])
+        
+        i += 1
+
+    new_point_x.append(point_x[-1])
+    new_point_y.append(point_y[-1])
+    
+    return np.array([new_point_x, new_point_y]).T
+
+
+def get_curdir():
+    # PyInstallerで実行されているかどうかをチェック
+    if getattr(sys, "frozen", False):
+        # EXEの実行ファイルのパスを取得
+        curdir = os.path.dirname(sys.executable)
+    else:
+        # スクリプトの実行ファイルのパスを取得
+        curdir =  os.path.dirname(os.path.abspath(__file__))
+    return curdir
+
+
+def generate_offset_function(x_array, y_array):
+    if x_array[0] > 0:
+        x_array_func = np.append(0, x_array)
+        y_array_func = np.append(y_array[0], y_array)
+    
+    if x_array[-1] < 10000:
+        x_array_func = np.append(x_array, 10000)
+        y_array_func = np.append(y_array, y_array[-1])   
+    
+    offset_function = intp.interp1d(x_array_func, y_array_func, kind = "linear")
+    
+    return offset_function
+
+
+def get_cross_point(p1_x, p1_y, p2_x, p2_y, p3_x, p3_y, p4_x, p4_y):
+    # https://imagingsolution.blog.fc2.com/blog-entry-137.html
+    s1 = ((p4_x - p2_x) * (p1_y - p2_y) - (p4_y - p2_y) * (p1_x - p2_x)) / 2.0
+    s2 = ((p4_x - p2_x) * (p2_y - p3_y) - (p4_y - p2_y) * (p2_x - p3_x)) / 2.0
+    
+    c1_x = p1_x + (p3_x - p1_x) * (s1 / (s1 + s2))
+    c1_y = p1_y + (p3_y - p1_y) * (s1 / (s1 + s2))
+    
+    return c1_x, c1_y
+
+
+def generate_offset_interporate_point(l0_x, l0_y, l1_x, l1_y, l0_offset, l1_offset):
+    # https://w3e.kanazawa-it.ac.jp/math/category/vector/henkan-tex.cgi?target=/math/category/vector/naiseki-wo-fukumu-kihonsiki.html&pcview=2
+    try:
+        a1 = l0_x[1] - l0_x[0]
+        a2 = l0_y[1] - l0_y[0]
+        b1 = l1_x[0] - l1_x[1]
+        b2 = l1_y[0] - l1_y[1]
+            
+        sita = np.arccos( (a1*b1 + a2*b2)/(np.sqrt(a1**2 + a2**2) * np.sqrt(b1**2 + b2**2)) ) / 2.0
+        beta = np.arctan2(a2, a1)
+        
+        R = min(l0_offset, l1_offset)
+        
+        cx, cy = get_cross_point(l0_x[0], l0_y[0], l1_x[0], l1_y[0], l0_x[1], l0_y[1], l1_x[1], l1_y[1])
+        
+        p1_x = cx - R * (1/np.tan(sita)) * np.cos(-beta) 
+        p1_y = cy + R * (1/np.tan(sita)) * np.sin(-beta) 
+        
+        p0_x = p1_x - R*np.sin(-beta)
+        p0_y = p1_y - R*np.cos(-beta)
+    
+        sita_array = np.linspace(np.pi/2 + beta, 2*sita + beta - np.pi/2, N_FILLET_INTERPORATE)
+    
+        x_intp = R*np.cos(sita_array) + p0_x
+        y_intp = R*np.sin(sita_array) + p0_y
+    except:
+        traceback.print_exc()
+        #内積・外積が計算できない場合は、補完しない直線を返す
+        x_intp = np.array([l0_x[1], l1_x[0]])
+        y_intp = np.array([l0_y[1], l1_y[0]])     
+        pass
+        
+    
+    #for debug
+    """
+    print(np.degrees(sita), np.degrees(beta))
+    plt.plot(cx, cy, "ro")
+    plt.plot(p1_x, p1_y, "bo")
+    plt.plot(p0_x, p0_y, "go")
+    plt.plot(l0_x, l0_y, "-o")
+    plt.plot(l1_x, l1_y, "-o")
+    plt.plot(x_intp, y_intp)
+    ax = plt.gca()
+    ax.set_aspect('equal', adjustable='box')
+    """
+    
+    return x_intp, y_intp
+    
+

@@ -16,6 +16,7 @@ import traceback
 from cam_generic_lib import *
 from line_object import *
 from cam_global import *
+from error_log import *
 
 #######################################################################################################################################
 ###############    super_tableクラス   ここから　　　#########################################################################################
@@ -72,6 +73,7 @@ class super_table:
         try:
             self.table.destroy()
         except:
+            # 初回はtableオブジェクトがないので、例外を許容する
             pass
         self.table = ttk.Treeview(self.root, height = self.y_height)
         self.table.place(x = self.x_pos, y = self.y_pos)

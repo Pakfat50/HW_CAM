@@ -14,6 +14,7 @@ import traceback
 
 # 内部ライブラリ
 from cam_generic_lib import *
+from error_log import *
 from cam_global import *
 
 #######################################################################################################################################
@@ -185,6 +186,7 @@ class line_object:
             self.update()
         except:
             traceback.print_exc()
+            output_log(traceback.format_exc())
             pass
     
     
@@ -204,6 +206,7 @@ class line_object:
             self.num = int(num)
         except:
             traceback.print_exc()
+            output_log(traceback.format_exc())
             pass
     
     

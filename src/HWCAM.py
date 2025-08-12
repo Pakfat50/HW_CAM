@@ -43,6 +43,7 @@ from line_object import *
 from dxf_file import *
 from messeage_window import *
 from cam_global import *
+from error_log import *
 
 #======================================================================================================================================
 #            クラスの実装
@@ -146,6 +147,7 @@ class config:
             
         except:
             traceback.print_exc()
+            output_log(traceback.format_exc())
             self.FILENAME_XY = "ファイル名を入力して下さい。"
             self.FILENAME_UV = "ファイル名を入力して下さい。"
             self.OX = 0.0
@@ -178,6 +180,7 @@ class config:
             self.MESSEAGE = "%sの読み込み成功\n"%file_path
         except:
             traceback.print_exc()
+            output_log(traceback.format_exc())
             x_data = [1,1000]
             y_data = [0,0]
             self.offset_function = generate_offset_function(x_data, y_data)
@@ -425,6 +428,7 @@ def Set_OffsetDist(dxf_obj0, dxf_obj1, entry, messeage_window):
         messeage_window.set_messeage("オフセット距離を%sに設定しました。\n"%OffsetDist)
     except:
         traceback.print_exc()
+        output_log(traceback.format_exc())
         messeage_window.set_messeage("実数値を入力して下さい。\n")
         pass
 
@@ -456,6 +460,7 @@ def AutoLineSort(dxf_obj0, dxf_obj1, entry_x, entry_y, messeage_window):
         messeage_window.set_messeage("自動整列しました。\n")
     except:
         traceback.print_exc()
+        output_log(traceback.format_exc())
         messeage_window.set_messeage("実数値を入力して下さい。\n")
         pass
 
@@ -619,6 +624,7 @@ def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, e
 
     except:
         traceback.print_exc()
+        output_log(traceback.format_exc())
         messeage_window.set_messeage("入力値に誤りがあります。オフセット値更新を中止しました。\n")
 
 # Ver2.1変更　引数追加，距離別指定可能
@@ -774,6 +780,7 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
             messeage_window.set_messeage("入力値に誤りがあります。Gコード生成を中止しました。\n\n")
     except:
         traceback.print_exc()
+        output_log(traceback.format_exc())
         messeage_window.set_messeage("Gコード生成途中でエラーが発生しました。\n\n")
         pass
 
@@ -963,6 +970,7 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
         
     except:
         traceback.print_exc()
+        output_log(traceback.format_exc())
         messeage_window.set_messeage("パスチェック中にエラーが発生しました。\n")
         pass      
 
@@ -984,6 +992,7 @@ def offset_origin(dxf_obj0, dxf_obj1, entry_offset_ox, entry_offset_oy, messeage
         messeage_window.set_messeage("XY,UV座標をX:%s, Y:%sオフセットしました。\n"%(offset_ox, offset_oy))
     except:
         traceback.print_exc()
+        output_log(traceback.format_exc())
         messeage_window.set_messeage("オフセット中にエラーが発生しました\n")
 
 

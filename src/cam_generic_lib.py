@@ -15,7 +15,7 @@ import traceback
 
 # 内部ライブラリ
 from cam_global import *
-
+from error_log import *
 
 #======================================================================================================================================
 #            汎用関数
@@ -291,6 +291,7 @@ def plot_3d_cut_path(ax, x, y, u, v, xm, ym, um, vm, z_xy, z_uv, z_m, n_plot):
             return np.array([])
     except:
         traceback.print_exc()
+        output_log(traceback.format_exc())
         return np.array([])
         pass
 
@@ -435,6 +436,7 @@ def generate_offset_interporate_point(l0_x, l0_y, l1_x, l1_y, l0_offset, l1_offs
         
     except:
         traceback.print_exc()
+        output_log(traceback.format_exc())
         #内積・外積が計算できない場合は、補完しない直線を返す
         x_intp = np.array([l0_x[1], l1_x[0]])
         y_intp = np.array([l0_y[1], l1_y[0]])     

@@ -116,7 +116,7 @@ def offset_line(x, y, d, cut_dir, interp_mode): #ver2.2 interp_mode 追加　ポ
         if x[0] == x[1]:
             k = np.pi/2.0
         else:
-            k = np.arctan((y[1]-y[0])/(x[1]-x[0]))
+            k = np.arctan2((y[1]-y[0]), (x[1]-x[0]))
         
         new_x.append(x[0] - d*np.sin(k))
         new_x.append(x[1] - d*np.sin(k))
@@ -131,7 +131,7 @@ def offset_line(x, y, d, cut_dir, interp_mode): #ver2.2 interp_mode 追加　ポ
                 if x[i] == x[i+1]:
                     k = np.pi/2.0
                 else:
-                    k = np.arctan((y[i+1]-y[i])/(x[i+1]-x[i]))
+                    k = np.arctan2((y[i+1]-y[i]), (x[i+1]-x[i]))
 
                 new_x.append(x[i]   - d*np.sin(k))
                 new_x.append(x[i+1] - d*np.sin(k))

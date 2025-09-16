@@ -420,6 +420,7 @@ class dxf_file:
             line_num = self.line_num_list[item2num(temp_item_num)]
             temp_line_object = self.line_list[line_num]
             temp_line_object.toggle_cut_dir()
+            temp_line_object.toggle_offset_dir()
             temp_line_object.update()
             self.table.table.item(temp_item_num, values=(temp_line_object.num, temp_line_object.cut_dir, \
                                                          temp_line_object.offset_dir, format(temp_line_object.offset_dist, '.2f'), \
@@ -587,7 +588,8 @@ class dxf_file:
         
     
     def SortLine(self):
-        selected_items = self.table.table.selection()
+        selected_items = self.table.table.selection()   
+        
         if not(len(selected_items) == 1):
             return len(selected_items)
         else:
@@ -606,6 +608,9 @@ class dxf_file:
                 
             alaivable_line_num_list = sorted(np.array(self.line_num_list.copy())[np.where(np.array(self.line_num_list.copy()) >= 0)])
             new_line_num_list = [line_num_st]
+            
+            x_array = np.array(getFlatten(line_object_st.x))
+            y_array = np.array(getFlatten(line_object_st.y))
     
             while i < len(alaivable_line_num_list) :
                 norm_mn = np.inf
@@ -632,16 +637,14 @@ class dxf_file:
                 if temp_cut_dir == 'F':
                     x0 = temp_line1.ed[0]
                     y0 = temp_line1.ed[1]
-                    if temp_line1.cut_dir != temp_cut_dir:
-                        temp_line1.toggle_offset_dir()
                         
                 if temp_cut_dir == 'R':
                     x0 = temp_line1.st[0]
                     y0 = temp_line1.st[1]
-                    if temp_line1.cut_dir != temp_cut_dir:
-                        temp_line1.toggle_offset_dir()
                             
                 temp_line1.set_cut_dir(temp_cut_dir)
+                x_array = np.concatenate([x_array, getFlatten(temp_line1.x)], 0)
+                y_array = np.concatenate([y_array, getFlatten(temp_line1.y)], 0)
                 new_line_num_list.append(temp_line_num1)
                 i += 1
             
@@ -654,6 +657,18 @@ class dxf_file:
                     i += 1
                 else:
                     i += 1
+            
+            ccw = detectRotation(x_array, y_array)
+s
+            i = 0
+            while i < len(self.line_num_list):
+                temp_line_num = self.line_num_list[i]
+                temp_line = self.line_list[temp_line_num]
+                if ccw == True:
+                    temp_line.set_offset_dir('O')
+                else:
+                    temp_line.set_offset_dir('I')
+                i += 1
             
             self.table_reload()
             self.table.table.selection_set('I001')

@@ -104,20 +104,12 @@ def offset_line(x, y, d, cut_dir, interp_mode): #ver2.2 interp_mode 追加　ポ
     new_x = []
     new_y = []
     k = 0
-    sign_cut_dir = 1
-    
-    if cut_dir == "R":
-        sign_cut_dir = -1
     
     if len(x) < 2: 
         return x, y
 
     if len(x) == 2:
-        if x[0] == x[1]:
-            k = np.pi/2.0
-        else:
-            k = np.arctan2((y[1]-y[0]), (x[1]-x[0]))
-        
+        k = np.arctan2((y[1]-y[0]), (x[1]-x[0]))
         new_x.append(x[0] - d*np.sin(k))
         new_x.append(x[1] - d*np.sin(k))
         new_y.append(y[0] + d*np.cos(k))
@@ -152,8 +144,8 @@ def offset_line(x, y, d, cut_dir, interp_mode): #ver2.2 interp_mode 追加　ポ
                 else:
                     k = np.arctan2((y[i+1]-y[i-1]), (x[i+1]-x[i-1]))
 
-                new_x.append(x[i] - d*np.sin(k) * sign_cut_dir)      
-                new_y.append(y[i] + d*np.cos(k) * sign_cut_dir)
+                new_x.append(x[i] - d*np.sin(k))      
+                new_y.append(y[i] + d*np.cos(k))
                 i += 1
     
     new_x = np.array(new_x)
@@ -457,5 +449,28 @@ def generate_offset_interporate_point(l0_x, l0_y, l1_x, l1_y, l0_offset, l1_offs
     """
     
     return x_intp, y_intp
+
+
+def getFlatten(array):
+    ret = []
+    for val in array:
+        ret.append(float(val))
+    return np.array(ret)
+
+
+def detectRotation(x, y):
+    i = 0
+    temp_s = 0
+
+    while i < len(x) - 1:
+        temp_s += x[i]*y[i+1] - x[i+1]*y[i]
+        i += 1
+    temp_s += x[-1]*y[0] - x[0]*y[-1]
     
+    if temp_s > 0:
+        ccw = True
+    else:
+        ccw = False
+    
+    return ccw
 

@@ -602,17 +602,20 @@ class dxf_file:
             if cut_dir_st == 'F':
                 x0 = line_object_st.ed[0]
                 y0 = line_object_st.ed[1]
+                x_array = np.array(line_object_st.x_raw)
+                y_array = np.array(line_object_st.y_raw)
             else:
                 x0 = line_object_st.st[0]
                 y0 = line_object_st.st[1]   
+                x_array = np.array(line_object_st.x_raw[::-1])
+                y_array = np.array(line_object_st.y_raw[::-1])
                 
             alaivable_line_num_list = sorted(np.array(self.line_num_list.copy())[np.where(np.array(self.line_num_list.copy()) >= 0)])
             new_line_num_list = [line_num_st]
             
-            x_array = np.array(getFlatten(line_object_st.x))
-            y_array = np.array(getFlatten(line_object_st.y))
+
     
-            while i < len(alaivable_line_num_list) :
+            while i < len(alaivable_line_num_list) - 1:
                 norm_mn = np.inf
                 j = 0
                 while j < len(alaivable_line_num_list):
@@ -637,15 +640,18 @@ class dxf_file:
                 if temp_cut_dir == 'F':
                     x0 = temp_line1.ed[0]
                     y0 = temp_line1.ed[1]
-                        
+                    x_array = np.concatenate([x_array, temp_line1.x_raw], 0)
+                    y_array = np.concatenate([y_array, temp_line1.y_raw], 0)      
+                    
                 if temp_cut_dir == 'R':
                     x0 = temp_line1.st[0]
                     y0 = temp_line1.st[1]
-                            
+                    x_array = np.concatenate([x_array, temp_line1.x_raw[::-1]], 0)
+                    y_array = np.concatenate([y_array, temp_line1.y_raw[::-1]], 0) 
+                          
                 temp_line1.set_cut_dir(temp_cut_dir)
-                x_array = np.concatenate([x_array, getFlatten(temp_line1.x)], 0)
-                y_array = np.concatenate([y_array, getFlatten(temp_line1.y)], 0)
                 new_line_num_list.append(temp_line_num1)
+                print(temp_line_num1)
                 i += 1
             
             i = 0
@@ -659,7 +665,7 @@ class dxf_file:
                     i += 1
             
             ccw = detectRotation(x_array, y_array)
-s
+
             i = 0
             while i < len(self.line_num_list):
                 temp_line_num = self.line_num_list[i]

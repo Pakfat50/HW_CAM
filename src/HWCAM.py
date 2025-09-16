@@ -28,6 +28,7 @@ Created on Sat Jun 27 13:29:53 2020
 
 # 外部ライブラリ
 import tkinter as tk
+from tkinter import ttk
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
@@ -419,19 +420,17 @@ def Change_OffsetDir(dxf_obj, messeage_window):
     messeage_window.set_messeage("オフセット方向を逆転\n")
 
 
-def Set_OffsetDist(dxf_obj0, dxf_obj1, entry, messeage_window):
+def Set_OffsetDist(dxf_obj, entry, messeage_window):
     entry_value = entry.get()
     try:
         OffsetDist = float(entry_value)
-        dxf_obj0.set_offset_dist(OffsetDist)
-        dxf_obj1.set_offset_dist(OffsetDist)
+        dxf_obj.set_offset_dist(OffsetDist)
         messeage_window.set_messeage("オフセット距離を%sに設定しました。\n"%OffsetDist)
     except:
         traceback.print_exc()
         output_log(traceback.format_exc())
         messeage_window.set_messeage("実数値を入力して下さい。\n")
         pass
-
 
 def Merge_line(dxf_obj, messeage_window):
     error, selected_items = dxf_obj.Merge_Selected_line()
@@ -448,25 +447,17 @@ def delete_line(dxf_obj, messeage_window):
     messeage_window.set_messeage("ラインを削除しました。\n")
     
     
-def AutoLineSort(dxf_obj0, dxf_obj1, messeage_window): 
+def AutoLineSort(dxf_obj, messeage_window): 
     try:
-        ret_xy = dxf_obj0.SortLine()
-        ret_uv = dxf_obj1.SortLine()
-
-        output_log(traceback.format_exc())
-        
-        if ret_xy == 1:
+        ret = dxf_obj.SortLine()
+        if ret == 1:
             messeage_window.set_messeage("自動整列しました。\n")
         else:
-            messeage_window.set_messeage("XY平面で%s本の線が選択されています。起点とする１本の線のみを選択してください。\n"%ret_xy)
+            messeage_window.set_messeage("%s本の線が選択されています。起点とする１本の線のみを選択してください。\n"%ret)
+
     except:
         traceback.print_exc()
-        
-        if ret_uv == 1:
-            messeage_window.set_messeage("自動整列しました。\n")
-        else:
-            messeage_window.set_messeage("UV平面で%s本の線が選択されています。起点とする１本の線のみを選択してください。\n"%ret_uv)        
-    
+        output_log(traceback.format_exc())
         pass
 
 
@@ -1111,116 +1102,151 @@ if __name__ == "__main__":
     FileNameEntry1.place(x = 1252, y = 35) 
 
 
-    #【configファイル名の入力コンソール】
-    ConfigFileLabel0 = tk.Label(root, text="設定ファイル",font=("",15))
-    ConfigFileLabel0.place(x = 850, y = 510)
-    ConfigFileEntry = tk.Entry(root, width=50) 
-    ConfigFileEntry.insert(tk.END, "config.csv") 
-    ConfigFileEntry.place(x = 1000, y = 510)
-    
-    
+    #【X-Y用オフセット距離の入力コンソール】
+    OffsetDistLabel0 = tk.Label(root, text="オフセット量[mm]",font=("",10))
+    OffsetDistLabel0.place(x = 875, y = 498)
+    OffsetDistEntry0 = tk.Entry(root, width=14, justify=tk.RIGHT,font=("",12)) 
+    OffsetDistEntry0.insert(tk.END, "0.0")   
+    OffsetDistEntry0.place(x = 990, y = 495) 
+
+
+    #【U-V用オフセット距離の入力コンソール】
+    OffsetDistLabel1 = tk.Label(root, text="オフセット量[mm]",font=("",10))
+    OffsetDistLabel1.place(x = 1275, y = 498)
+    OffsetDistEntry1 = tk.Entry(root, width=14, justify=tk.RIGHT,font=("",12)) 
+    OffsetDistEntry1.insert(tk.END, "0.0")   
+    OffsetDistEntry1.place(x = 1390, y = 495) 
+
+
     #【オフセット関数ファイル名の入力コンソール】
-    OffsetFuncLabel0 = tk.Label(root, text="溶け量ファイル",font=("",15))
-    OffsetFuncLabel0.place(x = 850, y = 540)
-    OffsetFuncEntry = tk.Entry(root, width=50) 
+    OffsetFuncLabel0 = tk.Label(root, text="溶け量ファイル",font=("",12))
+    OffsetFuncLabel0.place(x = 850, y = 535)
+    OffsetFuncEntry = tk.Entry(root, width=36) 
     OffsetFuncEntry.insert(tk.END, "offset_function.csv")   
-    OffsetFuncEntry.place(x = 1000, y = 540) 
+    OffsetFuncEntry.place(x = 970, y = 535) 
+    
 
-
+    #【configファイル名の入力コンソール】
+    ConfigFileLabel0 = tk.Label(root, text="設定ファイル",font=("",12))
+    ConfigFileLabel0.place(x = 850, y = 575)
+    ConfigFileEntry = tk.Entry(root, width=36) 
+    ConfigFileEntry.insert(tk.END, "config.csv") 
+    ConfigFileEntry.place(x = 970, y = 575)
+    
+    
+    
     #【原点オフセット入力コンソール】
-    OriginOffsetLabel0 = tk.Label(root, text="図面オフセット",font=("",15))
-    OriginOffsetLabel0.place(x = 850, y = 580)
-    OriginOffsetLabel1 = tk.Label(root, text="X：",font=("",15))
-    OriginOffsetLabel1.place(x = 1000, y = 580)
-    OriginOffsetLabel2 = tk.Label(root, text="Y：",font=("",15))
-    OriginOffsetLabel2.place(x = 1120, y = 580)
-    OriginOffsetEntry_X = tk.Entry(root, width=8,font=("",15)) 
+    OriginOffsetLabel0 = tk.Label(root, text="全体オフセット",font=("",12))
+    OriginOffsetLabel0.place(x = 850, y = 610)
+    OriginOffsetLabel1 = tk.Label(root, text="X：",font=("",12))
+    OriginOffsetLabel1.place(x = 970, y = 610)
+    OriginOffsetLabel2 = tk.Label(root, text="Y：",font=("",12))
+    OriginOffsetLabel2.place(x = 1070, y = 610)
+    OriginOffsetEntry_X = tk.Entry(root, width=8,font=("",12)) 
     OriginOffsetEntry_X.insert(tk.END, 0)       
-    OriginOffsetEntry_X.place(x = 1030, y = 580)   
-    OriginOffsetEntry_Y = tk.Entry(root, width=8,font=("",15))     
+    OriginOffsetEntry_X.place(x = 1000, y = 610)   
+    OriginOffsetEntry_Y = tk.Entry(root, width=8,font=("",12))     
     OriginOffsetEntry_Y.insert(tk.END, 0)
-    OriginOffsetEntry_Y.place(x = 1150, y = 580)    
+    OriginOffsetEntry_Y.place(x = 1100, y = 610)    
 
 
     #【切り出し原点入力コンソール】
-    AutoAlignmentLabel0 = tk.Label(root, text="切り出し原点",font=("",15))
-    AutoAlignmentLabel0.place(x = 850, y = 620)
-    AutoAlignmentLabel1 = tk.Label(root, text="X：",font=("",15))
-    AutoAlignmentLabel1.place(x = 1000, y = 620)
-    AutoAlignmentLabel2 = tk.Label(root, text="Y：",font=("",15))
-    AutoAlignmentLabel2.place(x = 1120, y = 620)
-    AutoAlignmentEntry_X = tk.Entry(root, width=8,font=("",15)) 
+    AutoAlignmentLabel0 = tk.Label(root, text="切り出し始点",font=("",12))
+    AutoAlignmentLabel0.place(x = 850, y = 645)
+    AutoAlignmentLabel1 = tk.Label(root, text="X：",font=("",12))
+    AutoAlignmentLabel1.place(x = 970, y = 645)
+    AutoAlignmentLabel2 = tk.Label(root, text="Y：",font=("",12))
+    AutoAlignmentLabel2.place(x = 1070, y = 645)
+    AutoAlignmentEntry_X = tk.Entry(root, width=8,font=("",12)) 
     AutoAlignmentEntry_X.insert(tk.END, config.OX)       
-    AutoAlignmentEntry_X.place(x = 1030, y = 620)   
-    AutoAlignmentEntry_Y = tk.Entry(root, width=8,font=("",15))     
+    AutoAlignmentEntry_X.place(x = 1000, y = 645)   
+    AutoAlignmentEntry_Y = tk.Entry(root, width=8,font=("",12))     
     AutoAlignmentEntry_Y.insert(tk.END, config.OY)
-    AutoAlignmentEntry_Y.place(x = 1150, y = 620)    
+    AutoAlignmentEntry_Y.place(x = 1100, y = 645)
 
 
     #【切り出し終点入力コンソール】
-    CutEndLabel0 = tk.Label(root, text="切り出し終点",font=("",15))
-    CutEndLabel0.place(x = 850, y = 650)
-    CutEndLabel1 = tk.Label(root, text="X：",font=("",15))
-    CutEndLabel1.place(x = 1000, y = 650)
-    CutEndLabel2 = tk.Label(root, text="Y：",font=("",15))
-    CutEndLabel2.place(x = 1120, y = 650)
-    CutEndEntry_X = tk.Entry(root, width=8,font=("",15)) 
+    CutEndLabel0 = tk.Label(root, text="切り出し終点",font=("",12))
+    CutEndLabel0.place(x = 1200, y = 645)
+    CutEndLabel1 = tk.Label(root, text="X：",font=("",12))
+    CutEndLabel1.place(x = 1320, y = 645)
+    CutEndLabel2 = tk.Label(root, text="Y：",font=("",12))
+    CutEndLabel2.place(x = 1420, y = 645)
+    CutEndEntry_X = tk.Entry(root, width=8,font=("",12)) 
     CutEndEntry_X.insert(tk.END, config.EX)       
-    CutEndEntry_X.place(x = 1030, y = 650)   
-    CutEndEntry_Y = tk.Entry(root, width=8,font=("",15))     
+    CutEndEntry_X.place(x = 1350, y = 645)   
+    CutEndEntry_Y = tk.Entry(root, width=8,font=("",12))     
     CutEndEntry_Y.insert(tk.END, config.EY)
-    CutEndEntry_Y.place(x = 1150, y = 650) 
+    CutEndEntry_Y.place(x = 1450, y = 645) 
 
 
     #【分割距離入力コンソール】
-    dlLabel = tk.Label(root, text="分割距離[mm]",font=("",15))
-    dlLabel.place(x = 1150, y = 690)
-    dlEntry = tk.Entry(root, width=8,font=("",15))     
+    dlLabel = tk.Label(root, text="分割距離[mm]",font=("",12))
+    dlLabel.place(x = 1150, y = 680)
+    dlEntry = tk.Entry(root, width=8,font=("",12))     
     dlEntry.insert(tk.END, config.DELTA_LENGTH)
-    dlEntry.place(x = 1330, y = 690)       
+    dlEntry.place(x = 1300, y = 680)       
 
 
     #【カット速度入力コンソール】   
-    CutSpeedLabel = tk.Label(root, text="カット速度[mm/分]",font=("",15))
-    CutSpeedLabel.place(x = 850, y = 690)
-    CutSpeedEntry = tk.Entry(root, width=8,font=("",15))     
+    CutSpeedLabel = tk.Label(root, text="カット速度[mm/分]",font=("",12))
+    CutSpeedLabel.place(x = 850, y = 680)
+    CutSpeedEntry = tk.Entry(root, width=8,font=("",12))     
     CutSpeedEntry.insert(tk.END, config.CUTSPEED)
-    CutSpeedEntry.place(x = 1030, y = 690)    
+    CutSpeedEntry.place(x = 1000, y = 680)    
+
+
+    #【カット速度定義面入力コンボボックス】   
+    CutSpeedDefLabel = tk.Label(root, text="カット速度定義面",font=("",12))
+    CutSpeedDefLabel.place(x = 850, y = 705) 
+    CutSpeedDefList = ("XY(Mech)", "XY(Work)", "Center", "UV(Work)", "UV(Mech)")
+    CutSpeedDefCB = ttk.Combobox(root, textvariable= tk.StringVar(), width = 15,\
+                                 values=CutSpeedDefList, style="office.TCombobox")
+    CutSpeedDefCB.place(x = 1000, y = 705) 
+    
+
+    #【CNC速度定義入力コンボボックス】
+    CNCSpeedDefLabel = tk.Label(root, text="CNC速度定義",font=("",12))
+    CNCSpeedDefLabel.place(x = 1150, y = 705)
+    CNCSpeedDefList = ("XY", "UV", "XYZ", "InvertTime")
+    CNCSpeedDefCB = ttk.Combobox(root, textvariable= tk.StringVar(), width = 15,\
+                                 values=CNCSpeedDefList, style="office.TCombobox")
+    CNCSpeedDefCB.place(x = 1300, y = 705) 
 
 
     # Ver2.1 変更
     #【カット面距離入力コンソール1】   
-    XYDistLabel = tk.Label(root, text="XY面距離[mm]",font=("",15))
-    XYDistLabel.place(x = 850, y = 720)
-    XYDistEntry = tk.Entry(root, width=8,font=("",15))     
+    XYDistLabel = tk.Label(root, text="XY面距離[mm]",font=("",12))
+    XYDistLabel.place(x = 850, y = 735)
+    XYDistEntry = tk.Entry(root, width=8,font=("",12))     
     XYDistEntry.insert(tk.END, config.XY_DIST)
-    XYDistEntry.place(x = 1030, y = 720)  
+    XYDistEntry.place(x = 1000, y = 735)  
 
     # Ver2.1 追加
     #【カット面距離入力コンソール2】   
-    UVDistLabel = tk.Label(root, text="UV面距離[mm]",font=("",15))
-    UVDistLabel.place(x = 1150, y = 720)
-    UVDistEntry = tk.Entry(root, width=8,font=("",15))     
+    UVDistLabel = tk.Label(root, text="UV面距離[mm]",font=("",12))
+    UVDistLabel.place(x = 1150, y = 735)
+    UVDistEntry = tk.Entry(root, width=8,font=("",12))     
     UVDistEntry.insert(tk.END, config.UV_DIST)
-    UVDistEntry.place(x = 1330, y = 720)  
+    UVDistEntry.place(x = 1300, y = 735)  
 
 
     #Ver2.1 追加 
     #【XY-UV面距離入力コンソール】   
-    WorkLengthLabel = tk.Label(root, text="XY-UV面距離[mm]",font=("",15))
-    WorkLengthLabel.place(x = 850, y = 750)
-    WorkLengthEntry = tk.Entry(root, width=8,font=("",15))     
+    WorkLengthLabel = tk.Label(root, text="XY-UV面距離[mm]",font=("",12))
+    WorkLengthLabel.place(x = 850, y = 760)
+    WorkLengthEntry = tk.Entry(root, width=8,font=("",12))     
     WorkLengthEntry.insert(tk.END, config.WORK_LENGTH)
-    WorkLengthEntry.place(x = 1030, y = 750)
+    WorkLengthEntry.place(x = 1000, y = 760)
 
 
     #Ver2.1 位置変更 
     #【マシン距離入力コンソール】   
-    MachDistLabel = tk.Label(root, text="駆動面距離[mm]",font=("",15))
-    MachDistLabel.place(x = 1150, y = 750)
-    MachDistEntry = tk.Entry(root, width=8,font=("",15))     
+    MachDistLabel = tk.Label(root, text="駆動面距離[mm]",font=("",12))
+    MachDistLabel.place(x = 1150, y = 760)
+    MachDistEntry = tk.Entry(root, width=8,font=("",12))     
     MachDistEntry.insert(tk.END, config.MACH_DIST)
-    MachDistEntry.place(x = 1330, y = 750)  
+    MachDistEntry.place(x = 1300, y = 760)  
 
 
     #======================================================================================================================================
@@ -1244,93 +1270,99 @@ if __name__ == "__main__":
     LoadBtn1.place(x=1600, y=30)    
 
 
+    #【X-Y用 オフセット距離反映ボタン】
+    OffsetBtn0 = tk.Button(root, text="オフセット量設定", width = 15, bg='#fffacd', \
+                         command = lambda: Set_OffsetDist(dxf0, OffsetDistEntry0, MessageWindow))
+    OffsetBtn0.place(x=1125, y=492)  
+
+
+    #【U-V用 オフセット距離反映ボタン】
+    OffsetBtn1 = tk.Button(root, text="オフセット量設定", width = 15, bg='#fffacd', \
+                         command = lambda: Set_OffsetDist(dxf1, OffsetDistEntry1, MessageWindow))
+    OffsetBtn1.place(x=1525, y=492)  
+
+
     #【configファイル読込用のエクスプローラーを開くボタン】
     ConfigLoadBtn0 = tk.Button(root, text="開く", command = lambda: load_config(config, ConfigFileEntry, \
                                                                               dlEntry, CutSpeedEntry, XYDistEntry, UVDistEntry, \
                                                                                   WorkLengthEntry, MachDistEntry, MessageWindow))
-    ConfigLoadBtn0.place(x=1320, y=505)  
+    ConfigLoadBtn0.place(x=1207, y=570)  
 
     #【オフセット関数ファイル読込用のエクスプローラーを開くボタン】   
     OffsetFuncLoadBtn1 = tk.Button(root, text="開く", command = lambda: load_offset_func(config, OffsetFuncEntry, MessageWindow))
-    OffsetFuncLoadBtn1.place(x=1320, y=535)    
+    OffsetFuncLoadBtn1.place(x=1207, y=532)    
+
+    #【オフセット値更新ボタン】    
+    OffsetBtn = tk.Button(root, text = "溶け量ファイルからオフセット量設定", height = 1, width = 34, font=("",10),  bg='#fffacd', \
+                          command = lambda: Set_OffsetDistFromFunction(dxf0, dxf1, XYDistEntry, UVDistEntry, MachDistEntry, CutSpeedEntry, config.offset_function, MessageWindow))
+    OffsetBtn.place(x = 1255, y = 532)
 
 
     #【原点オフセットボタン】
-    OriginOffsetBtn0 = tk.Button(root, text="オフセット更新", width =15, command = lambda: offset_origin(dxf0, dxf1, OriginOffsetEntry_X, OriginOffsetEntry_Y, MessageWindow))
-    OriginOffsetBtn0.place(x=1255, y=580)   
+    OriginOffsetBtn0 = tk.Button(root, text="全体オフセット更新", width =15, command = lambda: offset_origin(dxf0, dxf1, OriginOffsetEntry_X, OriginOffsetEntry_Y, MessageWindow))
+    OriginOffsetBtn0.place(x=1205, y=607)   
 
     #【X-Yラインテーブル用　カット方向入れ替えボタン】
     ChangeCutDirBtn0 = tk.Button(root, text="カット方向入替え", width =15, bg = "#3cb371", command = lambda: Change_CutDir(dxf0, MessageWindow))
     ChangeCutDirBtn0.place(x=855, y=435)   
-       
-    #【X-Yラインテーブル用　オフセット方向入れ替えボタン】    
-    ChangeOffsetDirBtn0 = tk.Button(root, text="オフセット方向入替え", width =15, bg = "#3cb371", command = lambda: Change_OffsetDir(dxf0, MessageWindow))
-    ChangeOffsetDirBtn0.place(x=990, y=435)
+    
+    #【X-Yラインテーブル用　ライン整列ボタン】    
+    AutoAlignmentBtn0 = tk.Button(root, text="ライン整列", width =15, bg = "#3cb371", command = lambda: AutoLineSort(dxf0, MessageWindow))
+    AutoAlignmentBtn0.place(x=990, y=435)
             
     #【X-Yラインテーブル用　カット順逆転ボタン】    
     ReverseBtn0 = tk.Button(root, text="カット順逆転", width =15, bg = "#3cb371", command = lambda: Reverse(dxf0, MessageWindow))
     ReverseBtn0.place(x=1125, y=435)  
     
-    #【X-Yラインテーブル用　ライン入れ替えボタン】
-    SwapBtn0 = tk.Button(root, text="ライン入れ替え", width =15, bg = "#fffacd", command = lambda: swap_line(dxf0, MessageWindow))
-    SwapBtn0.place(x=855, y=465)    
     
     #【X-Yラインテーブル用　ライン結合ボタン】
     SwapBtn0 = tk.Button(root, text="ライン結合", width =15, bg = "#4ba3fb", command = lambda: Merge_line(dxf0, MessageWindow))
-    SwapBtn0.place(x=990, y=465) 
+    SwapBtn0.place(x=855, y=465) 
         
     #【X-Yラインテーブル用　ライン削除ボタン】    
     DelateBtn0 = tk.Button(root, text="ライン削除", width = 15, bg = "#ff6347", command = lambda: delete_line(dxf0, MessageWindow))
-    DelateBtn0.place(x=1125, y=465)
+    DelateBtn0.place(x=990, y=465)
   
   
     #【U-Vラインテーブル用　カット方向入れ替えボタン】    
     ChangeCutDirBtn1 = tk.Button(root, text="カット方向入替え", width =15, bg = "#3cb371", command = lambda: Change_CutDir(dxf1, MessageWindow))
     ChangeCutDirBtn1.place(x=1255, y=435)
     
-    #【U-Vラインテーブル用　オフセット方向入れ替えボタン】    
-    ChangeOffsetDirBtn1 = tk.Button(root, text="オフセット方向入替え", width =15, bg = "#3cb371", command = lambda: Change_OffsetDir(dxf1, MessageWindow))
-    ChangeOffsetDirBtn1.place(x=1390, y=435)
+    #【U-Vラインテーブル用　ライン整列ボタン】    
+    AutoAlignmentBtn1 = tk.Button(root, text="ライン整列", width =15, bg = "#3cb371", command = lambda: AutoLineSort(dxf1, MessageWindow))
+    AutoAlignmentBtn1.place(x=1390, y=435)
     
     #【U-Vラインテーブル用　カット順逆転ボタン】    
     ReverseBtn1 = tk.Button(root, text="カット順逆転", width =15, bg = "#3cb371", command = lambda: Reverse(dxf1, MessageWindow))
     ReverseBtn1.place(x=1525, y=435)   
     
-    #【U-Vラインテーブル用　ライン入れ替えボタン】    
-    SwapBtn1 = tk.Button(root, text="ライン入れ替え", width = 15, bg = "#fffacd", command = lambda: swap_line(dxf1, MessageWindow))
-    SwapBtn1.place(x=1255, y=465)
- 
+    
     #【U-Vラインテーブル用　ライン結合ボタン】    
     DelateBtn1 = tk.Button(root, text="ライン結合", width = 15, bg = "#4ba3fb" , command = lambda: Merge_line(dxf1, MessageWindow))
-    DelateBtn1.place(x=1390, y=465)   
+    DelateBtn1.place(x=1255, y=465)   
  
     #【U-Vラインテーブル用　ライン削除ボタン】    
     DelateBtn1 = tk.Button(root, text="ライン削除", width = 15, bg = "#ff6347" , command = lambda: delete_line(dxf1, MessageWindow))
-    DelateBtn1.place(x=1525, y=465)
+    DelateBtn1.place(x=1390, y=465)
     
-    #【オフセット値更新ボタン】    
-    OffsetBtn = tk.Button(root, text = "オフセット距離更新", height = 1, width = 19,  bg='#fffacd', \
-                          command = lambda: Set_OffsetDistFromFunction(dxf0, dxf1, XYDistEntry, UVDistEntry, MachDistEntry, CutSpeedEntry, config.offset_function, MessageWindow))
-    OffsetBtn.place(x = 1530, y = 598)
-
-
+    """
     #【自動整列ボタン】    
-    AutoAlignmentBtn = tk.Button(root, text = "自動整列", height = 1, width = 12,font=("",15), bg='#fffacd', command = lambda: AutoLineSort(dxf0, dxf1, MessageWindow))
+    AutoAlignmentBtn = tk.Button(root, text = "自動整列", height = 1, width = 12, font=("",12), bg='#fffacd', command = lambda: AutoLineSort(dxf0, dxf1, MessageWindow))
     AutoAlignmentBtn.place(x = 1530, y = 555)
-
+    """
 
     #Ver2.0 変更　WorkDistWntryを追加
     #【パスチェックボタン】    
-    ChkPassBtn = tk.Button(root, text = "パスチェック", height = 2, width = 12,font=("",15), bg='#3cb371', \
+    ChkPassBtn = tk.Button(root, text = "パスチェック", height = 2, width = 14,font=("",12), bg='#3cb371', \
                            command = lambda: path_chk(root, dxf0, dxf1, AutoAlignmentEntry_X, AutoAlignmentEntry_Y, CutEndEntry_X, CutEndEntry_Y, XYDistEntry, UVDistEntry, WorkLengthEntry, MachDistEntry, dlEntry, MessageWindow))
-    ChkPassBtn.place(x = 1530, y = 630)
+    ChkPassBtn.place(x = 1530, y = 690)
     
 
     #Ver2.0 変更　MechDistEntry, WorkDistWntryを追加
     #【Gコード生成ボタン】        
-    GenGCodeBtn = tk.Button(root, text = "Gコード生成", height = 2, width = 12,font=("",15), bg='#ff6347', \
+    GenGCodeBtn = tk.Button(root, text = "Gコード生成", height = 2, width = 14,font=("",12), bg='#ff6347', \
                             command = lambda: gen_g_code(dxf0, dxf1, AutoAlignmentEntry_X, AutoAlignmentEntry_Y, CutEndEntry_X, CutEndEntry_Y, XYDistEntry, UVDistEntry, WorkLengthEntry, MachDistEntry, CutSpeedEntry, dlEntry, MessageWindow, config))
-    GenGCodeBtn.place(x = 1530, y = 700)
+    GenGCodeBtn.place(x = 1530, y = 740)
 
 
 
@@ -1338,8 +1370,8 @@ if __name__ == "__main__":
     #        Checkbuttonインスタンスの生成
     #======================================================================================================================================
 
-    #【U-V画面とX-Y画面の連動チェックボックス】  
-    chkValue = tk.BooleanVar()      
+    #【U-V画面とX-Y画面の連動チェックボックス】
+    chkValue = tk.BooleanVar()
     chk0 = tk.Checkbutton(root, text="U-V画面をX-Y画面に連動させる", var=chkValue , command =  lambda: XY_UV_Link(chkValue, table0, table1, MessageWindow))
     chk0.place(x=1460, y=5)
     

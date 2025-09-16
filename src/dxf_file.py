@@ -349,20 +349,27 @@ class dxf_file:
                     col = "b"
                     
                 if line_num == self.selected_line:
-                    self.ax.plot(temp_line_object.x, temp_line_object.y, color = col)
-                    X,Y = temp_line_object.x[0], temp_line_object.y[0]
-                    U,V = temp_line_object.x[1], temp_line_object.y[1]
-                    self.ax.quiver(X,Y,U-X,V-Y,color = col)
-                    if temp_line_object.cut_dir == "F":
-                        X,Y = temp_line_object.x_raw[0], temp_line_object.y_raw[0]
-                        U,V = temp_line_object.x[0], temp_line_object.y[0]
-                    else:
-                        X,Y = temp_line_object.x_raw[-1], temp_line_object.y_raw[-1]
-                        U,V = temp_line_object.x[0], temp_line_object.y[0]            
-                    if norm(X,Y,U,V) != 0:
-                        self.ax.quiver(X,Y,U-X,V-Y,color = "y") #ver2.2 バグ修正 Y を y に変更
-                else :
-                    self.ax.plot(temp_line_object.x, temp_line_object.y ,color = col, alpha = 0.2)    
+                    alpha_line = 1
+                    alpha_vect = 1
+                    alpha_offset = 1
+                else:
+                    alpha_line = 0.1
+                    alpha_vect = 0.1
+                    alpha_offset = 0
+                    
+                self.ax.plot(temp_line_object.x, temp_line_object.y, color = col, alpha = alpha_line)
+                X,Y = temp_line_object.x[0], temp_line_object.y[0]
+                U,V = temp_line_object.x[1], temp_line_object.y[1]
+                self.ax.quiver(X,Y,U-X,V-Y,color = col, alpha = alpha_vect)
+                if temp_line_object.cut_dir == "F":
+                    X,Y = temp_line_object.x_raw[0], temp_line_object.y_raw[0]
+                    U,V = temp_line_object.x[0], temp_line_object.y[0]
+                else:
+                    X,Y = temp_line_object.x_raw[-1], temp_line_object.y_raw[-1]
+                    U,V = temp_line_object.x[0], temp_line_object.y[0]            
+                if norm(X,Y,U,V) != 0:
+                    self.ax.quiver(X,Y,U-X,V-Y,color = "y", alpha = alpha_offset) #ver2.2 バグ修正 Y を y に変更
+  
             i += 1
         self.canvas.draw()
         

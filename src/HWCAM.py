@@ -448,20 +448,25 @@ def delete_line(dxf_obj, messeage_window):
     messeage_window.set_messeage("ラインを削除しました。\n")
     
     
-def AutoLineSort(dxf_obj0, dxf_obj1, entry_x, entry_y, messeage_window):
-    entry_x_value = entry_x.get()
-    entry_y_value = entry_y.get()
-    
+def AutoLineSort(dxf_obj0, dxf_obj1, messeage_window): 
     try:
-        ox = float(entry_x_value)
-        oy = float(entry_y_value)
-        dxf_obj0.SortLine(ox, oy)
-        dxf_obj1.SortLine(ox, oy)
-        messeage_window.set_messeage("自動整列しました。\n")
+        ret_xy = dxf_obj0.SortLine()
+        ret_uv = dxf_obj1.SortLine()
+
+        output_log(traceback.format_exc())
+        
+        if ret_xy == 1:
+            messeage_window.set_messeage("自動整列しました。\n")
+        else:
+            messeage_window.set_messeage("XY平面で%s本の線が選択されています。起点とする１本の線のみを選択してください。\n"%ret_xy)
     except:
         traceback.print_exc()
-        output_log(traceback.format_exc())
-        messeage_window.set_messeage("実数値を入力して下さい。\n")
+        
+        if ret_uv == 1:
+            messeage_window.set_messeage("自動整列しました。\n")
+        else:
+            messeage_window.set_messeage("UV平面で%s本の線が選択されています。起点とする１本の線のみを選択してください。\n"%ret_uv)        
+    
         pass
 
 
@@ -1310,7 +1315,7 @@ if __name__ == "__main__":
 
 
     #【自動整列ボタン】    
-    AutoAlignmentBtn = tk.Button(root, text = "自動整列", height = 1, width = 12,font=("",15), bg='#fffacd', command = lambda: AutoLineSort(dxf0, dxf1, AutoAlignmentEntry_X, AutoAlignmentEntry_Y, MessageWindow))
+    AutoAlignmentBtn = tk.Button(root, text = "自動整列", height = 1, width = 12,font=("",15), bg='#fffacd', command = lambda: AutoLineSort(dxf0, dxf1, MessageWindow))
     AutoAlignmentBtn.place(x = 1530, y = 555)
 
 

@@ -576,68 +576,83 @@ class dxf_file:
                 i += 1
         
         self.table_reload()
-        self.plot()        
+        self.plot()
         
     
-    def SortLine(self, ox0, oy0):
-        i = 0
-        norm_mn = np.inf
-        temp_cut_dir = 'F'
-        x0 = ox0
-        y0 = oy0
-        alaivable_line_num_list = sorted(np.array(self.line_num_list.copy())[np.where(np.array(self.line_num_list.copy()) >= 0)])
-        new_line_num_list = []
-
-        while i < len(alaivable_line_num_list) :
+    def SortLine(self):
+        selected_items = self.table.table.selection()
+        if not(len(selected_items) == 1):
+            return len(selected_items)
+        else:
+            item_num_st = selected_items[0]
+            line_num_st = self.line_num_list[item2num(item_num_st)]
+            line_object_st = self.line_list[line_num_st]
+            cut_dir_st = line_object_st.cut_dir
+            i = 0
             norm_mn = np.inf
-            j = 0
-            while j < len(alaivable_line_num_list):
-                num1 = alaivable_line_num_list[j]
-                if num1 in new_line_num_list:
-                    pass
-                
-                else:
-                    temp_line1 = self.line_list[num1]
-                    temp_norm_st = norm(x0, y0, temp_line1.st[0], temp_line1.st[1])
-                    temp_norm_ed = norm(x0, y0, temp_line1.ed[0], temp_line1.ed[1])
-                    if min(temp_norm_st, temp_norm_ed) < norm_mn:
-                        temp_line_num1 = num1
-                        norm_mn = min(temp_norm_st, temp_norm_ed)                      
-                        if temp_norm_st < temp_norm_ed:
-                            temp_cut_dir = 'F'
-                        else:
-                            temp_cut_dir = 'R'
-                j += 1
-                
-            temp_line1 = self.line_list[temp_line_num1]
-            if temp_cut_dir == 'F':
-                x0 = temp_line1.ed[0]
-                y0 = temp_line1.ed[1]
-                if temp_line1.cut_dir != temp_cut_dir:
-                    temp_line1.toggle_offset_dir()
-                    
-            if temp_cut_dir == 'R':
-                x0 = temp_line1.st[0]
-                y0 = temp_line1.st[1]
-                if temp_line1.cut_dir != temp_cut_dir:
-                    temp_line1.toggle_offset_dir()
-                        
-            temp_line1.set_cut_dir(temp_cut_dir)
-            new_line_num_list.append(temp_line_num1)
-            i += 1
-        
-        i = 0
-        j = 0
-        while i < len(self.line_num_list):
-            if self.line_num_list[i] >= 0:
-                self.line_num_list[i] = new_line_num_list[j]
-                j += 1
-                i += 1
+            if cut_dir_st == 'F':
+                x0 = line_object_st.ed[0]
+                y0 = line_object_st.ed[1]
             else:
+                x0 = line_object_st.st[0]
+                y0 = line_object_st.st[1]   
+                
+            alaivable_line_num_list = sorted(np.array(self.line_num_list.copy())[np.where(np.array(self.line_num_list.copy()) >= 0)])
+            new_line_num_list = [line_num_st]
+    
+            while i < len(alaivable_line_num_list) :
+                norm_mn = np.inf
+                j = 0
+                while j < len(alaivable_line_num_list):
+                    num1 = alaivable_line_num_list[j]
+                    if num1 in new_line_num_list:
+                        pass
+                    
+                    else:
+                        temp_line1 = self.line_list[num1]
+                        temp_norm_st = norm(x0, y0, temp_line1.st[0], temp_line1.st[1])
+                        temp_norm_ed = norm(x0, y0, temp_line1.ed[0], temp_line1.ed[1])
+                        if min(temp_norm_st, temp_norm_ed) < norm_mn:
+                            temp_line_num1 = num1
+                            norm_mn = min(temp_norm_st, temp_norm_ed)                      
+                            if temp_norm_st < temp_norm_ed:
+                                temp_cut_dir = 'F'
+                            else:
+                                temp_cut_dir = 'R'
+                    j += 1
+                    
+                temp_line1 = self.line_list[temp_line_num1]
+                if temp_cut_dir == 'F':
+                    x0 = temp_line1.ed[0]
+                    y0 = temp_line1.ed[1]
+                    if temp_line1.cut_dir != temp_cut_dir:
+                        temp_line1.toggle_offset_dir()
+                        
+                if temp_cut_dir == 'R':
+                    x0 = temp_line1.st[0]
+                    y0 = temp_line1.st[1]
+                    if temp_line1.cut_dir != temp_cut_dir:
+                        temp_line1.toggle_offset_dir()
+                            
+                temp_line1.set_cut_dir(temp_cut_dir)
+                new_line_num_list.append(temp_line_num1)
                 i += 1
-        
-        self.table_reload()
-        self.plot()        
+            
+            i = 0
+            j = 0
+            while i < len(self.line_num_list):
+                if self.line_num_list[i] >= 0:
+                    self.line_num_list[i] = new_line_num_list[j]
+                    j += 1
+                    i += 1
+                else:
+                    i += 1
+            
+            self.table_reload()
+            self.table.table.selection_set('I001')
+            self.table.table.see('I001')
+            self.set_selected_line(line_num_st)
+            return 1
 
 
     def offset_origin(self, offset_ox, offset_oy):

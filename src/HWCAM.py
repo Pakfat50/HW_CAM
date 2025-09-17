@@ -490,13 +490,25 @@ def Set_OffsetDist(dxf_obj, entry, x_dxf_obj, x_entry, chkValue, name, x_name, m
         entry_value = entry.get()
         offset_dist = float(entry_value)
         dxf_obj.set_offset_dist(offset_dist)
+        self_collision_list = dxf_obj.check_self_collision()
         messeage_window.set_messeage("%sのオフセット距離を%sに設定しました。\n"%(name, offset_dist))
+        if len(self_collision_list) > 0:
+            temp_str = ""
+            for num in self_collision_list:
+                temp_str += "%s "%num
+            messeage_window.set_messeage("%sの%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(name, temp_str))
         
         if chkValue.get():
             x_entry_value = x_entry.get()
             x_offset_dist = float(x_entry_value)
             x_dxf_obj.set_offset_dist(x_offset_dist)
-            messeage_window.set_messeage("%sのオフセット距離を%sに設定しました。\n"%(x_name, x_offset_dist))           
+            x_self_collision_list = x_dxf_obj.check_self_collision()
+            messeage_window.set_messeage("%sのオフセット距離を%sに設定しました。\n"%(x_name, x_offset_dist))
+            if len(self_collision_list) > 0:
+                x_temp_str = ""
+                for num in x_self_collision_list:
+                    x_temp_str += "%s "%num
+                messeage_window.set_messeage("%sの%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(x_name, x_temp_str))
         
     except:
         traceback.print_exc()
@@ -653,6 +665,23 @@ def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, e
             dxf_obj1.table_reload()
             dxf_obj0.plot()
             dxf_obj1.plot()
+            
+            
+            self_collision_list0 = dxf_obj0.check_self_collision()
+            self_collision_list1 = dxf_obj1.check_self_collision()
+            if len(self_collision_list0) > 0:
+                temp_str0 = ""
+                for num in self_collision_list0:
+                    temp_str0 += "%s "%num
+                messeage_window.set_messeage("XY平面の%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%temp_str0)
+            
+            if len(self_collision_list1) > 0:
+                temp_str1 = ""
+                for num in self_collision_list1:
+                    temp_str1 += "%s "%num
+                messeage_window.set_messeage("UV平面の%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%temp_str1)
+            
+                
             messeage_window.set_messeage("オフセット値を更新しました。\n")
         else:
             messeage_window.set_messeage("XY座標とUV座標でライン数が一致しません。XY：%s本，UV：%s本\n"%(len(a_line_num_list0),len(a_line_num_list1)))

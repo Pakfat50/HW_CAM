@@ -108,3 +108,27 @@ Traceback (most recent call last):
     raise IOError("%s not found." % path)
 OSError:  not found.
 
+Time: 2025/09/18 07:44:35
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 995, in path_chk
+    x_m_array, y_m_array, u_m_array, v_m_array = make_offset_path(x_array, y_array, u_array, v_array, Z_XY, Z_UV, Z_Mach)
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 556, in make_offset_path
+    xu_mid = (x_array[i] + u_array[i])/ 2.0
+IndexError: index 701 is out of bounds for axis 0 with size 701
+
+Time: 2025/09/18 07:44:52
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 995, in path_chk
+    x_m_array, y_m_array, u_m_array, v_m_array = make_offset_path(x_array, y_array, u_array, v_array, Z_XY, Z_UV, Z_Mach)
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 556, in make_offset_path
+    xu_mid = (x_array[i] + u_array[i])/ 2.0
+IndexError: index 498 is out of bounds for axis 0 with size 498
+
+Time: 2025/09/18 08:14:01
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 995, in path_chk
+    x_m_array, y_m_array, u_m_array, v_m_array = make_offset_path(x_array, y_array, u_array, v_array, Z_XY, Z_UV, Z_Mach)
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 556, in make_offset_path
+    xu_mid = (x_array[i] + u_array[i])/ 2.0
+IndexError: index 491 is out of bounds for axis 0 with size 491
+

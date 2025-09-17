@@ -128,6 +128,7 @@ class line_object:
         self.interp_mode = "cubic" #ver.2.2追加 "cubic":3d-spline, "linear":1d-line, ポリラインの指定用
         self.offset_ox = 0
         self.offset_oy = 0
+        self.self_collision = False
 
         if len(x_points)<2:
             self.line_type = "point"
@@ -149,7 +150,8 @@ class line_object:
         self.N = max(len(x_points), len(y_points))
         self.x = np.array(x_points) + offset_ox
         self.y = np.array(y_points) + offset_oy
-        self.interp_mode = "cubic" 
+        self.interp_mode = "cubic"
+        self.self_collision = False
 
         if len(x_points)<2:
             self.line_type = "point"
@@ -168,11 +170,21 @@ class line_object:
             temp_y = self.y_raw
         
         if self.offset_dir == "I":
-            self.x, self.y = offset_line(temp_x, temp_y, self.offset_dist, self.cut_dir, self.interp_mode) 
-            
+            temp_x, temp_y = offset_line(temp_x, temp_y, self.offset_dist, self.cut_dir, self.interp_mode) 
+
         else:
-            self.x, self.y = offset_line(temp_x, temp_y, -self.offset_dist, self.cut_dir, self.interp_mode)
+            temp_x, temp_y = offset_line(temp_x, temp_y, -self.offset_dist, self.cut_dir, self.interp_mode) 
+        
+        self_col = True
+        detection = False
+        while self_col == True:
+            temp_x, temp_y, self_col = remove_self_collision(temp_x, temp_y)
+            if self_col == True:
+                detection = True
     
+        self.x = temp_x
+        self.y = temp_y
+        self.self_collision = detection
     
     def set_offset_dir(self, offset_dir):
         if offset_dir == 'O' or offset_dir == 'I':

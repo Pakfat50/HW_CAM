@@ -148,10 +148,7 @@ def offset_line(x, y, d, cut_dir, interp_mode): #ver2.2 interp_mode 追加　ポ
                 new_y.append(y[i] + d*np.cos(k))
                 i += 1
     
-    new_x = np.array(new_x)
-    new_y = np.array(new_y)
-    
-    return new_x, new_y
+    return np.array(new_x), np.array(new_y)
 
 
 def norm(x0, y0, x, y):
@@ -518,4 +515,57 @@ def generate_offset_interporate_point(l0_x, l0_y, l1_x, l1_y, l0_offset, l1_offs
     
     return x_intp, y_intp
 
+
+# https://qiita.com/wihan23/items/03efd7cd40dfec96a987
+def max_min_cross(p1, p2, p3, p4):
+    min_ab, max_ab = min(p1, p2), max(p1, p2)
+    min_cd, max_cd = min(p3, p4), max(p3, p4)
+
+    if min_ab > max_cd or max_ab < min_cd:
+        return False
+
+    return True
+
+# https://qiita.com/wihan23/items/03efd7cd40dfec96a987
+def cross_judge(a, b, c, d):
+    # x座標による判定
+    if not max_min_cross(a[0], b[0], c[0], d[0]):
+        return False
+
+    # y座標による判定
+    if not max_min_cross(a[1], b[1], c[1], d[1]):
+        return False
+
+    tc1 = (a[0] - b[0]) * (c[1] - a[1]) + (a[1] - b[1]) * (a[0] - c[0])
+    tc2 = (a[0] - b[0]) * (d[1] - a[1]) + (a[1] - b[1]) * (a[0] - d[0])
+    td1 = (c[0] - d[0]) * (a[1] - c[1]) + (c[1] - d[1]) * (c[0] - a[0])
+    td2 = (c[0] - d[0]) * (b[1] - c[1]) + (c[1] - d[1]) * (c[0] - b[0])
+    return tc1 * tc2 <= 0 and td1 * td2 <= 0
+
+
+def remove_self_collision(x, y):
+    new_x = [x[0]]
+    new_y = [y[0]]
+    detection = False
+    
+    i = 1
+    while i < len(x):
+        j = i+1
+        p1 = [x[i-1], y[i-1]]
+        p2 = [x[i], y[i]]
+        while j < len(x)-3:
+            p3 = [x[j], y[j]]
+            p4 = [x[j+1], y[j+1]]
+            if cross_judge(p1, p2, p3, p4) == True:
+                detection = True
+                cx, cy = getCrossPointFromPoint(p1[0], p1[1], p3[0], p3[1], p2[0], p2[1], p4[0], p4[1])
+                new_x.append(cx)
+                new_y.append(cy)             
+                i = j+1
+            j += 1
+        new_x.append(x[i])
+        new_y.append(y[i])
+        i += 1
+        
+    return new_x, new_y, detection
 

@@ -452,61 +452,68 @@ def getFiletSita(sita_st, sita_ed):
     
 
 def generate_offset_interporate_point(l0_x, l0_y, l1_x, l1_y, l0_offset, l1_offset):
+    #x_intp = np.array([l0_x[1], l1_x[0]])
+    #y_intp = np.array([l0_y[1], l1_y[0]])  
+    x_intp = np.array([])
+    y_intp = np.array([])
+    
     try:
-        # フィレットのRをオフセット距離から決定する（Rが大きいと、線端とフィレット補完点がオーバーラップしうるため、小さい方をRとする）
-        r = min(l0_offset, l1_offset)
+        p2p_dist = norm(l0_x[1], l0_y[1], l1_x[0], l1_y[0])
         
-        # l0とl1のなす角sitaを内積により求める
-        # https://w3e.kanazawa-it.ac.jp/math/category/vector/henkan-tex.cgi?target=/math/category/vector/naiseki-wo-fukumu-kihonsiki.html&pcview=2
-        a1 = l0_x[1] - l0_x[0]
-        a2 = l0_y[1] - l0_y[0]
-        b1 = l1_x[0] - l1_x[1]
-        b2 = l1_y[0] - l1_y[1]
+        if (p2p_dist > DIST_NEAR) and (p2p_dist < l0_offset *2) and (p2p_dist < l1_offset *2) :
             
-        sita = np.arccos( (a1*b1 + a2*b2)/(np.sqrt(a1**2 + a2**2) * np.sqrt(b1**2 + b2**2)) ) / 2.0
-
-        # l0がx軸となす角をarctan2により求める
-        alpha = np.arctan2(a2, a1)
-        
-        # l1がx軸となす角をarctan2により求める
-        beta = np.arctan2(b2, b1)
-        
-        # l0とl1の交点を求める
-        cx, cy = getCrossPointFromPoint(l0_x[0], l0_y[0], l1_x[0], l1_y[0], l0_x[1], l0_y[1], l1_x[1], l1_y[1])
-        
-        # 幾何より、l0延長線上のフィレット開始点（p1）および、フィレットの中心座標（p0）を求める
-        p1_x = cx - r * (1/np.tan(sita)) * np.cos(-alpha)
-        p1_y = cy + r * (1/np.tan(sita)) * np.sin(-alpha)
-
-        p2_x = cx - r * (1/np.tan(sita)) * np.cos(-beta)
-        p2_y = cy + r * (1/np.tan(sita)) * np.sin(-beta)
-        
-        m2_0 = np.tan(alpha + np.pi/2)
-        m2_1 = np.tan(beta + np.pi/2)
-        b0 = -m2_0*p1_x + p1_y
-        b1 = -m2_1*p2_x + p2_y
-        
-        f_x, f_y = getCrossPointFromLines(m2_0, b0, m2_1, b1)
-
-        # 円弧の始点角と終点角を計算する。
-        sita_st = float(np.arctan2(p1_y-f_y, p1_x-f_x))
-        sita_ed = float(np.arctan2(p2_y-f_y, p2_x-f_x))
-        sita_st, sita_ed = getFiletSita(sita_st, sita_ed)
-        
-        if r <= DIST_NEAR*10:
-            r = DIST_NEAR*10
-            N = 4
-        else:
-            N = N_FILLET_INTERPORATE
-        sita = np.linspace(sita_st, sita_ed, N)
-
-        x_intp = r*np.cos(sita) + f_x
-        y_intp = r*np.sin(sita) + f_y
+            # フィレットのRをオフセット距離から決定する（Rが大きいと、線端とフィレット補完点がオーバーラップしうるため、小さい方をRとする）
+            r = min(l0_offset, l1_offset)
+            
+            # l0とl1のなす角sitaを内積により求める
+            # https://w3e.kanazawa-it.ac.jp/math/category/vector/henkan-tex.cgi?target=/math/category/vector/naiseki-wo-fukumu-kihonsiki.html&pcview=2
+            a1 = l0_x[1] - l0_x[0]
+            a2 = l0_y[1] - l0_y[0]
+            b1 = l1_x[0] - l1_x[1]
+            b2 = l1_y[0] - l1_y[1]
+                
+            sita = np.arccos( (a1*b1 + a2*b2)/(np.sqrt(a1**2 + a2**2) * np.sqrt(b1**2 + b2**2)) ) / 2.0
+    
+            # l0がx軸となす角をarctan2により求める
+            alpha = np.arctan2(a2, a1)
+            
+            # l1がx軸となす角をarctan2により求める
+            beta = np.arctan2(b2, b1)
+            
+            # l0とl1の交点を求める
+            cx, cy = getCrossPointFromPoint(l0_x[0], l0_y[0], l1_x[0], l1_y[0], l0_x[1], l0_y[1], l1_x[1], l1_y[1])
+            
+            # 幾何より、l0延長線上のフィレット開始点（p1）および、フィレットの中心座標（p0）を求める
+            p1_x = cx - r * (1/np.tan(sita)) * np.cos(-alpha)
+            p1_y = cy + r * (1/np.tan(sita)) * np.sin(-alpha)
+    
+            p2_x = cx - r * (1/np.tan(sita)) * np.cos(-beta)
+            p2_y = cy + r * (1/np.tan(sita)) * np.sin(-beta)
+            
+            m2_0 = np.tan(alpha + np.pi/2)
+            m2_1 = np.tan(beta + np.pi/2)
+            b0 = -m2_0*p1_x + p1_y
+            b1 = -m2_1*p2_x + p2_y
+            
+            f_x, f_y = getCrossPointFromLines(m2_0, b0, m2_1, b1)
+    
+            # 円弧の始点角と終点角を計算する。
+            sita_st = float(np.arctan2(p1_y-f_y, p1_x-f_x))
+            sita_ed = float(np.arctan2(p2_y-f_y, p2_x-f_x))
+            sita_st, sita_ed = getFiletSita(sita_st, sita_ed)
+            
+            if r <= DIST_NEAR*10:
+                r = DIST_NEAR*10
+                N = 4
+            else:
+                N = N_FILLET_INTERPORATE
+            sita = np.linspace(sita_st, sita_ed, N)
+    
+            x_intp = r*np.cos(sita) + f_x
+            y_intp = r*np.sin(sita) + f_y
 
     except:
         traceback.print_exc()
-        x_intp = np.array([l0_x[1], l1_x[0]])
-        y_intp = np.array([l0_y[1], l1_y[0]])   
         pass
     
     return x_intp, y_intp

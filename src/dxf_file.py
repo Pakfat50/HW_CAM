@@ -621,7 +621,11 @@ class dxf_file:
                 y_array = np.array(line_object_st.y_raw[::-1])
                 
             alaivable_line_num_list = sorted(np.array(self.line_num_list.copy())[np.where(np.array(self.line_num_list.copy()) >= 0)])
-            new_line_num_list = [line_num_st]
+            new_line_nums = [line_num_st]
+            
+            new_line_num_list = []
+            x_array_list = []
+            y_array_list = []
             
     
             while i < len(alaivable_line_num_list) - 1:
@@ -629,7 +633,7 @@ class dxf_file:
                 j = 0
                 while j < len(alaivable_line_num_list):
                     num1 = alaivable_line_num_list[j]
-                    if num1 in new_line_num_list:
+                    if (num1 in sum(new_line_num_list, [])) or (num1 in new_line_nums):
                         pass
                     
                     else:
@@ -649,41 +653,74 @@ class dxf_file:
                 if temp_cut_dir == 'F':
                     x0 = temp_line1.ed[0]
                     y0 = temp_line1.ed[1]
-                    x_array = np.concatenate([x_array, temp_line1.x_raw], 0)
-                    y_array = np.concatenate([y_array, temp_line1.y_raw], 0)      
-                    
+                    temp_x = temp_line1.x_raw
+                    temp_y = temp_line1.y_raw
+                                             
                 if temp_cut_dir == 'R':
                     x0 = temp_line1.st[0]
                     y0 = temp_line1.st[1]
-                    x_array = np.concatenate([x_array, temp_line1.x_raw[::-1]], 0)
-                    y_array = np.concatenate([y_array, temp_line1.y_raw[::-1]], 0) 
+                    temp_x = temp_line1.x_raw[::-1]
+                    temp_y = temp_line1.y_raw[::-1]
                           
                 temp_line1.set_cut_dir(temp_cut_dir)
-                new_line_num_list.append(temp_line_num1)
-                print(temp_line_num1)
+                
+                if norm_mn <= DIST_NEAR:
+                    new_line_nums.append(temp_line_num1)
+                    x_array = np.concatenate([x_array, temp_x], 0)
+                    y_array = np.concatenate([y_array, temp_y], 0)
+                else:
+                    new_line_num_list.append(new_line_nums)
+                    x_array_list.append(x_array)
+                    y_array_list.append(y_array)
+                    new_line_nums = [temp_line_num1]
+                    x_array = np.array(temp_x)
+                    y_array = np.array(temp_y)
+                
                 i += 1
+                
+            new_line_num_list.append(new_line_nums)
+            x_array_list.append(x_array)
+            y_array_list.append(y_array)    
+             
+            
+            ccw_list = []
+            i = 0
+            while i < len(x_array_list):
+                temp_x_array = x_array_list[i]
+                temp_y_array = y_array_list[i]
+                temp_ccw = detectRotation(temp_x_array, temp_y_array)
+                ccw_list.append(temp_ccw)
+                i += 1
+            
+            ccw_st = ccw_list[0]
+            i = 0
+            while i < len(ccw_list):
+                temp_ccw = ccw_list[i]
+                temp_line_nums = new_line_num_list[i]
+                if not(temp_ccw == ccw_st):
+                    temp_line_nums = temp_line_nums[::-1]
+                    new_line_num_list[i] = temp_line_nums
+                    
+                for num in temp_line_nums:
+                    temp_line = self.line_list[num]
+                    if not(temp_ccw == ccw_st):
+                        temp_line.toggle_cut_dir()
+                    if ccw_st == True:
+                        temp_line.set_offset_dir('O')
+                    else:
+                        temp_line.set_offset_dir('I')
+                i += 1
+            
             
             i = 0
             j = 0
             while i < len(self.line_num_list):
                 if self.line_num_list[i] >= 0:
-                    self.line_num_list[i] = new_line_num_list[j]
+                    self.line_num_list[i] = sum(new_line_num_list,[])[j]
                     j += 1
                     i += 1
                 else:
                     i += 1
-            
-            ccw = detectRotation(x_array, y_array)
-
-            i = 0
-            while i < len(self.line_num_list):
-                temp_line_num = self.line_num_list[i]
-                temp_line = self.line_list[temp_line_num]
-                if ccw == True:
-                    temp_line.set_offset_dir('O')
-                else:
-                    temp_line.set_offset_dir('I')
-                i += 1
             
             self.table_reload()
             self.table.table.selection_set('I001')

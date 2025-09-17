@@ -80,3 +80,19 @@ Traceback (most recent call last):
     raise ValueError("A value in x_new is below the interpolation "
 ValueError: A value in x_new is below the interpolation range.
 
+Time: 2025/09/17 22:14:47
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 430, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 689, in SortLine
+    self.line_num_list[i] = sum(new_line_num_list,[])[j]
+IndexError: list index out of range
+
+Time: 2025/09/17 22:15:33
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 430, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 692, in SortLine
+    self.line_num_list[i] = sum(new_line_num_list,[])[j]
+IndexError: list index out of range
+

@@ -677,8 +677,8 @@ class dxf_file:
                 i += 1
             
             self.table_reload()
-            self.table.table.selection_set('I001')
-            self.table.table.see('I001')
+            #self.table.table.selection_set('I001')
+            #self.table.table.see('I001')
             self.set_selected_line(line_num_st)
             return 1
 

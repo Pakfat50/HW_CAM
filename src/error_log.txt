@@ -28,3 +28,19 @@ Traceback (most recent call last):
     self.set_selected_line(line_num_st)
 AttributeError: 'dxf_file' object has no attribute 'set_selected_line'
 
+Time: 2025/09/17 16:20:43
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 430, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 691, in SortLine
+    self.set_selected_line(line_num_st)
+AttributeError: 'dxf_file' object has no attribute 'set_selected_line'
+
+Time: 2025/09/17 16:20:43
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 430, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 691, in SortLine
+    self.set_selected_line(line_num_st)
+AttributeError: 'dxf_file' object has no attribute 'set_selected_line'
+

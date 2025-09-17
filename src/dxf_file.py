@@ -346,8 +346,7 @@ class dxf_file:
                     col = "b"
                 else:
                     col = "b"
-                
-                print(self.get_selected_lines(), line_num)
+                    
                 if line_num in self.get_selected_lines():
                     alpha_line = 1
                     alpha_vect = 1
@@ -389,28 +388,25 @@ class dxf_file:
     
     def selected(self, event):
         selected_items = self.table.table.selection()
-        if not selected_items:
-            return None
-        item_num = item2num(selected_items[0])
-        item_index = self.table.table.get_children().index(selected_items[0])
-        line_num = self.line_num_list[item_num]
-        
-        print(self.table.sync, self.table.sync_update, self.x_table.sync, self.x_table.sync_update)
-        if self.table.sync == True:
-            if self.x_table.sync_update == True:
-                self.x_table.sync_update = False
-                try:
-                    x_item = self.x_table.table.get_children()[item_index]
-                    self.x_table.table.selection_set(x_item)
-                    self.x_table.table.see(x_item)
-                except:
-                    # XY-UV画面同期中に線数が異なると選択できないため、例外を許容する
-                    # traceback.print_exc()
-                    pass
-            else:
-                self.x_table.sync_update = True
-                self.table.sync_update = True
-        self.plot()
+        if not len(selected_items) == 0:
+            self.plot()
+            
+            if self.table.sync == True:
+                if self.x_table.sync_update == True:
+                    self.x_table.sync_update = False
+                    try:
+                        item_index = self.table.table.get_children().index(selected_items[0])
+                        x_item = self.x_table.table.get_children()[item_index]
+                        self.x_table.table.selection_set(x_item)
+                        self.x_table.table.see(x_item)
+                    except:
+                        # XY-UV画面同期中に線数が異なると選択できないため、例外を許容する
+                        # traceback.print_exc()
+                        pass
+                else:
+                    self.x_table.sync_update = True
+                    self.table.sync_update = True
+            
                 
         
         

@@ -238,7 +238,6 @@ class dxf_file:
         self.name = name
         self.line_list = []
         self.line_num_list = []
-        self.selected_line = 0
     
     
     def load_file(self, filename):
@@ -246,7 +245,6 @@ class dxf_file:
         self.filename = filename
         self.line_list = []
         self.line_num_list = []
-        self.selected_line = 0
         self.reload()
         self.plot()
         self.table.table.bind("<<TreeviewSelect>>", self.selected)
@@ -348,8 +346,9 @@ class dxf_file:
                     col = "b"
                 else:
                     col = "b"
-                    
-                if line_num == self.selected_line:
+                
+                print(self.get_selected_lines(), line_num)
+                if line_num in self.get_selected_lines():
                     alpha_line = 1
                     alpha_vect = 1
                     alpha_offset = 1
@@ -375,9 +374,17 @@ class dxf_file:
         self.canvas.draw()
         
         
-    def set_selected_line(self, selected_line):
-        self.selected_line = selected_line
-        self.plot()
+    def get_selected_lines(self):
+        selected_items = self.table.table.selection()
+        if not selected_items:
+            return [9999]
+        
+        ret = []
+        for item in selected_items:
+            item_num = item2num(item)
+            line_num = self.line_num_list[item_num]
+            ret.append(line_num)
+        return ret
     
     
     def selected(self, event):
@@ -403,8 +410,8 @@ class dxf_file:
             else:
                 self.x_table.sync_update = True
                 self.table.sync_update = True
+        self.plot()
                 
-        self.set_selected_line(line_num)
         
         
     def set_offset_dist(self, offset_dist):
@@ -467,8 +474,7 @@ class dxf_file:
     
 
     def Swap_line(self, item_num0, item_num1):
-        self.line_num_list[item_num0], self.line_num_list[item_num1] = self.line_num_list[item_num1], self.line_num_list[item_num0] 
-        self.set_selected_line(item_num1)    
+        self.line_num_list[item_num0], self.line_num_list[item_num1] = self.line_num_list[item_num1], self.line_num_list[item_num0]    
 
 
     def Merge_Selected_line(self):
@@ -621,7 +627,6 @@ class dxf_file:
             alaivable_line_num_list = sorted(np.array(self.line_num_list.copy())[np.where(np.array(self.line_num_list.copy()) >= 0)])
             new_line_num_list = [line_num_st]
             
-
     
             while i < len(alaivable_line_num_list) - 1:
                 norm_mn = np.inf
@@ -685,8 +690,8 @@ class dxf_file:
                 i += 1
             
             self.table_reload()
-            #self.table.table.selection_set('I001')
-            #self.table.table.see('I001')
+            self.table.table.selection_set('I001')
+            self.table.table.see('I001')
             self.set_selected_line(line_num_st)
             return 1
 

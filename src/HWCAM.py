@@ -410,27 +410,47 @@ def swap_line(dxf_obj, messeage_window):
         messeage_window.set_messeage("２つのラインを選択して下さい。%s本のラインが選択されています。\n"%len(selected_items))
 
 
-def Change_CutDir(dxf_obj, messeage_window):
+def Change_CutDir(dxf_obj, x_dxf_obj, chkValue, messeage_window):
     dxf_obj.Change_CutDir()
+    if chkValue.get():
+        x_dxf_obj.Change_CutDir()
     messeage_window.set_messeage("カット方向を逆転\n")
     
 
-def Change_OffsetDir(dxf_obj, messeage_window):
+def Change_OffsetDir(dxf_obj, x_dxf_obj, chkValue, messeage_window):
     dxf_obj.Change_OffsetDir()
+    if chkValue.get():
+        x_dxf_obj.Change_OffsetDir()
     messeage_window.set_messeage("オフセット方向を逆転\n")
 
 
-def Set_OffsetDist(dxf_obj, entry, messeage_window):
-    entry_value = entry.get()
+
+def AutoLineSort(dxf_obj, x_dxf_obj, chkValue, messeage_window): 
     try:
-        OffsetDist = float(entry_value)
-        dxf_obj.set_offset_dist(OffsetDist)
-        messeage_window.set_messeage("オフセット距離を%sに設定しました。\n"%OffsetDist)
+        ret = dxf_obj.SortLine()
+        if chkValue.get():
+            x_ret = x_dxf_obj.SortLine()
+        else:
+            x_ret = 1
+            
+        if (ret == 1) and (x_ret == 1):
+            messeage_window.set_messeage("自動整列しました。\n")
+        else:
+            messeage_window.set_messeage("%s本の線が選択されています。起点とする１本の線のみを選択してください。\n"%max(ret, x_ret))
+
     except:
         traceback.print_exc()
         output_log(traceback.format_exc())
-        messeage_window.set_messeage("実数値を入力して下さい。\n")
         pass
+
+
+def Reverse(dxf_obj, x_dxf_obj, chkValue, messeage_window):
+    dxf_obj.reverse_all()
+    if chkValue.get():
+        x_dxf_obj.reverse_all()
+    messeage_window.set_messeage("カット順を逆転しました。\n")
+
+
 
 def Merge_line(dxf_obj, messeage_window):
     error, selected_items = dxf_obj.Merge_Selected_line()
@@ -447,23 +467,17 @@ def delete_line(dxf_obj, messeage_window):
     messeage_window.set_messeage("ラインを削除しました。\n")
     
     
-def AutoLineSort(dxf_obj, messeage_window): 
+def Set_OffsetDist(dxf_obj, entry, messeage_window):
+    entry_value = entry.get()
     try:
-        ret = dxf_obj.SortLine()
-        if ret == 1:
-            messeage_window.set_messeage("自動整列しました。\n")
-        else:
-            messeage_window.set_messeage("%s本の線が選択されています。起点とする１本の線のみを選択してください。\n"%ret)
-
+        OffsetDist = float(entry_value)
+        dxf_obj.set_offset_dist(OffsetDist)
+        messeage_window.set_messeage("オフセット距離を%sに設定しました。\n"%OffsetDist)
     except:
         traceback.print_exc()
         output_log(traceback.format_exc())
+        messeage_window.set_messeage("実数値を入力して下さい。\n")
         pass
-
-
-def Reverse(dxf_obj, messeage_window):
-    dxf_obj.reverse_all()
-    messeage_window.set_messeage("カット順を逆転しました。\n")
 
 
 def Replace_G01_code(g_code_str, X_str, Y_str, U_str, V_str):
@@ -1303,15 +1317,15 @@ if __name__ == "__main__":
     OriginOffsetBtn0.place(x=1205, y=607)   
 
     #【X-Yラインテーブル用　カット方向入れ替えボタン】
-    ChangeCutDirBtn0 = tk.Button(root, text="カット方向入替え", width =15, bg = "#3cb371", command = lambda: Change_CutDir(dxf0, MessageWindow))
+    ChangeCutDirBtn0 = tk.Button(root, text="カット方向入替え", width =15, bg = "#3cb371", command = lambda: Change_CutDir(dxf0, dxf1, chkValue, MessageWindow))
     ChangeCutDirBtn0.place(x=855, y=435)   
     
     #【X-Yラインテーブル用　ライン整列ボタン】    
-    AutoAlignmentBtn0 = tk.Button(root, text="ライン整列", width =15, bg = "#3cb371", command = lambda: AutoLineSort(dxf0, MessageWindow))
+    AutoAlignmentBtn0 = tk.Button(root, text="ライン整列", width =15, bg = "#3cb371", command = lambda: AutoLineSort(dxf0, dxf1, chkValue, MessageWindow))
     AutoAlignmentBtn0.place(x=990, y=435)
             
     #【X-Yラインテーブル用　カット順逆転ボタン】    
-    ReverseBtn0 = tk.Button(root, text="カット順逆転", width =15, bg = "#3cb371", command = lambda: Reverse(dxf0, MessageWindow))
+    ReverseBtn0 = tk.Button(root, text="カット順逆転", width =15, bg = "#3cb371", command = lambda: Reverse(dxf0, dxf1, chkValue, MessageWindow))
     ReverseBtn0.place(x=1125, y=435)  
     
     
@@ -1325,15 +1339,15 @@ if __name__ == "__main__":
   
   
     #【U-Vラインテーブル用　カット方向入れ替えボタン】    
-    ChangeCutDirBtn1 = tk.Button(root, text="カット方向入替え", width =15, bg = "#3cb371", command = lambda: Change_CutDir(dxf1, MessageWindow))
+    ChangeCutDirBtn1 = tk.Button(root, text="カット方向入替え", width =15, bg = "#3cb371", command = lambda: Change_CutDir(dxf1, dxf0, chkValue, MessageWindow))
     ChangeCutDirBtn1.place(x=1255, y=435)
     
     #【U-Vラインテーブル用　ライン整列ボタン】    
-    AutoAlignmentBtn1 = tk.Button(root, text="ライン整列", width =15, bg = "#3cb371", command = lambda: AutoLineSort(dxf1, MessageWindow))
+    AutoAlignmentBtn1 = tk.Button(root, text="ライン整列", width =15, bg = "#3cb371", command = lambda: AutoLineSort(dxf1, dxf0, chkValue, MessageWindow))
     AutoAlignmentBtn1.place(x=1390, y=435)
     
     #【U-Vラインテーブル用　カット順逆転ボタン】    
-    ReverseBtn1 = tk.Button(root, text="カット順逆転", width =15, bg = "#3cb371", command = lambda: Reverse(dxf1, MessageWindow))
+    ReverseBtn1 = tk.Button(root, text="カット順逆転", width =15, bg = "#3cb371", command = lambda: Reverse(dxf1, dxf0, chkValue, MessageWindow))
     ReverseBtn1.place(x=1525, y=435)   
     
     

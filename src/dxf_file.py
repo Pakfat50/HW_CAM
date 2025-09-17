@@ -395,10 +395,13 @@ class dxf_file:
                 if self.x_table.sync_update == True:
                     self.x_table.sync_update = False
                     try:
-                        item_index = self.table.table.get_children().index(selected_items[0])
-                        x_item = self.x_table.table.get_children()[item_index]
-                        self.x_table.table.selection_set(x_item)
-                        self.x_table.table.see(x_item)
+                        x_selected_items = []
+                        for item in selected_items:
+                            item_index = self.table.table.get_children().index(item)
+                            x_item = self.x_table.table.get_children()[item_index]
+                            x_selected_items.append(x_item)
+                        self.x_table.table.selection_set(x_selected_items)
+                        self.x_table.table.see(x_selected_items)
                     except:
                         # XY-UV画面同期中に線数が異なると選択できないため、例外を許容する
                         # traceback.print_exc()
@@ -408,8 +411,6 @@ class dxf_file:
                     self.table.sync_update = True
             
                 
-        
-        
     def set_offset_dist(self, offset_dist):
         table_item_list = self.table.table.get_children()
         i = 0

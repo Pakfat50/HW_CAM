@@ -588,6 +588,7 @@ class dxf_file:
                 temp_num = new_line_num_list[j]
                 temp_line = self.line_list[temp_num]
                 temp_line.toggle_cut_dir()
+                temp_line.toggle_offset_dir()
                 self.line_num_list[i] = temp_num                
                 j += 1
                 i += 1

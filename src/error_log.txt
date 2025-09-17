@@ -96,3 +96,15 @@ Traceback (most recent call last):
     self.line_num_list[i] = sum(new_line_num_list,[])[j]
 IndexError: list index out of range
 
+Time: 2025/09/18 07:19:20
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 175, in load_offset_func
+    offset_function_file = np.genfromtxt(file_path, delimiter = ",", skip_header = 1, dtype = str)
+  File "C:\ProgramData\Anaconda3\lib\site-packages\numpy\lib\npyio.py", line 1749, in genfromtxt
+    fid = np.lib._datasource.open(fname, 'rt', encoding=encoding)
+  File "C:\ProgramData\Anaconda3\lib\site-packages\numpy\lib\_datasource.py", line 195, in open
+    return ds.open(path, mode, encoding=encoding, newline=newline)
+  File "C:\ProgramData\Anaconda3\lib\site-packages\numpy\lib\_datasource.py", line 535, in open
+    raise IOError("%s not found." % path)
+OSError:  not found.
+

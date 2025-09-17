@@ -44,3 +44,39 @@ Traceback (most recent call last):
     self.set_selected_line(line_num_st)
 AttributeError: 'dxf_file' object has no attribute 'set_selected_line'
 
+Time: 2025/09/17 16:31:56
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 430, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 691, in SortLine
+    self.set_selected_line(line_num_st)
+AttributeError: 'dxf_file' object has no attribute 'set_selected_line'
+
+Time: 2025/09/17 16:31:58
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 618, in Set_OffsetDistFromFunction
+    get_offset_and_cut_speed(line0_length, line1_length, Z_XY, Z_UV, Z_Mach, \
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 573, in get_offset_and_cut_speed
+    offset_XY_Mech = offset_function(cutspeed_XY_Mech)
+  File "C:\ProgramData\Anaconda3\lib\site-packages\scipy\interpolate\polyint.py", line 74, in __call__
+    y = self._evaluate(x)
+  File "C:\ProgramData\Anaconda3\lib\site-packages\scipy\interpolate\interpolate.py", line 659, in _evaluate
+    below_bounds, above_bounds = self._check_bounds(x_new)
+  File "C:\ProgramData\Anaconda3\lib\site-packages\scipy\interpolate\interpolate.py", line 688, in _check_bounds
+    raise ValueError("A value in x_new is below the interpolation "
+ValueError: A value in x_new is below the interpolation range.
+
+Time: 2025/09/17 16:32:07
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 618, in Set_OffsetDistFromFunction
+    get_offset_and_cut_speed(line0_length, line1_length, Z_XY, Z_UV, Z_Mach, \
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 573, in get_offset_and_cut_speed
+    offset_XY_Mech = offset_function(cutspeed_XY_Mech)
+  File "C:\ProgramData\Anaconda3\lib\site-packages\scipy\interpolate\polyint.py", line 74, in __call__
+    y = self._evaluate(x)
+  File "C:\ProgramData\Anaconda3\lib\site-packages\scipy\interpolate\interpolate.py", line 659, in _evaluate
+    below_bounds, above_bounds = self._check_bounds(x_new)
+  File "C:\ProgramData\Anaconda3\lib\site-packages\scipy\interpolate\interpolate.py", line 688, in _check_bounds
+    raise ValueError("A value in x_new is below the interpolation "
+ValueError: A value in x_new is below the interpolation range.
+

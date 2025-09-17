@@ -688,7 +688,7 @@ class dxf_file:
             self.table_reload()
             self.table.table.selection_set('I001')
             self.table.table.see('I001')
-            self.set_selected_line(line_num_st)
+            self.plot()
             return 1
 
 

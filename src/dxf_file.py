@@ -60,13 +60,14 @@ class super_table:
         self.y_pos = y
         self.root = root
         self.y_height = y_height
-        self.parent = 0
+        self.sync = False
+        self.sync_update = False
         self.reset()
     
     
-    def set_parent(self, parent):
-        if parent == 1 or parent == 0:
-            self.parent = parent
+    def set_sync(self, sync):
+        self.sync = sync
+        self.sync_update = True
     
     
     def reset(self):
@@ -386,8 +387,11 @@ class dxf_file:
         item_num = item2num(selected_items[0])
         item_index = self.table.table.get_children().index(selected_items[0])
         line_num = self.line_num_list[item_num]
-        if self.table.parent == 1:
-            if self.x_table.parent == 0:            
+        
+        print(self.table.sync, self.table.sync_update, self.x_table.sync, self.x_table.sync_update)
+        if self.table.sync == True:
+            if self.x_table.sync_update == True:
+                self.x_table.sync_update = False
                 try:
                     x_item = self.x_table.table.get_children()[item_index]
                     self.x_table.table.selection_set(x_item)
@@ -396,6 +400,10 @@ class dxf_file:
                     # XY-UV画面同期中に線数が異なると選択できないため、例外を許容する
                     # traceback.print_exc()
                     pass
+            else:
+                self.x_table.sync_update = True
+                self.table.sync_update = True
+                
         self.set_selected_line(line_num)
         
         

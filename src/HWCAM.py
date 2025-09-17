@@ -393,12 +393,12 @@ def load_file(dxf_obj, entry, messeage_window):
 
 def XY_UV_Link(chkValue, table_XY, table_UV, messeage_window):
     if chkValue.get():
-        table_XY.set_parent(1)
-        table_UV.set_parent(0)
+        table_XY.set_sync(True)
+        table_UV.set_sync(True)
         messeage_window.set_messeage("U-V画面をX-Y画面と連動\n")
     else:
-        table_XY.set_parent(0)
-        table_UV.set_parent(0)       
+        table_XY.set_sync(False)
+        table_UV.set_sync(False)       
         messeage_window.set_messeage("U-V画面とX-Y画面の連動を解除\n")
 
 

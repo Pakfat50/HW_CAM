@@ -362,7 +362,6 @@ def gen_g_code_line_str(x,y,u,v, x0,y0,u0,v0, cs_xy, cs_uv, cnc_cs_def):
                 t_xy = l_xy/cs_xy
                 t_uv = l_uv/cs_uv
                 cut_speed = min(t_xy, t_uv)
-                print(t_xy, t_uv)
             else: # cnc_cs_def == "Faster"
                 cut_speed = max(cs_xy, cs_uv)
 

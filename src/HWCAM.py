@@ -634,6 +634,55 @@ def get_cutspeed(length_XY, length_UV, Z_XY, Z_UV, Z_Mach, CutSpeed, CutSpeedDef
     return cs_xy_mech, cs_xy_work, cs_mid, cs_uv_work, cs_uv_mech
 
 
+
+def Set_CutSpeed(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, entry_MachDist, entry_CS, cb_CSDef):
+    entry_XYDist_value = entry_XYDist.get()
+    entry_UVDist_value = entry_UVDist.get()
+    entry_MachDist_value = entry_MachDist.get()
+    entry_CS_value = entry_CS.get()   
+    CutSpeedDef = cb_CSDef.get()    
+
+    # 削除済みの線は、インデックスが-1となっているので、有効な線（インデックスが0以上の線）のみを抽出する
+    a_line_num_list0 = np.array(np.array(dxf_obj0.line_num_list.copy())[np.where(np.array(dxf_obj0.line_num_list.copy()) >= 0)])
+    a_line_num_list1 = np.array(np.array(dxf_obj1.line_num_list.copy())[np.where(np.array(dxf_obj1.line_num_list.copy()) >= 0)])
+    
+    try:
+        Z_XY = float(entry_XYDist_value)
+        Z_UV = float(entry_UVDist_value)
+        Z_Mach = float(entry_MachDist_value)
+        CutSpeed = float(entry_CS_value)
+                    
+        if len(a_line_num_list0) == len(a_line_num_list1):
+            i = 0
+            while i < len(a_line_num_list0):
+                line_num0 = a_line_num_list0[i]
+                line_num1 = a_line_num_list1[i]
+                
+                line0 = dxf_obj0.line_list[line_num0]
+                line1 = dxf_obj1.line_list[line_num1]
+                
+                line0_length = line0.get_length()
+                line1_length = line1.get_length()
+                
+                cs_xy_mech, cs_xy_work, cs_mid, cs_uv_work, cs_uv_mech = \
+                    get_cutspeed(line0_length, line1_length, Z_XY, Z_UV, Z_Mach, \
+                                             CutSpeed, CutSpeedDef)
+                
+                line0.set_cutspeed(cs_xy_work, cs_xy_mech)
+                line1.set_cutspeed(cs_uv_work, cs_uv_mech)
+                
+                i += 1
+            dxf_obj0.table_reload()
+            dxf_obj1.table_reload()
+            dxf_obj0.plot()
+            dxf_obj1.plot()
+            
+    except:
+        traceback.print_exc()
+        output_log(traceback.format_exc())
+
+
+
 def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, entry_MachDist, entry_CS, cb_CSDef, offset_function, removeSelfCollisionValue, messeage_window):
     entry_XYDist_value = entry_XYDist.get()
     entry_UVDist_value = entry_UVDist.get()
@@ -1277,6 +1326,10 @@ if __name__ == "__main__":
     CutSpeedDefList = ("XY(Mech)", "XY(Work)", "Center", "UV(Work)", "UV(Mech)")
     CutSpeedDefCB = ttk.Combobox(root, textvariable= tk.StringVar(), width = 15,\
                                  values=CutSpeedDefList, style="office.TCombobox")
+    CutSpeedDefCB.bind(
+        '<<ComboboxSelected>>', 
+        lambda e: Set_CutSpeed(dxf0, dxf1, XYDistEntry, UVDistEntry, MachDistEntry,\
+                       CutSpeedEntry, CutSpeedDefCB))
     CutSpeedDefCB.place(x = 1000, y = 705) 
     
 

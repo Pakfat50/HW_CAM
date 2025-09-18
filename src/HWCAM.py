@@ -967,11 +967,6 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
 #Ver2.1変更　引数追加，距離別指定可能
 def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
              entry_XYDist, entry_UVDist, entry_MachDist, entry_dl, messeage_window):
-        
-    PLOT_PER_POINT = 2
-    
-    if PLOT_PER_POINT < 1:
-        PLOT_PER_POINT = 1
     
     Window_3d_plot = tk.Toplevel(Root)
     Window_3d_plot.wm_title("Cut Path")
@@ -1010,6 +1005,7 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
         y_array = np.array([oy])
         u_array = np.array([ox])
         v_array = np.array([oy])
+        length_sum = 0
         
         xy_offset_dist = []
         uv_offset_dist = []
@@ -1031,6 +1027,8 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
                 
                 line0_length = line0.get_length()
                 line1_length = line1.get_length()
+                
+                length_sum += (line0_length + line1_length)/2.0
                 
                 xy_offset_dist.append(line0.offset_dist)
                 uv_offset_dist.append(line1.offset_dist)
@@ -1066,8 +1064,8 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
                     norm_line2line0 = norm(x_array[-1], y_array[-1], x[0], y[0])
                     norm_line2line1 = norm(u_array[-1], v_array[-1], u[0], v[0])
                     
-                    if norm_line2line0 > dl*PLOT_PER_POINT  or  norm_line2line1 > dl*PLOT_PER_POINT:
-                        N_interp_line2line = int(max(norm_line2line0, norm_line2line1) / dl / PLOT_PER_POINT)
+                    if norm_line2line0 > DIST_CUTPATH_PLOT  or  norm_line2line1 > DIST_CUTPATH_PLOT:
+                        N_interp_line2line = int(max(norm_line2line0, norm_line2line1) / DIST_CUTPATH_PLOT)
                         
                         if N_interp_line2line < 2:
                             N_interp_line2line = 2
@@ -1090,8 +1088,8 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
             norm_line2line0 = norm(x_array[-1], y_array[-1], ex, ey)
             norm_line2line1 = norm(u_array[-1], v_array[-1], ex, ey)
             
-            if norm_line2line0 > dl*PLOT_PER_POINT  or  norm_line2line1 > dl*PLOT_PER_POINT:
-                N_interp_line2line = int(max(norm_line2line0, norm_line2line1) / dl / PLOT_PER_POINT)
+            if norm_line2line0 > DIST_CUTPATH_PLOT  or  norm_line2line1 > DIST_CUTPATH_PLOT:
+                N_interp_line2line = int(max(norm_line2line0, norm_line2line1) / DIST_CUTPATH_PLOT)
                 
                 if N_interp_line2line < 2:
                     N_interp_line2line = 2
@@ -1106,7 +1104,7 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
             #オフセット面の作成
             x_m_array, y_m_array, u_m_array, v_m_array = make_offset_path(x_array, y_array, u_array, v_array, Z_XY, Z_UV, Z_Mach)
             
-            point_dist_array = plot_3d_cut_path(ax, x_array, y_array, u_array, v_array, x_m_array, y_m_array, u_m_array, v_m_array, Z_XY, Z_UV, Z_Mach, int(len(x_array)/PLOT_PER_POINT))
+            point_dist_array = plot_3d_cut_path(ax, x_array, y_array, u_array, v_array, x_m_array, y_m_array, u_m_array, v_m_array, Z_XY, Z_UV, Z_Mach, int(length_sum/DIST_CUTPATH_PLOT))
             
             ax.view_init(elev=90, azim=-90) 
             

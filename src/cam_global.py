@@ -15,3 +15,4 @@ ERROR_LOG_FILENAME = "error_log.txt"    #エラーログを出力するファイ
 DIST_NEAR = 0.0001                      #近傍点判定距離[mm]
 AUTOSORT_WHEN_LOADFILE = True           #dxfファイルオープン時に自動ソートする
 CUTSPEED_DEFAULT = 20                   #読み込み時のカット速度
+DIST_CUTPATH_PLOT = 1                   #単位：mm パスチェック時に線を描画する間隔

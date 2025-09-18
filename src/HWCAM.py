@@ -111,7 +111,6 @@ class config:
         self.CUTSPEED = 200
         self.XY_DIST = 25.0
         self.UV_DIST = 50.0
-        self.WORK_LENGTH = 425
         self.MACH_DIST = 500
         self.HEADER = "T1\nG17 G49 G54 G80 G90 G94 G21 G40 G64\n"
         self.X_str = 'X'
@@ -137,13 +136,12 @@ class config:
             self.CUTSPEED = float(config_data[8])
             self.XY_DIST = float(config_data[9])
             self.UV_DIST = float(config_data[10])
-            self.WORK_LENGTH = float(config_data[11])
-            self.MACH_DIST = float(config_data[12])
-            self.HEADER = config_data[13].replace("\\n", "\n")
-            self.X_str = str(config_data[14])
-            self.Y_str = str(config_data[15])
-            self.U_str = str(config_data[16])
-            self.V_str = str(config_data[17])
+            self.MACH_DIST = float(config_data[11])
+            self.HEADER = config_data[12].replace("\\n", "\n")
+            self.X_str = str(config_data[13])
+            self.Y_str = str(config_data[14])
+            self.U_str = str(config_data[15])
+            self.V_str = str(config_data[16])
             self.MESSEAGE = "設定ファイルの読み込み成功\n"
             
         except:
@@ -160,7 +158,6 @@ class config:
             self.CUTSPEED = 200
             self.XY_DIST = 25.0
             self.UV_DIST = 50.0
-            self.WORK_LENGTH = 425
             self.MACH_DIST = 500
             self.HEADER = "T1\nG17 G49 G54 G80 G90 G94 G21 G40 G64\n"
             self.X_str = 'X'

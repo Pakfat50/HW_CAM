@@ -249,7 +249,8 @@ class dxf_file:
         self.plot()
         self.table.table.bind("<<TreeviewSelect>>", self.selected)
         self.table.table.loaded_item_num = len(self.table.table.get_children())
-
+        self.table.table.selection_set('I001')
+        self.table.table.see('I001')
 
     def reload(self):
         dwg = ez.readfile(self.filename)
@@ -724,9 +725,11 @@ class dxf_file:
                 else:
                     i += 1
             
+            items = self.table.table.get_children()
+            
             self.table_reload()
-            self.table.table.selection_set('I001')
-            self.table.table.see('I001')
+            self.table.table.selection_set(items[0])
+            self.table.table.see(items[0])
             self.plot()
             return 1
 

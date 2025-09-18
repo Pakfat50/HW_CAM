@@ -142,3 +142,329 @@ Traceback (most recent call last):
     print(len(x), len(temp_x))
 NameError: name 'x' is not defined
 
+Time: 2025/09/18 10:21:13
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 439, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 729, in SortLine
+    self.table.table.selection_set('I001')
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1439, in selection_set
+    self._selection("set", items)
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1434, in _selection
+    self.tk.call(self._w, "selection", selop, items)
+_tkinter.TclError: Item I001 not found
+
+Time: 2025/09/18 10:21:20
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 439, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 729, in SortLine
+    self.table.table.selection_set('I001')
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1439, in selection_set
+    self._selection("set", items)
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1434, in _selection
+    self.tk.call(self._w, "selection", selop, items)
+_tkinter.TclError: Item I001 not found
+
+Time: 2025/09/18 10:21:22
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 439, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 729, in SortLine
+    self.table.table.selection_set('I001')
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1439, in selection_set
+    self._selection("set", items)
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1434, in _selection
+    self.tk.call(self._w, "selection", selop, items)
+_tkinter.TclError: Item I001 not found
+
+Time: 2025/09/18 10:22:03
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 439, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 729, in SortLine
+    self.table.table.selection_set('I001')
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1439, in selection_set
+    self._selection("set", items)
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1434, in _selection
+    self.tk.call(self._w, "selection", selop, items)
+_tkinter.TclError: Item I001 not found
+
+Time: 2025/09/18 10:22:06
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 439, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 729, in SortLine
+    self.table.table.selection_set('I001')
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1439, in selection_set
+    self._selection("set", items)
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1434, in _selection
+    self.tk.call(self._w, "selection", selop, items)
+_tkinter.TclError: Item I001 not found
+
+Time: 2025/09/18 10:22:08
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 439, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 729, in SortLine
+    self.table.table.selection_set('I001')
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1439, in selection_set
+    self._selection("set", items)
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1434, in _selection
+    self.tk.call(self._w, "selection", selop, items)
+_tkinter.TclError: Item I001 not found
+
+Time: 2025/09/18 10:22:10
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 439, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 729, in SortLine
+    self.table.table.selection_set('I001')
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1439, in selection_set
+    self._selection("set", items)
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1434, in _selection
+    self.tk.call(self._w, "selection", selop, items)
+_tkinter.TclError: Item I001 not found
+
+Time: 2025/09/18 10:22:14
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 439, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 729, in SortLine
+    self.table.table.selection_set('I001')
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1439, in selection_set
+    self._selection("set", items)
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1434, in _selection
+    self.tk.call(self._w, "selection", selop, items)
+_tkinter.TclError: Item I001 not found
+
+Time: 2025/09/18 10:22:15
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 439, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 729, in SortLine
+    self.table.table.selection_set('I001')
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1439, in selection_set
+    self._selection("set", items)
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1434, in _selection
+    self.tk.call(self._w, "selection", selop, items)
+_tkinter.TclError: Item I001 not found
+
+Time: 2025/09/18 10:22:17
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 439, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 729, in SortLine
+    self.table.table.selection_set('I001')
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1439, in selection_set
+    self._selection("set", items)
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1434, in _selection
+    self.tk.call(self._w, "selection", selop, items)
+_tkinter.TclError: Item I001 not found
+
+Time: 2025/09/18 10:22:21
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 439, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 729, in SortLine
+    self.table.table.selection_set('I001')
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1439, in selection_set
+    self._selection("set", items)
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1434, in _selection
+    self.tk.call(self._w, "selection", selop, items)
+_tkinter.TclError: Item I001 not found
+
+Time: 2025/09/18 10:22:26
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 439, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 729, in SortLine
+    self.table.table.selection_set('I001')
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1439, in selection_set
+    self._selection("set", items)
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1434, in _selection
+    self.tk.call(self._w, "selection", selop, items)
+_tkinter.TclError: Item I001 not found
+
+Time: 2025/09/18 10:22:33
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 439, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 729, in SortLine
+    self.table.table.selection_set('I001')
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1439, in selection_set
+    self._selection("set", items)
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1434, in _selection
+    self.tk.call(self._w, "selection", selop, items)
+_tkinter.TclError: Item I001 not found
+
+Time: 2025/09/18 10:22:41
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 439, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 729, in SortLine
+    self.table.table.selection_set('I001')
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1439, in selection_set
+    self._selection("set", items)
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1434, in _selection
+    self.tk.call(self._w, "selection", selop, items)
+_tkinter.TclError: Item I001 not found
+
+Time: 2025/09/18 10:22:52
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 439, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 729, in SortLine
+    self.table.table.selection_set('I001')
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1439, in selection_set
+    self._selection("set", items)
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1434, in _selection
+    self.tk.call(self._w, "selection", selop, items)
+_tkinter.TclError: Item I001 not found
+
+Time: 2025/09/18 10:23:22
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 439, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 729, in SortLine
+    self.table.table.selection_set('I001')
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1439, in selection_set
+    self._selection("set", items)
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1434, in _selection
+    self.tk.call(self._w, "selection", selop, items)
+_tkinter.TclError: Item I001 not found
+
+Time: 2025/09/18 10:30:10
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 439, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 729, in SortLine
+    item_num = num2item(line_num_st)
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\cam_generic_lib.py", line 170, in num2item
+    item = "I%s"%(temp.zfill(3))
+AttributeError: 'int' object has no attribute 'zfill'
+
+Time: 2025/09/18 10:30:17
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 439, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 729, in SortLine
+    item_num = num2item(line_num_st)
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\cam_generic_lib.py", line 170, in num2item
+    item = "I%s"%(temp.zfill(3))
+AttributeError: 'numpy.int32' object has no attribute 'zfill'
+
+Time: 2025/09/18 10:30:56
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 439, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 729, in SortLine
+    item_num = num2item(line_num_st)
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\cam_generic_lib.py", line 170, in num2item
+    item = "I%s"%(temp.zfill(3))
+AttributeError: 'int' object has no attribute 'zfill'
+
+Time: 2025/09/18 10:31:03
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 439, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 729, in SortLine
+    item_num = num2item(line_num_st)
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\cam_generic_lib.py", line 170, in num2item
+    item = "I%s"%(temp.zfill(3))
+AttributeError: 'int' object has no attribute 'zfill'
+
+Time: 2025/09/18 10:31:05
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 439, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 729, in SortLine
+    item_num = num2item(line_num_st)
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\cam_generic_lib.py", line 170, in num2item
+    item = "I%s"%(temp.zfill(3))
+AttributeError: 'int' object has no attribute 'zfill'
+
+Time: 2025/09/18 10:37:34
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 439, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 730, in SortLine
+    self.table.table.selection_set("I001")
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1439, in selection_set
+    self._selection("set", items)
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1434, in _selection
+    self.tk.call(self._w, "selection", selop, items)
+_tkinter.TclError: Item I001 not found
+
+Time: 2025/09/18 10:37:43
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 439, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 730, in SortLine
+    self.table.table.selection_set("I001")
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1439, in selection_set
+    self._selection("set", items)
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1434, in _selection
+    self.tk.call(self._w, "selection", selop, items)
+_tkinter.TclError: Item I001 not found
+
+Time: 2025/09/18 10:37:57
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 439, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 730, in SortLine
+    self.table.table.selection_set("I001")
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1439, in selection_set
+    self._selection("set", items)
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1434, in _selection
+    self.tk.call(self._w, "selection", selop, items)
+_tkinter.TclError: Item I001 not found
+
+Time: 2025/09/18 10:38:10
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 439, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 730, in SortLine
+    self.table.table.selection_set("I001")
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1439, in selection_set
+    self._selection("set", items)
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1434, in _selection
+    self.tk.call(self._w, "selection", selop, items)
+_tkinter.TclError: Item I001 not found
+
+Time: 2025/09/18 10:38:25
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 439, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 730, in SortLine
+    self.table.table.selection_set("I001")
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1439, in selection_set
+    self._selection("set", items)
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1434, in _selection
+    self.tk.call(self._w, "selection", selop, items)
+_tkinter.TclError: Item I001 not found
+
+Time: 2025/09/18 10:41:00
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 439, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 730, in SortLine
+    self.table.table.selection_set("I001")
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1439, in selection_set
+    self._selection("set", items)
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1434, in _selection
+    self.tk.call(self._w, "selection", selop, items)
+_tkinter.TclError: Item I001 not found
+
+Time: 2025/09/18 10:41:12
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 439, in AutoLineSort
+    ret = dxf_obj.SortLine()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 730, in SortLine
+    self.table.table.selection_set("I001")
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1439, in selection_set
+    self._selection("set", items)
+  File "C:\ProgramData\Anaconda3\lib\tkinter\ttk.py", line 1434, in _selection
+    self.tk.call(self._w, "selection", selop, items)
+_tkinter.TclError: Item I001 not found
+

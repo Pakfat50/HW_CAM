@@ -332,7 +332,7 @@ def open_file_explorer(entry):
     entry.insert(tk.END, data)
 
 
-def load_config(config, config_entry, dlEntry, CutSpeedEntry, XYDistEntry, UVDistEntry, WorkLengthEntry, MachDistEntry, MessageWindow):
+def load_config(config, config_entry, dlEntry, CutSpeedEntry, XYDistEntry, UVDistEntry, MachDistEntry, MessageWindow):
     open_file_explorer(config_entry)
     
     config_path = config_entry.get()
@@ -353,10 +353,6 @@ def load_config(config, config_entry, dlEntry, CutSpeedEntry, XYDistEntry, UVDis
     #【カット面距離入力コンソール2】   
     UVDistEntry.delete(0,tk.END)
     UVDistEntry.insert(tk.END, config.UV_DIST)
-
-    #【XY-UV面距離入力コンソール】 
-    WorkLengthEntry.delete(0,tk.END)
-    WorkLengthEntry.insert(tk.END, config.WORK_LENGTH)
 
     #【マシン距離入力コンソール】   
     MachDistEntry.delete(0,tk.END)
@@ -722,14 +718,13 @@ def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, e
         messeage_window.set_messeage("入力値に誤りがあります。オフセット値更新を中止しました。\n")
 
 # Ver2.1変更　引数追加，距離別指定可能
-def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry_XYDist, entry_UVDist, entry_WorkLength, entry_MachDist, entry_CS, entry_dl, messeage_window, config):
+def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry_XYDist, entry_UVDist, entry_MachDist, entry_CS, entry_dl, messeage_window, config):
     entry_ox_value = entry_ox.get()
     entry_oy_value = entry_oy.get()
     entry_ex_value = entry_ex.get()
     entry_ey_value = entry_ey.get()
     entry_XYDist_value = entry_XYDist.get()
     entry_UVDist_value = entry_UVDist.get()
-    entry_WorkLength_value = entry_WorkLength.get()
     entry_MachDist_value = entry_MachDist.get()
     entry_dl_value = entry_dl.get()
     entry_CS_value = entry_CS.get()
@@ -746,8 +741,8 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
         ey = float(entry_ey_value)
         Z_XY = float(entry_XYDist_value)
         Z_UV = float(entry_UVDist_value)
-        Z_Work = float(entry_WorkLength_value)
         Z_Mach = float(entry_MachDist_value)
+        Z_Work = Z_Mach - Z_XY - Z_UV
         dl = float(entry_dl_value)
         CS = float(entry_CS_value)
 
@@ -881,7 +876,7 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
     
 #Ver2.1変更　引数追加，距離別指定可能
 def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
-             entry_XYDist, entry_UVDist, entry_WorkLength, entry_MachDist, entry_dl, messeage_window):
+             entry_XYDist, entry_UVDist, entry_MachDist, entry_dl, messeage_window):
         
     PLOT_PER_POINT = 2
     
@@ -909,9 +904,7 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
     entry_dl_value = entry_dl.get()
     entry_XYDist_value = entry_XYDist.get()
     entry_UVDist_value = entry_UVDist.get()
-    entry_WorkLength_value = entry_WorkLength.get()
     entry_MachDist_value = entry_MachDist.get()
-
     
     try:
         ox = float(entry_ox_value)
@@ -921,8 +914,8 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
         dl = float(entry_dl_value)
         Z_XY = float(entry_XYDist_value)
         Z_UV = float(entry_UVDist_value)
-        Z_Work = float(entry_WorkLength_value)
         Z_Mach = float(entry_MachDist_value)
+        Z_Work = Z_Mach - Z_XY - Z_UV
         
         x_array = np.array([ox])
         y_array = np.array([oy])
@@ -1315,36 +1308,26 @@ if __name__ == "__main__":
     # Ver2.1 変更
     #【カット面距離入力コンソール1】   
     XYDistLabel = tk.Label(root, text="XY面距離[mm]",font=("",12))
-    XYDistLabel.place(x = 850, y = 735)
+    XYDistLabel.place(x = 850, y = 740)
     XYDistEntry = tk.Entry(root, width=8,font=("",12))     
     XYDistEntry.insert(tk.END, config.XY_DIST)
-    XYDistEntry.place(x = 1000, y = 735)  
+    XYDistEntry.place(x = 970, y = 740)  
 
     # Ver2.1 追加
     #【カット面距離入力コンソール2】   
     UVDistLabel = tk.Label(root, text="UV面距離[mm]",font=("",12))
-    UVDistLabel.place(x = 1150, y = 735)
+    UVDistLabel.place(x = 1070, y = 740)
     UVDistEntry = tk.Entry(root, width=8,font=("",12))     
     UVDistEntry.insert(tk.END, config.UV_DIST)
-    UVDistEntry.place(x = 1300, y = 735)  
-
-
-    #Ver2.1 追加 
-    #【XY-UV面距離入力コンソール】   
-    WorkLengthLabel = tk.Label(root, text="XY-UV面距離[mm]",font=("",12))
-    WorkLengthLabel.place(x = 850, y = 760)
-    WorkLengthEntry = tk.Entry(root, width=8,font=("",12))     
-    WorkLengthEntry.insert(tk.END, config.WORK_LENGTH)
-    WorkLengthEntry.place(x = 1000, y = 760)
-
+    UVDistEntry.place(x = 1190, y = 740)  
 
     #Ver2.1 位置変更 
     #【マシン距離入力コンソール】   
     MachDistLabel = tk.Label(root, text="駆動面距離[mm]",font=("",12))
-    MachDistLabel.place(x = 1150, y = 760)
+    MachDistLabel.place(x = 1290, y = 740)
     MachDistEntry = tk.Entry(root, width=8,font=("",12))     
     MachDistEntry.insert(tk.END, config.MACH_DIST)
-    MachDistEntry.place(x = 1300, y = 760)  
+    MachDistEntry.place(x = 1420, y = 740)  
 
 
     #======================================================================================================================================
@@ -1385,7 +1368,7 @@ if __name__ == "__main__":
     #【configファイル読込用のエクスプローラーを開くボタン】
     ConfigLoadBtn0 = tk.Button(root, text="開く", command = lambda: load_config(config, ConfigFileEntry, \
                                                                               dlEntry, CutSpeedEntry, XYDistEntry, UVDistEntry, \
-                                                                                  WorkLengthEntry, MachDistEntry, MessageWindow))
+                                                                              MachDistEntry, MessageWindow))
     ConfigLoadBtn0.place(x=1207, y=570)  
 
     #【オフセット関数ファイル読込用のエクスプローラーを開くボタン】   
@@ -1450,15 +1433,15 @@ if __name__ == "__main__":
     #Ver2.0 変更　WorkDistWntryを追加
     #【パスチェックボタン】    
     ChkPassBtn = tk.Button(root, text = "パスチェック", height = 2, width = 14,font=("",12), bg='#3cb371', \
-                           command = lambda: path_chk(root, dxf0, dxf1, AutoAlignmentEntry_X, AutoAlignmentEntry_Y, CutEndEntry_X, CutEndEntry_Y, XYDistEntry, UVDistEntry, WorkLengthEntry, MachDistEntry, dlEntry, MessageWindow))
-    ChkPassBtn.place(x = 1530, y = 690)
+                           command = lambda: path_chk(root, dxf0, dxf1, AutoAlignmentEntry_X, AutoAlignmentEntry_Y, CutEndEntry_X, CutEndEntry_Y, XYDistEntry, UVDistEntry, MachDistEntry, dlEntry, MessageWindow))
+    ChkPassBtn.place(x = 1530, y = 660)
     
 
     #Ver2.0 変更　MechDistEntry, WorkDistWntryを追加
     #【Gコード生成ボタン】        
     GenGCodeBtn = tk.Button(root, text = "Gコード生成", height = 2, width = 14,font=("",12), bg='#ff6347', \
-                            command = lambda: gen_g_code(dxf0, dxf1, AutoAlignmentEntry_X, AutoAlignmentEntry_Y, CutEndEntry_X, CutEndEntry_Y, XYDistEntry, UVDistEntry, WorkLengthEntry, MachDistEntry, CutSpeedEntry, dlEntry, MessageWindow, config))
-    GenGCodeBtn.place(x = 1530, y = 740)
+                            command = lambda: gen_g_code(dxf0, dxf1, AutoAlignmentEntry_X, AutoAlignmentEntry_Y, CutEndEntry_X, CutEndEntry_Y, XYDistEntry, UVDistEntry, MachDistEntry, CutSpeedEntry, dlEntry, MessageWindow, config))
+    GenGCodeBtn.place(x = 1530, y = 720)
 
 
 

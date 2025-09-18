@@ -312,14 +312,14 @@ def gen_g_code_line_str(x,y,u,v, x0,y0,u0,v0, cs_xy, cs_uv, cnc_cs_def):
         elif cnc_cs_def == "XYU":
             l_xyu = np.sqrt((x[0]-x0)**2 + (y[0]-y0)**2 + (u[0]-u0)**2)
             l_xy = np.sqrt((x[0]-x0)**2 + (y[0]-y0)**2)
-            if (l_xyu < DIST_NEAR) or (l_xy < DIST_NEAR):
+            if (l_xyu > DIST_NEAR) and (l_xy > DIST_NEAR):
                 cut_speed = cs_xy * l_xyu / l_xy
             else:
                 cut_speed = cs_xy
         elif cnc_cs_def == "XYV":
             l_xyv = np.sqrt((x[0]-x0)**2 + (y[0]-y0)**2 + (v[0]-v0)**2)
             l_xy = np.sqrt((x[0]-x0)**2 + (y[0]-y0)**2)
-            if (l_xyv < DIST_NEAR) or (l_xy < DIST_NEAR):
+            if (l_xyv > DIST_NEAR) and (l_xy > DIST_NEAR):
                 cut_speed = cs_xy * l_xyv / l_xy
             else:
                 cut_speed = cs_xy                
@@ -345,14 +345,14 @@ def gen_g_code_line_str(x,y,u,v, x0,y0,u0,v0, cs_xy, cs_uv, cnc_cs_def):
             elif cnc_cs_def == "XYU":
                 l_xyu = np.sqrt((x[i]-x[i-1])**2 + (y[i]-y[i-1])**2 + (u[i]-u[i-1])**2)
                 l_xy = np.sqrt((x[i]-x[i-1])**2 + (y[i]-y[i-1])**2)
-                if (l_xyu < DIST_NEAR) or (l_xy < DIST_NEAR):
+                if (l_xyu > DIST_NEAR) and (l_xy > DIST_NEAR):
                     cut_speed = cs_xy * l_xyu / l_xy
                 else:
                     cut_speed = cs_xy
             elif cnc_cs_def == "XYV":
                 l_xyv = np.sqrt((x[i]-x[i-1])**2 + (y[i]-y[i-1])**2 + (v[i]-v[i-1])**2)
                 l_xy = np.sqrt((x[i]-x[i-1])**2 + (y[i]-y[i-1])**2)
-                if (l_xyv < DIST_NEAR) or (l_xy < DIST_NEAR):
+                if (l_xyv > DIST_NEAR) and (l_xy > DIST_NEAR):
                     cut_speed = cs_xy * l_xyv / l_xy
                 else:
                     cut_speed = cs_xy                

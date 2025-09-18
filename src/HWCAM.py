@@ -742,18 +742,9 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
         Z_XY = float(entry_XYDist_value)
         Z_UV = float(entry_UVDist_value)
         Z_Mach = float(entry_MachDist_value)
-        Z_Work = Z_Mach - Z_XY - Z_UV
         dl = float(entry_dl_value)
         CS = float(entry_CS_value)
 
-
-        if np.abs(Z_XY + Z_UV + Z_Work - Z_Mach) > np.abs(Z_ERROR):
-            if (Z_XY + Z_UV + Z_Work - Z_Mach) > 0.0:
-                messeage_window.set_messeage("【警告】\nXY面距離，UV面距離，加工物サイズの和が，駆動面距離に対して%s mm 長いです。（許容誤差：%s mm）\n入力値を確認してください。\n\n"%((Z_XY + Z_UV + Z_Work - Z_Mach), np.abs(Z_ERROR)))
-                temp_error_flg = True
-            else:
-                messeage_window.set_messeage("【警告】\nXY面距離，UV面距離，加工物サイズの和が，駆動面距離に対して%s mm 短いです。（許容誤差：%s mm）\n入力値を確認してください。\n\n"%((Z_Mach - Z_XY - Z_UV - Z_Work), np.abs(Z_ERROR)))
-                temp_error_flg = True
         if Z_XY > Z_Mach:
             messeage_window.set_messeage("【警告】\nXY面距離が駆動面距離に対して%s mm 長いです。\n入力値を確認してください。\n\n"%(Z_XY - Z_Mach))
             temp_error_flg = True
@@ -763,6 +754,7 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
        
         if dl < 0.1:
             dl = 0.1
+            
         #Ver2.0　変更 Gコード出力形式
         code_line_list.append("G01 X%f Y%f U%f V%f F%s\n"%(ox, oy, ox, oy, CS))
         
@@ -915,7 +907,6 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
         Z_XY = float(entry_XYDist_value)
         Z_UV = float(entry_UVDist_value)
         Z_Mach = float(entry_MachDist_value)
-        Z_Work = Z_Mach - Z_XY - Z_UV
         
         x_array = np.array([ox])
         y_array = np.array([oy])
@@ -1042,11 +1033,7 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
             messeage_window.set_messeage("パスを描画しました。ワイヤーの最大長は%s mmです。（初期長%s mm）\n"%(int(max(point_dist_array)), int(Z_Mach)))
             messeage_window.set_messeage("\n【加工範囲】 \nX: %smm～%smm\nY: %smm～%smm\nU: %smm～%smm\nV: %smm～%smm\n\n"
                                          %(int(min(x_array)), int(max(x_array)), int(min(y_array)), int(max(y_array)), int(min(u_array)), int(max(u_array)), int(min(v_array)), int(max(v_array))))
-            if np.abs(Z_XY + Z_UV + Z_Work - Z_Mach) > np.abs(Z_ERROR):
-                if (Z_XY + Z_UV + Z_Work - Z_Mach) > 0.0:
-                    messeage_window.set_messeage("【警告】\nXY面距離，UV面距離，加工物サイズの和が，駆動面距離に対して%s mm 短いです。（許容誤差：%s mm）\n入力値を確認してください。\n\n"%((Z_Mach - Z_XY - Z_UV - Z_Work), np.abs(Z_ERROR)))
-                else:
-                    messeage_window.set_messeage("【警告】\nXY面距離，UV面距離，加工物サイズの和が，駆動面距離に対して%s mm 短いです。（許容誤差：%s mm）\n入力値を確認してください。\n\n"%((Z_Mach - Z_XY - Z_UV - Z_Work), np.abs(Z_ERROR)))
+
             if Z_XY > Z_Mach:
                 messeage_window.set_messeage("【警告】\nXY面距離が駆動面距離に対して%s mm 長いです。\n入力値を確認してください。\n\n"%(Z_XY - Z_Mach))
             if Z_UV > Z_Mach:

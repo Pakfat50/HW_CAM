@@ -132,3 +132,13 @@ Traceback (most recent call last):
     xu_mid = (x_array[i] + u_array[i])/ 2.0
 IndexError: index 491 is out of bounds for axis 0 with size 491
 
+Time: 2025/09/18 09:49:28
+Traceback (most recent call last):
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 504, in Set_OffsetDist
+    self_collision_list = dxf_obj.check_self_collision()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\dxf_file.py", line 758, in check_self_collision
+    temp_line.remove_self_collision()
+  File "C:\Users\hirar\Documents\Git\HW_CAM\src\line_object.py", line 186, in remove_self_collision
+    print(len(x), len(temp_x))
+NameError: name 'x' is not defined
+

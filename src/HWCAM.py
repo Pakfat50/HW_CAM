@@ -402,6 +402,13 @@ def XY_UV_Link(chkValue, table_XY, table_UV, messeage_window):
         messeage_window.set_messeage("U-V画面とX-Y画面の連動を解除\n")
 
 
+def EnableRemoveSelfCollision(removeSelfCollisionValue, messeage_window):
+    if removeSelfCollisionValue.get():
+        messeage_window.set_messeage("自己交差除去を有効化\n")
+    else:
+        messeage_window.set_messeage("自己交差除去を無効化\n")
+
+
 def swap_line(dxf_obj, messeage_window):
     selected_items = dxf_obj.Swap_Selected_line()
     if len(selected_items) == 2:
@@ -485,31 +492,43 @@ def delete_line(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):
     
     
     
-def Set_OffsetDist(dxf_obj, entry, x_dxf_obj, x_entry, chkValue, name, x_name, messeage_window):
+def Set_OffsetDist(dxf_obj, entry, x_dxf_obj, x_entry, chkValue, removeSelfCollisionValue, name, x_name, messeage_window):
     try:
+        if removeSelfCollisionValue.get():
+            remove_self_collision = True
+            dxf_obj.set_remove_self_collision(True)
+            x_dxf_obj.set_remove_self_collision(True)
+        else:
+            remove_self_collision = False
+            dxf_obj.set_remove_self_collision(False)
+            x_dxf_obj.set_remove_self_collision(False)            
+        
         entry_value = entry.get()
         offset_dist = float(entry_value)
         dxf_obj.set_offset_dist(offset_dist)
-        self_collision_list = dxf_obj.check_self_collision()
         messeage_window.set_messeage("%sのオフセット距離を%sに設定しました。\n"%(name, offset_dist))
-        if len(self_collision_list) > 0:
-            temp_str = ""
-            for num in self_collision_list:
-                temp_str += "%s "%num
-            messeage_window.set_messeage("%sの%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(name, temp_str))
+        if remove_self_collision == True:
+            self_collision_list = dxf_obj.check_self_collision()
+            if len(self_collision_list) > 0:
+                temp_str = ""
+                for num in self_collision_list:
+                    temp_str += "%s "%num
+                messeage_window.set_messeage("%sの%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(name, temp_str))
         
         if chkValue.get():
             x_entry_value = x_entry.get()
             x_offset_dist = float(x_entry_value)
             x_dxf_obj.set_offset_dist(x_offset_dist)
-            x_self_collision_list = x_dxf_obj.check_self_collision()
             messeage_window.set_messeage("%sのオフセット距離を%sに設定しました。\n"%(x_name, x_offset_dist))
-            if len(self_collision_list) > 0:
-                x_temp_str = ""
-                for num in x_self_collision_list:
-                    x_temp_str += "%s "%num
-                messeage_window.set_messeage("%sの%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(x_name, x_temp_str))
-        
+            if remove_self_collision == True:
+                x_self_collision_list = x_dxf_obj.check_self_collision()
+                if len(self_collision_list) > 0:
+                    x_temp_str = ""
+                    for num in x_self_collision_list:
+                        x_temp_str += "%s "%num
+                    messeage_window.set_messeage("%sの%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(x_name, x_temp_str))
+
+                
     except:
         traceback.print_exc()
         output_log(traceback.format_exc())
@@ -623,11 +642,20 @@ def get_offset_and_cut_speed(length_XY, length_UV, Z_XY, Z_UV, Z_Mach, CutSpeed,
     return offset_XY_Work, offset_UV_Work, cutspeed_XY_Work, cutspeed_UV_Work, cutspeed_XY_Mech, cutspeed_UV_Mech
 
 
-def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, entry_MachDist, entry_CS, offset_function, messeage_window):
+def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, entry_MachDist, entry_CS, offset_function, removeSelfCollisionValue, messeage_window):
     entry_XYDist_value = entry_XYDist.get()
     entry_UVDist_value = entry_UVDist.get()
     entry_MachDist_value = entry_MachDist.get()
-    entry_CS_value = entry_CS.get()    
+    entry_CS_value = entry_CS.get()   
+    
+    if removeSelfCollisionValue.get():
+        remove_self_collision = True
+        dxf_obj0.set_remove_self_collision(True)
+        dxf_obj1.set_remove_self_collision(True)
+    else:
+        remove_self_collision = False
+        dxf_obj0.set_remove_self_collision(False)
+        dxf_obj1.set_remove_self_collision(False)    
 
     # 削除済みの線は、インデックスが-1となっているので、有効な線（インデックスが0以上の線）のみを抽出する
     a_line_num_list0 = np.array(np.array(dxf_obj0.line_num_list.copy())[np.where(np.array(dxf_obj0.line_num_list.copy()) >= 0)])
@@ -666,21 +694,21 @@ def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, e
             dxf_obj0.plot()
             dxf_obj1.plot()
             
-            
-            self_collision_list0 = dxf_obj0.check_self_collision()
-            self_collision_list1 = dxf_obj1.check_self_collision()
-            if len(self_collision_list0) > 0:
-                temp_str0 = ""
-                for num in self_collision_list0:
-                    temp_str0 += "%s "%num
-                messeage_window.set_messeage("XY平面の%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%temp_str0)
-            
-            if len(self_collision_list1) > 0:
-                temp_str1 = ""
-                for num in self_collision_list1:
-                    temp_str1 += "%s "%num
-                messeage_window.set_messeage("UV平面の%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%temp_str1)
-            
+            if remove_self_collision == True:
+                self_collision_list0 = dxf_obj0.check_self_collision()
+                self_collision_list1 = dxf_obj1.check_self_collision()
+                if len(self_collision_list0) > 0:
+                    temp_str0 = ""
+                    for num in self_collision_list0:
+                        temp_str0 += "%s "%num
+                    messeage_window.set_messeage("XY平面の%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%temp_str0)
+                
+                if len(self_collision_list1) > 0:
+                    temp_str1 = ""
+                    for num in self_collision_list1:
+                        temp_str1 += "%s "%num
+                    messeage_window.set_messeage("UV平面の%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%temp_str1)
+                
                 
             messeage_window.set_messeage("オフセット値を更新しました。\n")
         else:
@@ -1340,13 +1368,15 @@ if __name__ == "__main__":
 
     #【X-Y用 オフセット距離反映ボタン】
     OffsetBtn0 = tk.Button(root, text="オフセット量設定", width = 15, bg='#fffacd', \
-                         command = lambda: Set_OffsetDist(dxf0, OffsetDistEntry0, dxf1, OffsetDistEntry1, chkValue, "XY面", "UV面", MessageWindow))
+                         command = lambda: Set_OffsetDist(dxf0, OffsetDistEntry0, dxf1, OffsetDistEntry1, \
+                                                          chkValue, removeSelfCollisionValue, "XY面", "UV面", MessageWindow))
     OffsetBtn0.place(x=1125, y=492)  
 
 
     #【U-V用 オフセット距離反映ボタン】
     OffsetBtn1 = tk.Button(root, text="オフセット量設定", width = 15, bg='#fffacd', \
-                         command = lambda: Set_OffsetDist(dxf1, OffsetDistEntry1, dxf0, OffsetDistEntry0, chkValue, "UV面", "XY面", MessageWindow))
+                         command = lambda: Set_OffsetDist(dxf1, OffsetDistEntry1, dxf0, OffsetDistEntry0, \
+                                                          chkValue, removeSelfCollisionValue, "UV面", "XY面", MessageWindow))
     OffsetBtn1.place(x=1525, y=492)  
 
 
@@ -1362,7 +1392,8 @@ if __name__ == "__main__":
 
     #【オフセット値更新ボタン】    
     OffsetBtn = tk.Button(root, text = "溶け量ファイルからオフセット量設定", height = 1, width = 34, font=("",10),  bg='#fffacd', \
-                          command = lambda: Set_OffsetDistFromFunction(dxf0, dxf1, XYDistEntry, UVDistEntry, MachDistEntry, CutSpeedEntry, config.offset_function, MessageWindow))
+                          command = lambda: Set_OffsetDistFromFunction(dxf0, dxf1, XYDistEntry, UVDistEntry, MachDistEntry, CutSpeedEntry, \
+                                                                       config.offset_function, removeSelfCollisionValue, MessageWindow))
     OffsetBtn.place(x = 1255, y = 532)
 
 
@@ -1413,11 +1444,6 @@ if __name__ == "__main__":
     DelateBtn1 = tk.Button(root, text="ライン削除", width = 15, bg = "#ff6347" , command = lambda: delete_line(dxf1, dxf0, chkValue, "UV面", "XY面", MessageWindow))
     DelateBtn1.place(x=1390, y=465)
     
-    """
-    #【自動整列ボタン】    
-    AutoAlignmentBtn = tk.Button(root, text = "自動整列", height = 1, width = 12, font=("",12), bg='#fffacd', command = lambda: AutoLineSort(dxf0, dxf1, MessageWindow))
-    AutoAlignmentBtn.place(x = 1530, y = 555)
-    """
 
     #Ver2.0 変更　WorkDistWntryを追加
     #【パスチェックボタン】    
@@ -1440,8 +1466,14 @@ if __name__ == "__main__":
 
     #【U-V画面とX-Y画面の連動チェックボックス】
     chkValue = tk.BooleanVar()
-    chk0 = tk.Checkbutton(root, text="U-V画面をX-Y画面に連動させる", var=chkValue , command =  lambda: XY_UV_Link(chkValue, table0, table1, MessageWindow))
-    chk0.place(x=1460, y=5)
+    chk0 = tk.Checkbutton(root, text="X-Y画面とU-V画面を連動させる", var=chkValue , command =  lambda: XY_UV_Link(chkValue, table0, table1, MessageWindow))
+    chk0.place(x=1500, y=5)
+
+    #【自己交差除去チェックボックス】
+    removeSelfCollisionValue = tk.BooleanVar()
+    chk1 = tk.Checkbutton(root, text="自己交差除去有効化", var=removeSelfCollisionValue, command =  lambda: EnableRemoveSelfCollision(removeSelfCollisionValue, MessageWindow))
+    chk1.place(x=1360, y=5)
+    
     
 
     #======================================================================================================================================

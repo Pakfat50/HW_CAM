@@ -743,7 +743,21 @@ class dxf_file:
             i += 1   
         self.table_reload()
         self.plot()
+    
+    def set_remove_self_collision(self, val):
+        alaivable_line_num_list = np.array(np.array(self.line_num_list.copy())[np.where(np.array(self.line_num_list.copy()) >= 0)])
         
+        i = 0
+        j = 0
+        while i < len(self.line_num_list):
+            if self.line_num_list[i] >= 0:
+                temp_num = alaivable_line_num_list[j]
+                temp_line = self.line_list[temp_num]
+                temp_line.remove_self_collision = val
+                j += 1
+                i += 1
+            else:
+                i += 1    
 
     def check_self_collision(self):
         alaivable_line_num_list = np.array(np.array(self.line_num_list.copy())[np.where(np.array(self.line_num_list.copy()) >= 0)])
@@ -755,12 +769,17 @@ class dxf_file:
             if self.line_num_list[i] >= 0:
                 temp_num = alaivable_line_num_list[j]
                 temp_line = self.line_list[temp_num]
+                temp_line.update()
+                
                 if temp_line.self_collision == True:
                     col_line_num_list.append(temp_num)
                 j += 1
                 i += 1
             else:
                 i += 1
+                
+        self.table_reload()
+        self.plot()
         return col_line_num_list
     
 

@@ -1,6 +1,0 @@
-Time: 2025/09/19 03:28:22
-Traceback (most recent call last):
-  File "C:\Users\hirar\Documents\Git\HW_CAM\src\HWCAM.py", line 1104, in path_chk
-    point_dist_array = plot_3d_cut_path(ax, x_array, y_array, u_array, v_array, x_m_array, y_m_array, u_m_array, v_m_array, Z_XY, Z_UV, Z_Mach, int(len(x_array)/PLOT_PER_POINT))
-NameError: name 'PLOT_PER_POINT' is not defined
-

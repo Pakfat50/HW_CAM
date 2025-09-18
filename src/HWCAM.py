@@ -594,8 +594,7 @@ def make_offset_path(x_array, y_array, u_array, v_array, Z_XY, Z_UV, Z_Mach):
     return new_x, new_y, new_u, new_v
 
 
-def get_offset_and_cut_speed(length_XY, length_UV, Z_XY, Z_UV, Z_Mach, CutSpeed, offset_function):
-    
+def get_cutspeed(length_XY, length_UV, Z_XY, Z_UV, Z_Mach, CutSpeed, CutSpeedDef):
     Z_work_mid = (Z_Mach - Z_XY - Z_UV)/2.0 + Z_XY
     L_XY_work = np.abs(Z_work_mid - Z_XY)
     L_UV_work = np.abs((Z_Mach - Z_UV) - Z_work_mid)
@@ -615,38 +614,39 @@ def get_offset_and_cut_speed(length_XY, length_UV, Z_XY, Z_UV, Z_Mach, CutSpeed,
     
     length_XY_Mech = k_xy*dl_XY + length_mid
     length_UV_Mech = k_uv*dl_UV + length_mid
-    
-    length_ratio_XY_Mech = length_XY_Mech/length_mid
-    length_ratio_UV_Mech = length_UV_Mech/length_mid
-    length_ratio_XY_Work = length_XY/length_mid
-    length_ratio_UV_Work = length_UV/length_mid
 
-    cutspeed_XY_Mech = CutSpeed*length_ratio_XY_Mech
-    cutspeed_UV_Mech = CutSpeed*length_ratio_UV_Mech
-    cutspeed_XY_Work = CutSpeed*length_ratio_XY_Work
-    cutspeed_UV_Work = CutSpeed*length_ratio_UV_Work
+    if CutSpeedDef == "XY(Mech)":
+        length_def = length_XY_Mech
+    elif CutSpeedDef == "XY(Work)":
+        length_def = length_XY
+    elif CutSpeedDef == "Center":
+        length_def = length_mid
+    elif CutSpeedDef == "UV(Work)":
+        length_def = length_UV
+    else: # CutSpeedDef == "UV(Mech)"
+        length_def = length_UV_Mech
     
-    offset_XY_Mech = offset_function(cutspeed_XY_Mech)
-    offset_UV_Mech = offset_function(cutspeed_UV_Mech)
-    offset_XY_Work = offset_function(cutspeed_XY_Work)
-    offset_UV_Work = offset_function(cutspeed_UV_Work)
-    offset_mid = offset_function(CutSpeed)
+    ratio_XY_Mech = length_XY_Mech/length_def
+    ratio_XY_Work = length_XY/length_def
+    ratio_mid = length_UV/length_def
+    ratio_UV_Work = length_UV/length_def
+    ratio_UV_Mech = length_UV_Mech/length_def
+  
+    cs_xy_mech = CutSpeed*ratio_XY_Mech
+    cs_xy_work = CutSpeed*ratio_XY_Work
+    cs_mid = CutSpeed*ratio_mid
+    cs_uv_work = CutSpeed*ratio_UV_Work
+    cs_uv_mech = CutSpeed*ratio_UV_Mech
     
-    #for debug
-    """   
-    #plt.plot([0, Z_XY, Z_work_mid, Z_Mach-Z_UV, Z_Mach],[length_XY_Mech, length_XY, length_mid, length_UV, length_UV_Mech], "-o")
-    #plt.plot([0, Z_XY, Z_work_mid, Z_Mach-Z_UV, Z_Mach],[cutspeed_XY_Mech, cutspeed_XY_Work, CutSpeed, cutspeed_UV_Work, cutspeed_UV_Mech], "-o")
-    #plt.plot([0, Z_XY, Z_work_mid, Z_Mach-Z_UV, Z_Mach],[offset_XY_Mech, offset_XY_Work, offset_mid, offset_UV_Work, offset_UV_Mech], "-o")    
-    """
-    
-    return offset_XY_Work, offset_UV_Work, cutspeed_XY_Work, cutspeed_UV_Work, cutspeed_XY_Mech, cutspeed_UV_Mech
+    return cs_xy_mech, cs_xy_work, cs_mid, cs_uv_work, cs_uv_mech
 
 
-def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, entry_MachDist, entry_CS, offset_function, removeSelfCollisionValue, messeage_window):
+def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, entry_MachDist, entry_CS, cb_CSDef, offset_function, removeSelfCollisionValue, messeage_window):
     entry_XYDist_value = entry_XYDist.get()
     entry_UVDist_value = entry_UVDist.get()
     entry_MachDist_value = entry_MachDist.get()
     entry_CS_value = entry_CS.get()   
+    CutSpeedDef = cb_CSDef.get()
     
     if removeSelfCollisionValue.get():
         remove_self_collision = True
@@ -679,14 +679,16 @@ def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, e
                 line0_length = line0.get_length()
                 line1_length = line1.get_length()
                 
-                offset_XY_Work, offset_UV_Work, cutspeed_XY_Work, cutspeed_UV_Work, cutspeed_XY_Mech, cutspeed_UV_Mech = \
-                    get_offset_and_cut_speed(line0_length, line1_length, Z_XY, Z_UV, Z_Mach, \
-                                             CutSpeed, offset_function)
+                cs_xy_mech, cs_xy_work, cs_mid, cs_uv_work, cs_uv_mech = \
+                    get_cutspeed(line0_length, line1_length, Z_XY, Z_UV, Z_Mach, \
+                                             CutSpeed, CutSpeedDef)
+                offset_XY_Work = offset_function(cs_xy_work)
+                offset_UV_Work = offset_function(cs_uv_work)
                 line0.set_offset_dist(offset_XY_Work)
                 line1.set_offset_dist(offset_UV_Work)
                 
-                line0.set_cutspeed(cutspeed_XY_Work, cutspeed_XY_Mech)
-                line1.set_cutspeed(cutspeed_UV_Work, cutspeed_UV_Mech)
+                line0.set_cutspeed(cs_xy_work, cs_xy_mech)
+                line1.set_cutspeed(cs_uv_work, cs_uv_mech)
                 
                 i += 1
             dxf_obj0.table_reload()
@@ -1392,7 +1394,7 @@ if __name__ == "__main__":
 
     #【オフセット値更新ボタン】    
     OffsetBtn = tk.Button(root, text = "溶け量ファイルからオフセット量設定", height = 1, width = 34, font=("",10),  bg='#fffacd', \
-                          command = lambda: Set_OffsetDistFromFunction(dxf0, dxf1, XYDistEntry, UVDistEntry, MachDistEntry, CutSpeedEntry, \
+                          command = lambda: Set_OffsetDistFromFunction(dxf0, dxf1, XYDistEntry, UVDistEntry, MachDistEntry, CutSpeedEntry, CutSpeedDefCB,\
                                                                        config.offset_function, removeSelfCollisionValue, MessageWindow))
     OffsetBtn.place(x = 1255, y = 532)
 

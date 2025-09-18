@@ -107,10 +107,13 @@ class config:
         self.EX = 0.0
         self.EY = 0.0
         self.DELTA_LENGTH = 1.0
-        self.OFFSET_DIST = 0.0
+        self.XY_OFFSET_DIST = 0.0
+        self.UV_OFFSET_DIST = 0.0
         self.CUTSPEED = 200
         self.XY_DIST = 25.0
         self.UV_DIST = 50.0
+        self.CS_DEF = "Center"
+        self.CNC_CS_DEF = "XY"
         self.MACH_DIST = 500
         self.HEADER = "T1\nG17 G49 G54 G80 G90 G94 G21 G40 G64\n"
         self.X_str = 'X'
@@ -132,16 +135,19 @@ class config:
             self.EX = float(config_data[4])
             self.EY = float(config_data[5])
             self.DELTA_LENGTH = float(config_data[6])
-            self.OFFSET_DIST = float(config_data[7])
-            self.CUTSPEED = float(config_data[8])
-            self.XY_DIST = float(config_data[9])
-            self.UV_DIST = float(config_data[10])
-            self.MACH_DIST = float(config_data[11])
-            self.HEADER = config_data[12].replace("\\n", "\n")
-            self.X_str = str(config_data[13])
-            self.Y_str = str(config_data[14])
-            self.U_str = str(config_data[15])
-            self.V_str = str(config_data[16])
+            self.XY_OFFSET_DIST = float(config_data[7])
+            self.UV_OFFSET_DIST = float(config_data[8])
+            self.CUTSPEED = float(config_data[9])
+            self.CS_DEF = str(config_data[10])
+            self.CNC_CS_DEF = str(config_data[11])
+            self.XY_DIST = float(config_data[12])
+            self.UV_DIST = float(config_data[13])
+            self.MACH_DIST = float(config_data[14])
+            self.HEADER = config_data[15].replace("\\n", "\n")
+            self.X_str = str(config_data[16])
+            self.Y_str = str(config_data[17])
+            self.U_str = str(config_data[18])
+            self.V_str = str(config_data[19])
             self.MESSEAGE = "設定ファイルの読み込み成功\n"
             
         except:
@@ -154,8 +160,11 @@ class config:
             self.EX = 0.0
             self.EY = 0.0
             self.DELTA_LENGTH = 1.0
-            self.OFFSET_DIST = 0.0
+            self.XY_OFFSET_DIST = 0.0
+            self.UV_OFFSET_DIST = 0.0
             self.CUTSPEED = 200
+            self.CS_DEF = "Center"
+            self.CNC_CS_DEF = "XY"
             self.XY_DIST = 25.0
             self.UV_DIST = 50.0
             self.MACH_DIST = 500
@@ -329,11 +338,21 @@ def open_file_explorer(entry):
     entry.insert(tk.END, data)
 
 
-def load_config(config, config_entry, dlEntry, CutSpeedEntry, XYDistEntry, UVDistEntry, MachDistEntry, MessageWindow):
+def load_config(config, config_entry, dlEntry, XYOffsetEntry, UVOffsetEntry,\
+                CutSpeedEntry, CsDefCB, CncCsDefCB,\
+                XYDistEntry, UVDistEntry, MachDistEntry, MessageWindow):
     open_file_explorer(config_entry)
     
     config_path = config_entry.get()
     config.load_config(config_path)
+    
+    #【XYオフセット距離入力コンソール】 
+    XYOffsetEntry.delete(0,tk.END)
+    XYOffsetEntry.insert(tk.END, config.XY_OFFSET_DIST) 
+    
+    #【UVオフセット距離入力コンソール】
+    UVOffsetEntry.delete(0,tk.END)
+    UVOffsetEntry.insert(tk.END, config.UV_OFFSET_DIST)    
     
     #【分割距離入力コンソール】 
     dlEntry.delete(0,tk.END)
@@ -342,6 +361,12 @@ def load_config(config, config_entry, dlEntry, CutSpeedEntry, XYDistEntry, UVDis
     #【カット速度入力コンソール】   
     CutSpeedEntry.delete(0,tk.END)
     CutSpeedEntry.insert(tk.END, config.CUTSPEED) 
+
+    #【カット速度定義コンボボックス】   
+    CsDefCB.set(config.CS_DEF) 
+
+    #【CNCカット速度定義コンボボックス】   
+    CncCsDefCB.set(config.CNC_CS_DEF) 
 
     #【カット面距離入力コンソール1】   
     XYDistEntry.delete(0,tk.END)
@@ -529,9 +554,9 @@ def Set_OffsetDist(dxf_obj, entry, x_dxf_obj, x_entry, chkValue, removeSelfColli
         pass
 
 
-def Replace_G01_code(g_code_str, X_str, Y_str, U_str, V_str):
+def Replace_G_code(g_code_str, X_str, Y_str, U_str, V_str):
     
-    if ('G01' in g_code_str) and ('X' in g_code_str) and ('Y' in g_code_str) and ('U' in g_code_str) and ('V' in g_code_str):
+    if ('G' in g_code_str) and ('X' in g_code_str) and ('Y' in g_code_str) and ('U' in g_code_str) and ('V' in g_code_str):
         new_g_code_str = g_code_str
         new_g_code_str = new_g_code_str.replace('X', X_str)
         new_g_code_str = new_g_code_str.replace('Y', Y_str)
@@ -670,12 +695,21 @@ def Set_CutSpeed(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, entry_MachDist,
                 
                 line0.set_cutspeed(cs_xy_work, cs_xy_mech)
                 line1.set_cutspeed(cs_uv_work, cs_uv_mech)
-                
                 i += 1
-            dxf_obj0.table_reload()
-            dxf_obj1.table_reload()
-            dxf_obj0.plot()
-            dxf_obj1.plot()
+
+        else:
+            for num0 in a_line_num_list0:
+                line0 = dxf_obj0.line_list[num0]
+                line0.set_cutspeed(CutSpeed, CutSpeed)
+                
+            for num1 in a_line_num_list1:
+                line1 = dxf_obj1.line_list[num1]
+                line1.set_cutspeed(CutSpeed, CutSpeed)
+                
+        dxf_obj0.table_reload()
+        dxf_obj1.table_reload()
+        dxf_obj0.plot()
+        dxf_obj1.plot()        
             
     except:
         traceback.print_exc()
@@ -764,7 +798,10 @@ def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, e
         messeage_window.set_messeage("入力値に誤りがあります。オフセット値更新を中止しました。\n")
 
 # Ver2.1変更　引数追加，距離別指定可能
-def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry_XYDist, entry_UVDist, entry_MachDist, entry_CS, entry_dl, messeage_window, config):
+def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry_XYDist, entry_UVDist, entry_MachDist, entry_CS, \
+               cb_CSDef, cb_CncCSDef, entry_dl, messeage_window, config):
+    Set_CutSpeed(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, entry_MachDist, entry_CS, cb_CSDef)
+    
     entry_ox_value = entry_ox.get()
     entry_oy_value = entry_oy.get()
     entry_ex_value = entry_ex.get()
@@ -774,6 +811,7 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
     entry_MachDist_value = entry_MachDist.get()
     entry_dl_value = entry_dl.get()
     entry_CS_value = entry_CS.get()
+    CncCsdDef = cb_CncCSDef.get()
     
     code_line_list = []
     code_line_list.append(config.HEADER)
@@ -802,7 +840,7 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
             dl = 0.1
             
         #Ver2.0　変更 Gコード出力形式
-        code_line_list.append("G01 X%f Y%f U%f V%f F%s\n"%(ox, oy, ox, oy, CS))
+        code_line_list.append("G00 X%f Y%f U%f V%f\n"%(ox, oy, ox, oy))
         
         a_line_num_list0 = np.array(np.array(dxf_obj0.line_num_list.copy())[np.where(np.array(dxf_obj0.line_num_list.copy()) >= 0)])
         a_line_num_list1 = np.array(np.array(dxf_obj1.line_num_list.copy())[np.where(np.array(dxf_obj1.line_num_list.copy()) >= 0)])
@@ -811,6 +849,11 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
         y_array = np.array([oy])
         u_array = np.array([ox])
         v_array = np.array([oy])
+        
+        x0 = ox
+        y0 = oy
+        u0 = ox
+        v0 = oy
         
         xy_offset_dist = []
         uv_offset_dist = []
@@ -837,7 +880,8 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
                     
                     x, y = generate_arc_length_points(line0, N)
                     u, v = generate_arc_length_points(line1, N)
-                    cut_speed = max(line0.cutspeed_mech, line1.cutspeed_mech)
+                    cs_xy = line0.cutspeed_mech
+                    cs_uv = line1.cutspeed_mech
                     
                     if (i != 0) and (i != len(a_line_num_list0)):
                         # 始点と終点以外は、フィレット補完する
@@ -856,7 +900,11 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
                         
                         #オフセット面の作成
                         x_m_f, y_m_f, u_m_f, v_m_f = make_offset_path(x_f, y_f, u_f, v_f, Z_XY, Z_UV, Z_Mach)
-                        code_line_list.append(gen_g_code_line_str(x_m_f, y_m_f, u_m_f, v_m_f, cut_speed))
+                        code_line_list.append(gen_g_code_line_str(x_m_f, y_m_f, u_m_f, v_m_f, x0, y0, u0, v0, cs_xy, cs_uv, CncCsdDef))
+                        x0 = x_m_f[-1]
+                        y0 = y_m_f[-1]
+                        u0 = u_m_f[-1]
+                        v0 = v_m_f[-1]
                     
                         x_array = np.concatenate([x_array, x_f], 0)
                         y_array = np.concatenate([y_array, y_f], 0)
@@ -865,7 +913,11 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
                     
                     #オフセット面の作成
                     x_m, y_m, u_m, v_m = make_offset_path(x, y, u, v, Z_XY, Z_UV, Z_Mach)
-                    code_line_list.append(gen_g_code_line_str(x_m, y_m, u_m, v_m, cut_speed))
+                    code_line_list.append(gen_g_code_line_str(x_m, y_m, u_m, v_m, x0, y0, u0, v0, cs_xy, cs_uv, CncCsdDef))
+                    x0 = x_m[-1]
+                    y0 = y_m[-1]
+                    u0 = u_m[-1]
+                    v0 = v_m[-1]                    
                     
                     x_array = np.concatenate([x_array, x], 0)
                     y_array = np.concatenate([y_array, y], 0)
@@ -874,11 +926,11 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
                     
                     i += 1
                 #Ver2.0　変更 Gコード出力形式
-                code_line_list.append("G01 X%f Y%f U%f V%f\n"%(ex, ey, ex, ey))
+                code_line_list.append(gen_g_code_line_str([ex], [ey], [ex], [ey], x0, y0, u0, v0, cs_xy, cs_uv, CncCsdDef))
                 
                 replaced_code_line_list = []
                 for g_code_str in code_line_list:
-                    replaced_code_line_list.append(Replace_G01_code(g_code_str, config.X_str, config.Y_str, config.U_str, config.V_str))
+                    replaced_code_line_list.append(Replace_G_code(g_code_str, config.X_str, config.Y_str, config.U_str, config.V_str))
                 
                 line = ""
                 for elem in replaced_code_line_list:
@@ -1084,6 +1136,17 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
                 messeage_window.set_messeage("【警告】\nXY面距離が駆動面距離に対して%s mm 長いです。\n入力値を確認してください。\n\n"%(Z_XY - Z_Mach))
             if Z_UV > Z_Mach:
                 messeage_window.set_messeage("【警告】\nUV面距離が駆動面距離に対して%s mm 長いです。\n入力値を確認してください。\n\n"%(Z_UV - Z_Mach))
+            
+            """
+            # for Debug
+            plt.figure()
+            plt.plot(x_m_array, y_m_array, "r")
+            plt.plot(u_m_array, v_m_array, "b")
+            plt.plot(x_array, y_array, "r--")
+            plt.plot(u_array, v_array, "b--")
+            plt.axis("equal")
+            plt.show()
+            """
             
         else:
             messeage_window.set_messeage("XY座標とUV座標でライン数が一致しません。XY：%s本，UV：%s本\n"%(len(a_line_num_list0), len(a_line_num_list1)))
@@ -1326,6 +1389,7 @@ if __name__ == "__main__":
     CutSpeedDefList = ("XY(Mech)", "XY(Work)", "Center", "UV(Work)", "UV(Mech)")
     CutSpeedDefCB = ttk.Combobox(root, textvariable= tk.StringVar(), width = 15,\
                                  values=CutSpeedDefList, style="office.TCombobox")
+    CutSpeedDefCB.set("Center")
     CutSpeedDefCB.bind(
         '<<ComboboxSelected>>', 
         lambda e: Set_CutSpeed(dxf0, dxf1, XYDistEntry, UVDistEntry, MachDistEntry,\
@@ -1336,9 +1400,10 @@ if __name__ == "__main__":
     #【CNC速度定義入力コンボボックス】
     CNCSpeedDefLabel = tk.Label(root, text="CNC速度定義",font=("",12))
     CNCSpeedDefLabel.place(x = 1150, y = 705)
-    CNCSpeedDefList = ("XY", "UV", "XYZ", "InvertTime")
+    CNCSpeedDefList = ("XY", "UV", "XYU", "XYV", "Faster" ,"InvertTime")
     CNCSpeedDefCB = ttk.Combobox(root, textvariable= tk.StringVar(), width = 15,\
                                  values=CNCSpeedDefList, style="office.TCombobox")
+    CNCSpeedDefCB.set("XY")
     CNCSpeedDefCB.place(x = 1300, y = 705) 
 
 
@@ -1356,7 +1421,7 @@ if __name__ == "__main__":
     UVDistLabel.place(x = 1070, y = 740)
     UVDistEntry = tk.Entry(root, width=8,font=("",12))     
     UVDistEntry.insert(tk.END, config.UV_DIST)
-    UVDistEntry.place(x = 1190, y = 740)  
+    UVDistEntry.place(x = 1190, y = 740)
 
     #Ver2.1 位置変更 
     #【マシン距離入力コンソール】   
@@ -1403,8 +1468,9 @@ if __name__ == "__main__":
 
 
     #【configファイル読込用のエクスプローラーを開くボタン】
-    ConfigLoadBtn0 = tk.Button(root, text="開く", command = lambda: load_config(config, ConfigFileEntry, \
-                                                                              dlEntry, CutSpeedEntry, XYDistEntry, UVDistEntry, \
+    ConfigLoadBtn0 = tk.Button(root, text="開く", command = lambda: load_config(config, ConfigFileEntry, dlEntry,\
+                                                                              OffsetDistEntry0, OffsetDistEntry1, CutSpeedEntry,\
+                                                                              CutSpeedDefCB, CNCSpeedDefCB, XYDistEntry, UVDistEntry,\
                                                                               MachDistEntry, MessageWindow))
     ConfigLoadBtn0.place(x=1207, y=570)  
 
@@ -1470,14 +1536,17 @@ if __name__ == "__main__":
     #Ver2.0 変更　WorkDistWntryを追加
     #【パスチェックボタン】    
     ChkPassBtn = tk.Button(root, text = "パスチェック", height = 2, width = 14,font=("",12), bg='#3cb371', \
-                           command = lambda: path_chk(root, dxf0, dxf1, AutoAlignmentEntry_X, AutoAlignmentEntry_Y, CutEndEntry_X, CutEndEntry_Y, XYDistEntry, UVDistEntry, MachDistEntry, dlEntry, MessageWindow))
+                           command = lambda: path_chk(root, dxf0, dxf1, AutoAlignmentEntry_X, AutoAlignmentEntry_Y, CutEndEntry_X, CutEndEntry_Y, \
+                                                      XYDistEntry, UVDistEntry, MachDistEntry, dlEntry, MessageWindow))
     ChkPassBtn.place(x = 1530, y = 660)
     
 
     #Ver2.0 変更　MechDistEntry, WorkDistWntryを追加
     #【Gコード生成ボタン】        
     GenGCodeBtn = tk.Button(root, text = "Gコード生成", height = 2, width = 14,font=("",12), bg='#ff6347', \
-                            command = lambda: gen_g_code(dxf0, dxf1, AutoAlignmentEntry_X, AutoAlignmentEntry_Y, CutEndEntry_X, CutEndEntry_Y, XYDistEntry, UVDistEntry, MachDistEntry, CutSpeedEntry, dlEntry, MessageWindow, config))
+                            command = lambda: gen_g_code(dxf0, dxf1, AutoAlignmentEntry_X, AutoAlignmentEntry_Y, CutEndEntry_X, CutEndEntry_Y, \
+                                                         XYDistEntry, UVDistEntry, MachDistEntry, CutSpeedEntry, CutSpeedDefCB, CNCSpeedDefCB, \
+                                                         dlEntry, MessageWindow, config))
     GenGCodeBtn.place(x = 1530, y = 720)
 
 

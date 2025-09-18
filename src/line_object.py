@@ -121,8 +121,8 @@ class line_object:
         self.offset_dist = 0
         self.offset_dir = "O"
         self.cut_dir = "F"
-        self.cutspeed_work = 100
-        self.cutspeed_mech = 100
+        self.cutspeed_work = CUTSPEED_DEFAULT
+        self.cutspeed_mech = CUTSPEED_DEFAULT
         self.x = x_points
         self.y = y_points
         self.interp_mode = "cubic" #ver.2.2追加 "cubic":3d-spline, "linear":1d-line, ポリラインの指定用

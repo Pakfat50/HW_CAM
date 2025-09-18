@@ -296,14 +296,79 @@ def file_chk(filename):
 
 
 #Ver2.0　変更 Gコード出力形式
-def gen_g_code_line_str(x,y,u,v, cut_speed):
+def gen_g_code_line_str(x,y,u,v, x0,y0,u0,v0, cs_xy, cs_uv, cnc_cs_def):
     code_str = ""
+    
+    if cnc_cs_def == "InvertTime":
+        cs_digits = '.8f' # 逆時間送りの場合は、分解能を上げる
+    else:
+        cs_digits = '.2f'
+    
     if len(x) == len(y) == len(u) == len(v):
-        i = 0
+        if cnc_cs_def == "XY":
+            cut_speed = cs_xy
+        elif cnc_cs_def == "UV":
+            cut_speed = cs_uv
+        elif cnc_cs_def == "XYU":
+            l_xyu = np.sqrt((x[0]-x0)**2 + (y[0]-y0)**2 + (u[0]-u0)**2)
+            l_xy = np.sqrt((x[0]-x0)**2 + (y[0]-y0)**2)
+            if (l_xyu < DIST_NEAR) or (l_xy < DIST_NEAR):
+                cut_speed = cs_xy * l_xyu / l_xy
+            else:
+                cut_speed = cs_xy
+        elif cnc_cs_def == "XYV":
+            l_xyv = np.sqrt((x[0]-x0)**2 + (y[0]-y0)**2 + (v[0]-v0)**2)
+            l_xy = np.sqrt((x[0]-x0)**2 + (y[0]-y0)**2)
+            if (l_xyv < DIST_NEAR) or (l_xy < DIST_NEAR):
+                cut_speed = cs_xy * l_xyv / l_xy
+            else:
+                cut_speed = cs_xy                
+        elif cnc_cs_def == "InvertTime":
+            l_xy = np.sqrt((x[0]-x0)**2 + (y[0]-y0)**2)
+            l_uv = np.sqrt((u[0]-u0)**2 + (v[0]-v0)**2)
+            t_xy = l_xy/cs_xy
+            t_uv = l_uv/cs_uv
+            cut_speed = min(t_xy, t_uv)
+        else: # cnc_cs_def == "Faster"
+            cut_speed = max(cs_xy, cs_uv)
+
+        code_str += "G01 X%s Y%s U%s V%s F%s\n"%(format(x[0], '.6f'), format(y[0], '.6f'), \
+                                                 format(u[0], '.6f'), format(v[0], '.6f'), \
+                                                 format(cut_speed, cs_digits))
+        
+        i = 1
         while i < len(x):
+            if cnc_cs_def == "XY":
+                cut_speed = cs_xy
+            elif cnc_cs_def == "UV":
+                cut_speed = cs_uv
+            elif cnc_cs_def == "XYU":
+                l_xyu = np.sqrt((x[i]-x[i-1])**2 + (y[i]-y[i-1])**2 + (u[i]-u[i-1])**2)
+                l_xy = np.sqrt((x[i]-x[i-1])**2 + (y[i]-y[i-1])**2)
+                if (l_xyu < DIST_NEAR) or (l_xy < DIST_NEAR):
+                    cut_speed = cs_xy * l_xyu / l_xy
+                else:
+                    cut_speed = cs_xy
+            elif cnc_cs_def == "XYV":
+                l_xyv = np.sqrt((x[i]-x[i-1])**2 + (y[i]-y[i-1])**2 + (v[i]-v[i-1])**2)
+                l_xy = np.sqrt((x[i]-x[i-1])**2 + (y[i]-y[i-1])**2)
+                if (l_xyv < DIST_NEAR) or (l_xy < DIST_NEAR):
+                    cut_speed = cs_xy * l_xyv / l_xy
+                else:
+                    cut_speed = cs_xy                
+            elif cnc_cs_def == "InvertTime":
+                l_xy = np.sqrt((x[i]-x[i-1])**2 + (y[i]-y[i-1])**2)
+                l_uv = np.sqrt((u[i]-u[i-1])**2 + (v[i]-v[i-1])**2)
+                t_xy = l_xy/cs_xy
+                t_uv = l_uv/cs_uv
+                cut_speed = min(t_xy, t_uv)
+                print(t_xy, t_uv)
+            else: # cnc_cs_def == "Faster"
+                cut_speed = max(cs_xy, cs_uv)
+
             code_str += "G01 X%s Y%s U%s V%s F%s\n"%(format(x[i], '.6f'), format(y[i], '.6f'), \
                                                      format(u[i], '.6f'), format(v[i], '.6f'), \
-                                                         format(cut_speed, '.1f'))
+                                                         format(cut_speed, cs_digits))
             i += 1
         return code_str
 
@@ -505,6 +570,7 @@ def generate_offset_interporate_point(l0_x, l0_y, l1_x, l1_y, l0_offset, l1_offs
             else:
                 N = N_FILLET_INTERPORATE
             sita = np.linspace(sita_st, sita_ed, N)
+            sita = sita[1:-1] # 重複点が生じないように、始点と終点は削除する
     
             x_intp = r*np.cos(sita) + f_x
             y_intp = r*np.sin(sita) + f_y

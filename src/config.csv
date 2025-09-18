@@ -6,13 +6,16 @@ UVƒtƒ@ƒCƒ‹–¼,none,”FŽ¯•s‰ÂŽ–—á.dxf,UV–Ê‚Å“Ç‚Ýž‚Þdxfƒtƒ@ƒCƒ‹–¼,.dxf‚Ü‚ÅŠÜ‚ß‚é‚±‚
 Ø‚èI‚í‚èX,mm,120,GƒR[ƒh‚ÌI“_‚ÌXÀ•W,ŽÀ”’l
 Ø‚èI‚í‚èY,mm,20,GƒR[ƒh‚ÌI“_‚ÌYÀ•W,ŽÀ”’l
 •ªŠ„‹——£,mm,1,GƒR[ƒh‚Å•âŠ®‚·‚é“_—ñ‚ÌŠÔŠu,ŽÀ”’l
-ƒIƒtƒZƒbƒg‹——£,mm,0.5,—n‚¯‚µ‚ë,ŽÀ”’l
+ƒIƒtƒZƒbƒg‹——£XY,mm,0.5,—n‚¯‚µ‚ë,ŽÀ”’l
+ƒIƒtƒZƒbƒg‹——£UV,mm,0.5,—n‚¯‚µ‚ë,ŽÀ”’l
 Ø‚èo‚µ‘¬“x,mm/min,200,ƒƒCƒ„[‚ð“®‚©‚·‘¬“x,ŽÀ”’l
+ƒJƒbƒg‘¬“x’è‹`–Ê,[,Center,Ø‚èo‚µ‘¬“x‚ð’è‹`‚·‚éÀ•W–ÊˆÊ’u,XY(Mech)^ XY(Work)^ Center^ UV(Work)^ UV(Mech)@‚Ì‚¢‚¸‚ê‚©‚ðÝ’è
+CNC‘¬“x’è‹`,[,XY,CNC‘¤‚Å‚Ì‘¬“x’è‹`,XY^ UV^ XYU^ XYV^ Faster^ InvertTime@‚Ì‚¢‚¸‚ê‚©‚ðÝ’è
 XY–Ê‹——£,mm,50,XY‹ì“®–Ê‚©‚çXY–Ê‚Ü‚Å‚Ì‹——£,ŽÀ”’l
 UV–Ê‹——£,mm,50,UV‹ì“®–Ê‚©‚çUV–Ê‚Ü‚Å‚Ì‹——£,ŽÀ”’l
-‹ì“®–Ê‹——£,mm,500,‹ì“®–Ê‚Ì‹——£C‹ì“®–Ê‹——£=XY‹——£+‰ÁH•¨ƒTƒCƒY+UV‹——£CŒë·‚ª5mmˆÈã‚ ‚é‚ÆŒx,ŽÀ”’l
+‹ì“®–Ê‹——£,mm,500,‹ì“®–Ê‚Ì‹——£,ŽÀ”’l
 GƒR[ƒh‘‚«o‚µ,none,T1\nG17 G49 G54 G80 G90 G94 G21 G40\n,GƒR[ƒh‚Ì‰‚ß‚É‘}“ü‚·‚é•¶Žš—ñ,\n‚Í‰üs•¶Žš
 XŽ²–¼Ì,none,X,UIã‚ÌXŽ²‚É‘Î‰ž‚·‚é‹ì“®Ž²,GƒR[ƒh‚Éo—Í‚³‚ê‚é
 YŽ²–¼Ì,none,Y,UIã‚ÌYŽ²‚É‘Î‰ž‚·‚é‹ì“®Ž²,GƒR[ƒh‚Éo—Í‚³‚ê‚é
-UŽ²–¼Ì,none,Z,UIã‚ÌUŽ²‚É‘Î‰ž‚·‚é‹ì“®Ž²,GƒR[ƒh‚Éo—Í‚³‚ê‚é
-ZŽ²–¼Ì,none,A,UIã‚ÌVŽ²‚É‘Î‰ž‚·‚é‹ì“®Ž²,GƒR[ƒh‚Éo—Í‚³‚ê‚é
+UŽ²–¼Ì,none,A,UIã‚ÌUŽ²‚É‘Î‰ž‚·‚é‹ì“®Ž²,GƒR[ƒh‚Éo—Í‚³‚ê‚é
+VŽ²–¼Ì,none,Z,UIã‚ÌVŽ²‚É‘Î‰ž‚·‚é‹ì“®Ž²,GƒR[ƒh‚Éo—Í‚³‚ê‚é

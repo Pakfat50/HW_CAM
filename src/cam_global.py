@@ -13,4 +13,5 @@ LINE_MARGE_NORM_MN = 1                  #単位:mm ラインを結合時にラ�
 N_FILLET_INTERPORATE = 10               #オフセットした線間を補完するフィレットの座標点数
 ERROR_LOG_FILENAME = "error_log.txt"    #エラーログを出力するファイル名
 DIST_NEAR = 0.0001                      #近傍点判定距離[mm]
-AUTOSORT_WHEN_LOADFILE = False          #dxfファイルオープン時に自動ソートする
+AUTOSORT_WHEN_LOADFILE = True           #dxfファイルオープン時に自動ソートする
+CUTSPEED_DEFAULT = 20                   #読み込み時のカット速度

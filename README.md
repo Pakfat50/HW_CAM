@@ -79,10 +79,9 @@ Gコード生成前に、2Dおよび3Dにて、加工パスを確認できます
 ## 使用方法
 以下を参照ください。
 
+[ユーザマニュアル](https://github.com/Pakfat50/HW_CAM/blob/main/documents/README.md "ユーザマニュアル")
 
-## 参考文献
-熱線CNCについては、以下のサイトが参考になります。
-https://rckeith.co.uk/cnc/cnc-foam-cutting/
+
 
 
 

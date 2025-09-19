@@ -984,13 +984,14 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
     
     Window_3d_plot = tk.Toplevel(Root)
     Window_3d_plot.wm_title("Cut Path")
-    Window_3d_plot.geometry("1000x800")
+    Window_3d_plot.geometry("1500x800")
     
-    fig = Figure(figsize=(8, 6), dpi=100)
+    fig = Figure(figsize=(15, 8), dpi=70)
     
     canvas = FigureCanvasTkAgg(fig, master = Window_3d_plot)
     
-    ax = fig.add_subplot(111, projection="3d", proj_type = 'ortho')
+    ax1 = fig.add_subplot(121, projection="3d", proj_type = 'ortho')
+    ax2 = fig.add_subplot(122)
 
     toolbar = NavigationToolbar2Tk(canvas, Window_3d_plot)
     toolbar.update()
@@ -1118,9 +1119,9 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
             #オフセット面の作成
             x_m_array, y_m_array, u_m_array, v_m_array = make_offset_path(x_array, y_array, u_array, v_array, Z_XY, Z_UV, Z_Mach)
             
-            point_dist_array = plot_3d_cut_path(ax, x_array, y_array, u_array, v_array, x_m_array, y_m_array, u_m_array, v_m_array, Z_XY, Z_UV, Z_Mach, int(length_sum/DIST_CUTPATH_PLOT))
+            point_dist_array = plot_3d_cut_path(ax1, x_array, y_array, u_array, v_array, x_m_array, y_m_array, u_m_array, v_m_array, Z_XY, Z_UV, Z_Mach, int(length_sum/DIST_CUTPATH_PLOT))
             
-            ax.view_init(elev=90, azim=-90) 
+            ax1.view_init(elev=90, azim=-90) 
             
             x_max = max(max(x_array), max(u_array))
             x_min = min(min(x_array), min(u_array))
@@ -1134,9 +1135,16 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
             mid_x = (x_max + x_min) * 0.5
             mid_y = (y_max + y_min) * 0.5
             mid_z = (z_max + z_min) * 0.5
-            ax.set_xlim(mid_x - max_range, mid_x + max_range)
-            ax.set_ylim(mid_y - max_range, mid_y + max_range)
-            ax.set_zlim(mid_z - max_range, mid_z + max_range)
+            ax1.set_xlim(mid_x - max_range, mid_x + max_range)
+            ax1.set_ylim(mid_y - max_range, mid_y + max_range)
+            ax1.set_zlim(mid_z - max_range, mid_z + max_range)
+
+            ax2.plot(x_m_array, y_m_array, "b", label = "XY Mech Path")
+            ax2.plot(u_m_array, v_m_array, "r", label = "UV Mech Path")
+            ax2.plot(x_array, y_array, "b--", label = "XY Work Path")
+            ax2.plot(u_array, v_array, "r--", label = "UV Work Path")
+            ax2.set_aspect('equal')
+            ax2.legend()
             
             canvas.draw()
             
@@ -1148,17 +1156,6 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
                 messeage_window.set_messeage("【警告】\nXY面距離が駆動面距離に対して%s mm 長いです。\n入力値を確認してください。\n\n"%(Z_XY - Z_Mach))
             if Z_UV > Z_Mach:
                 messeage_window.set_messeage("【警告】\nUV面距離が駆動面距離に対して%s mm 長いです。\n入力値を確認してください。\n\n"%(Z_UV - Z_Mach))
-            
-            """
-            # for Debug
-            plt.figure()
-            plt.plot(x_m_array, y_m_array, "r")
-            plt.plot(u_m_array, v_m_array, "b")
-            plt.plot(x_array, y_array, "r--")
-            plt.plot(u_array, v_array, "b--")
-            plt.axis("equal")
-            plt.show()
-            """
             
         else:
             messeage_window.set_messeage("XY座標とUV座標でライン数が一致しません。XY：%s本，UV：%s本\n"%(len(a_line_num_list0), len(a_line_num_list1)))

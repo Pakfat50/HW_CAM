@@ -483,26 +483,21 @@ class dxf_file:
 
     def Merge_Selected_line(self):
         selected_items = self.table.table.selection()
-        error = 0   # 0: 成功, 1: 選択数が誤り, 2: 隣接していない
-        if len(selected_items) == 2:
-            
-            if self.Merge_line(selected_items[0], selected_items[1]) == True:
-                self.delete_line(selected_items[1])
-                self.table_reload()
-                self.plot()
-                error = 0
-                return error, [selected_items[0]]
-            else:
-                error = 2
-                return error, selected_items
-
-        elif len(selected_items) == 1:
-            error = 1
-            return error, [selected_items]
         
+        if len(selected_items) >= 2:
+            result_list= [True]
+            i = 1
+            while i < len(selected_items):      
+                result = self.Merge_line(selected_items[0], selected_items[i])
+                self.delete_line(selected_items[i])
+                result_list.append(result)
+                i += 1
+            self.table_reload()
+            self.plot()
         else:
-            error = 1
-            return error, selected_items
+            result_list = []
+            
+        return result_list, selected_items
 
 
     def Merge_line(self, parent_item_num, child_item_num):

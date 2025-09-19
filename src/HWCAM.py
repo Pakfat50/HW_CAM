@@ -483,36 +483,30 @@ def Reverse(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):
 
 
 def Merge_line(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):
-    result_list, selected_items = dxf_obj.Merge_Selected_line()
+    result_list, line_num_list = dxf_obj.Merge_Selected_line()
     if len(result_list) >= 2:
         i = 1
-        line_num_st = item2num(selected_items[0])
         while i < len(result_list):
-            line_num = item2num(selected_items[i])
-            result = result_list[i]
-            if result == True:
-                messeage_window.set_messeage("%sの%s番目のラインに%s番目のラインを結合しました。\n"%(name,line_num_st,line_num))
+            if result_list[i] == True:
+                messeage_window.set_messeage("%sの%s番目のラインに%s番目のラインを結合しました。\n"%(name,line_num_list[0],line_num_list[i]))
             else:
-                messeage_window.set_messeage("%sの%s番目のラインを結合できませんでした。ライン端点が接しているかを確認してください。\n"%(name,line_num))
+                messeage_window.set_messeage("%sの%s番目のラインを結合できませんでした。ライン端点が接しているかを確認してください。\n"%(name,line_num_list[i]))
             i += 1
     else:
-        messeage_window.set_messeage("%sで２本以上のラインを選択して下さい。%s本のラインが選択されています。\n"%(name,len(selected_items)))
+        messeage_window.set_messeage("%sで２本以上のラインを選択して下さい。%s本のラインが選択されています。\n"%(name,len(line_num_list)))
         
     if chkValue.get():
-        x_result_list, x_selected_items = x_dxf_obj.Merge_Selected_line()
+        x_result_list, x_line_num_list = x_dxf_obj.Merge_Selected_line()
         if len(x_result_list) >= 2:
             i = 1
-            x_line_num_st = item2num(x_selected_items[0])
             while i < len(x_result_list):
-                x_line_num = item2num(x_selected_items[i])
-                x_result = x_result_list[i]
-                if x_result == True:
-                    messeage_window.set_messeage("%sの%s番目のラインに%s番目のラインを結合しました。\n"%(x_name,x_line_num_st,x_line_num))
+                if x_result_list[i] == True:
+                    messeage_window.set_messeage("%sの%s番目のラインに%s番目のラインを結合しました。\n"%(x_name,x_line_num_list[0],x_line_num_list[i]))
                 else:
-                    messeage_window.set_messeage("%sの%s番目のラインを結合できませんでした。ライン端点が接しているかを確認してください。\n"%(x_name,x_line_num))
+                    messeage_window.set_messeage("%sの%s番目のラインを結合できませんでした。ライン端点が接しているかを確認してください。\n"%(x_name,x_line_num_list[i]))
                 i += 1
         else:
-            messeage_window.set_messeage("%sで２本以上のラインを選択して下さい。%s本のラインが選択されています。\n"%(x_name,len(x_selected_items)))
+            messeage_window.set_messeage("%sで２本以上のラインを選択して下さい。%s本のラインが選択されています。\n"%(x_name,len(x_line_num_list)))
         
         
 def delete_line(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):

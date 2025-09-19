@@ -481,6 +481,10 @@ class dxf_file:
         
         if len(selected_items) >= 2:
             result_list= [True]
+            line_num_list = []
+            for item in selected_items:
+                line_num_list.append(self.line_num_list[item2num(item)])
+            
             i = 1
             while i < len(selected_items):      
                 result = self.Merge_line(selected_items[0], selected_items[i])
@@ -489,10 +493,14 @@ class dxf_file:
                 i += 1
             self.table_reload()
             self.plot()
+        elif len(selected_items) == 1:
+            result_list = [True]
+            line_num_list = [self.line_num_list[item2num(selected_items[0])]]
         else:
             result_list = []
+            line_num_list = []
             
-        return result_list, selected_items
+        return result_list, line_num_list
 
 
     def Merge_line(self, parent_item_num, child_item_num):

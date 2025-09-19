@@ -169,13 +169,8 @@ def item2num(item_num):
 def generate_arc_length_points(line_object, N):
     
     N = int(N)
-    if N < 2:
-        N = 2
-
-    length_array = line_object.calc_length_array()
-    sum_length = length_array[-1]
-    
-    t_p = length_array/sum_length
+    if N < 4:
+        N = 4
     
     x = line_object.x
     y = line_object.y
@@ -185,37 +180,27 @@ def generate_arc_length_points(line_object, N):
         y_p = y
         
     if line_object.line_type == "line":  
-        fx_t = intp.interp1d(t_p, x, kind = "linear")
-        fy_t = intp.interp1d(t_p, y, kind = "linear")
+        fx_t = intp.interp1d([0,1], x, kind = "linear")
+        fy_t = intp.interp1d([0,1], y, kind = "linear")
             
-        t_p_arc = np.linspace(t_p[0], t_p[-1], N)
+        t_p_arc = np.linspace(0, 1, N)
         
         x_p = fx_t(t_p_arc)
         y_p = fy_t(t_p_arc)
 
     if line_object.line_type == "spline":
         if line_object.interp_mode == "linear":
-            fx_t = intp.interp1d(t_p, x, kind = "linear")
-            fy_t = intp.interp1d(t_p, y, kind = "linear")
-                
-            t_p_arc = np.linspace(t_p[0], t_p[-1], N)
-            
-            t_p_arc_add_orgine_point = np.append(t_p, t_p_arc)
-            t_p_arc_add_orgine_point = np.sort(t_p_arc_add_orgine_point)              
-                    
-            x_p = fx_t(t_p_arc_add_orgine_point)
-            y_p = fy_t(t_p_arc_add_orgine_point)
-            
-
+            dim = 1
         else:
-            fx_t = intp.CubicSpline(t_p, x)
-            fy_t = intp.CubicSpline(t_p, y)
+            dim = 3
             
-            t_p_arc = np.linspace(t_p[0], t_p[-1], N)
+        tck, u = intp.splprep([x, y], k=dim, s=0)
+        u_arc = np.linspace(0, 1, N)
+        p = intp.splev(u_arc, tck, 0)
+        
+        x_p = p[0]
+        y_p = p[1]
             
-            x_p = fx_t(t_p_arc)
-            y_p = fy_t(t_p_arc)
-    
     return x_p, y_p
     
 

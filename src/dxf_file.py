@@ -6,6 +6,7 @@ Created on Mon Aug 11 15:43:11 2025
 """
 
 # 外部ライブラリ
+import tkinter as tk
 import tkinter.ttk as ttk
 import ezdxf as ez
 import numpy as np
@@ -78,20 +79,21 @@ class super_table:
             pass
         self.table = ttk.Treeview(self.root, height = self.y_height)
         self.table.place(x = self.x_pos, y = self.y_pos)
-        self.table["column"] = (1,2,3,4,5,6)
+        self.table["column"] = (1,2,3,4)
         self.table["show"] = "headings"
         self.table.heading(1,text="番号")
-        self.table.heading(2,text="カット方向")
-        self.table.heading(3,text="オフセット方向")
-        self.table.heading(4,text="オフセット距離")
-        self.table.heading(5,text="タイプ")
-        self.table.heading(6,text="カット速度")
-        self.table.column(1, width=40)
-        self.table.column(2, width=60)
-        self.table.column(3, width=80)
-        self.table.column(4, width=80)
-        self.table.column(5, width=60)
-        self.table.column(6, width=70)
+        self.table.heading(2,text="オフセット距離")
+        self.table.heading(3,text="タイプ")
+        self.table.heading(4,text="カット速度")
+        self.table.column(1, width=50)
+        self.table.column(2, width=110)
+        self.table.column(3, width=100)
+        self.table.column(4, width=110)
+        # スクロールバーの追加
+        self.scrollbar = ttk.Scrollbar(self.root, orient=tk.VERTICAL, command=self.table.yview)
+        self.table.configure(yscroll=self.scrollbar.set)
+        self.scrollbar.place(x = self.x_pos+375, y = self.y_pos+2, height = (self.y_height+1) * 20 + 7)
+        
     
 ###############    super_tableクラス   ここまで　　　#########################################################################################
 #######################################################################################################################################
@@ -273,8 +275,7 @@ class dxf_file:
             temp_line_object = line_object(temp_spline_data[:,0], temp_spline_data[:,1], i) 
             self.line_list.append(temp_line_object)
             self.line_num_list.append(i)
-            self.table.table.insert("", "end", values=(temp_line_object.num, temp_line_object.cut_dir, \
-                                                       temp_line_object.offset_dir, format(temp_line_object.offset_dist, '.2f'),\
+            self.table.table.insert("", "end", values=(temp_line_object.num, format(temp_line_object.offset_dist, '.2f'),\
                                                        temp_line_object.line_type, int(temp_line_object.cutspeed_work)))
             i += 1
  
@@ -286,9 +287,8 @@ class dxf_file:
             temp_line_object = line_object(temp_arc_data[:,0], temp_arc_data[:,1], i + i_arc) 
             self.line_list.append(temp_line_object)
             self.line_num_list.append(i + i_arc)
-            self.table.table.insert("", "end", values=(temp_line_object.num, temp_line_object.cut_dir, \
-                                                       temp_line_object.offset_dir, format(temp_line_object.offset_dist, '.2f'), \
-                                                           temp_line_object.line_type, int(temp_line_object.cutspeed_work)))
+            self.table.table.insert("", "end", values=(temp_line_object.num, format(temp_line_object.offset_dist, '.2f'), \
+                                                       temp_line_object.line_type, int(temp_line_object.cutspeed_work)))
             i_arc += 1        
         i = i + i_arc
 
@@ -300,9 +300,8 @@ class dxf_file:
             temp_line_object.interp_mode = "linear" #poly_lineであることを設定する
             self.line_list.append(temp_line_object)
             self.line_num_list.append(i + i_poly)
-            self.table.table.insert("", "end", values=(temp_line_object.num, temp_line_object.cut_dir, \
-                                                       temp_line_object.offset_dir, format(temp_line_object.offset_dist, '.2f'), \
-                                                           temp_line_object.line_type, int(temp_line_object.cutspeed_work)))
+            self.table.table.insert("", "end", values=(temp_line_object.num, format(temp_line_object.offset_dist, '.2f'), \
+                                                       temp_line_object.line_type, int(temp_line_object.cutspeed_work)))
             i_poly += 1    
         i = i + i_poly
         #ver2.2追加　ここまで
@@ -319,9 +318,8 @@ class dxf_file:
                 temp_line_object = line_object(temp_line_data[:,0], temp_line_data[:,1], i+k) 
                 self.line_list.append(temp_line_object)
                 self.line_num_list.append(i+k)
-                self.table.table.insert("", "end", values=(temp_line_object.num, temp_line_object.cut_dir, \
-                                                           temp_line_object.offset_dir, format(temp_line_object.offset_dist, '.2f'), \
-                                                               temp_line_object.line_type, int(temp_line_object.cutspeed_work)))
+                self.table.table.insert("", "end", values=(temp_line_object.num, format(temp_line_object.offset_dist, '.2f'), \
+                                                           temp_line_object.line_type, int(temp_line_object.cutspeed_work)))
                 k += 1
             j += 1
             
@@ -333,8 +331,7 @@ class dxf_file:
             temp_item_num = table_item_list[i]
             line_num = self.line_num_list[item2num(temp_item_num)]
             temp_line_object = self.line_list[line_num]
-            self.table.table.item(temp_item_num, values=(temp_line_object.num, temp_line_object.cut_dir, \
-                                                         temp_line_object.offset_dir, format(temp_line_object.offset_dist, '.2f'), \
+            self.table.table.item(temp_item_num, values=(temp_line_object.num, format(temp_line_object.offset_dist, '.2f'), \
                                                          temp_line_object.line_type, int(temp_line_object.cutspeed_work)))
             i += 1
 
@@ -441,9 +438,8 @@ class dxf_file:
             temp_line_object.toggle_cut_dir()
             temp_line_object.toggle_offset_dir()
             temp_line_object.update()
-            self.table.table.item(temp_item_num, values=(temp_line_object.num, temp_line_object.cut_dir, \
-                                                         temp_line_object.offset_dir, format(temp_line_object.offset_dist, '.2f'), \
-                                                             temp_line_object.line_type, int(temp_line_object.cutspeed_work)))
+            self.table.table.item(temp_item_num, values=(temp_line_object.num, format(temp_line_object.offset_dist, '.2f'), \
+                                                         temp_line_object.line_type, int(temp_line_object.cutspeed_work)))
             i += 1   
         self.table_reload()
         self.plot()
@@ -458,9 +454,8 @@ class dxf_file:
             temp_line_object = self.line_list[line_num]
             temp_line_object.toggle_offset_dir()
             temp_line_object.update()
-            self.table.table.item(temp_item_num, values=(temp_line_object.num, temp_line_object.cut_dir, \
-                                                         temp_line_object.offset_dir, format(temp_line_object.offset_dist, '.2f'), \
-                                                             temp_line_object.line_type, int(temp_line_object.cutspeed_work)))
+            self.table.table.item(temp_item_num, values=(temp_line_object.num, format(temp_line_object.offset_dist, '.2f'), \
+                                                         temp_line_object.line_type, int(temp_line_object.cutspeed_work)))
             i += 1      
         self.table_reload()
         self.plot()

@@ -1217,7 +1217,8 @@ if __name__ == "__main__":
     root.title("HotwireDXF CAM ver%s"%VERSION)                          #メインウィンドウの名称
     root.geometry("1700x950")                                        #メインウィンドウのサイズ（単位：pixcel）
     root.protocol('WM_DELETE_WINDOW', _destroyWindow)                #メインウィンドウを閉じたときにインスタンスを破棄する処理
-
+    style = ttk.Style()
+    style.theme_use('clam')
 
 
     #======================================================================================================================================

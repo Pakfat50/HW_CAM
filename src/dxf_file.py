@@ -242,12 +242,12 @@ class dxf_file:
         self.line_num_list = []
     
     
-    def load_file(self, filename):
+    def load_file(self, filename, is_refine):
         self.table.reset()
         self.filename = filename
         self.line_list = []
         self.line_num_list = []
-        self.reload()
+        self.reload(is_refine)
         self.table.table.bind("<<TreeviewSelect>>", self.selected)
         self.table.table.loaded_item_num = len(self.table.table.get_children())
         
@@ -260,7 +260,7 @@ class dxf_file:
         else:
             self.plot()
 
-    def reload(self):
+    def reload(self, is_refine):
         dwg = ez.readfile(self.filename)
         modelspace = dwg.modelspace()
         line_obj = modelspace.query('LINE')
@@ -272,11 +272,11 @@ class dxf_file:
         while i < len(spline_obj):
             temp_spline = spline_obj[i]
             temp_spline_data = np.array(temp_spline.control_points)[:]
-            temp_line_object = line_object(temp_spline_data[:,0], temp_spline_data[:,1], i) 
+            temp_line_object = line_object(temp_spline_data[:,0], temp_spline_data[:,1], i, is_refine) 
             self.line_list.append(temp_line_object)
             self.line_num_list.append(i)
-            self.table.table.insert("", "end", values=(temp_line_object.num, format(temp_line_object.offset_dist, '.2f'),\
-                                                       temp_line_object.line_type, int(temp_line_object.cutspeed_work)))
+            self.table.table.insert("", "end", values=(temp_line_object.num, format(temp_line_object.offset_dist, '.4f'),\
+                                                       temp_line_object.line_type, format(temp_line_object.cutspeed_work,'.2f')))
             i += 1
  
         #ver2.2追加　円弧，ポリラインの読み込み　ここから
@@ -284,11 +284,11 @@ class dxf_file:
         while i_arc < len(arc_obj):
             temp_arc = arc_obj[i_arc]
             temp_arc_data = arc_to_spline(temp_arc)
-            temp_line_object = line_object(temp_arc_data[:,0], temp_arc_data[:,1], i + i_arc) 
+            temp_line_object = line_object(temp_arc_data[:,0], temp_arc_data[:,1], i + i_arc, is_refine) 
             self.line_list.append(temp_line_object)
             self.line_num_list.append(i + i_arc)
-            self.table.table.insert("", "end", values=(temp_line_object.num, format(temp_line_object.offset_dist, '.2f'), \
-                                                       temp_line_object.line_type, int(temp_line_object.cutspeed_work)))
+            self.table.table.insert("", "end", values=(temp_line_object.num, format(temp_line_object.offset_dist, '.4f'), \
+                                                       temp_line_object.line_type, format(temp_line_object.cutspeed_work,'.2f')))
             i_arc += 1        
         i = i + i_arc
 
@@ -296,12 +296,12 @@ class dxf_file:
         while i_poly < len(poly_obj):
             temp_poly = poly_obj[i_poly]
             temp_poly_data = poly_to_spline(temp_poly)
-            temp_line_object = line_object(temp_poly_data[:,0], temp_poly_data[:,1], i + i_poly) 
+            temp_line_object = line_object(temp_poly_data[:,0], temp_poly_data[:,1], i + i_poly, is_refine) 
             temp_line_object.interp_mode = "linear" #poly_lineであることを設定する
             self.line_list.append(temp_line_object)
             self.line_num_list.append(i + i_poly)
-            self.table.table.insert("", "end", values=(temp_line_object.num, format(temp_line_object.offset_dist, '.2f'), \
-                                                       temp_line_object.line_type, int(temp_line_object.cutspeed_work)))
+            self.table.table.insert("", "end", values=(temp_line_object.num, format(temp_line_object.offset_dist, '.4f'), \
+                                                       temp_line_object.line_type, format(temp_line_object.cutspeed_work,'.2f')))
             i_poly += 1    
         i = i + i_poly
         #ver2.2追加　ここまで
@@ -315,11 +315,11 @@ class dxf_file:
             temp_line_data.append(temp_line.dxf.end)
             temp_line_data = np.array(temp_line_data)[:,0:2]
             if norm(temp_line_data[0,0],temp_line_data[0,1],temp_line_data[1,0],temp_line_data[1,1]) != 0:
-                temp_line_object = line_object(temp_line_data[:,0], temp_line_data[:,1], i+k) 
+                temp_line_object = line_object(temp_line_data[:,0], temp_line_data[:,1], i+k, is_refine) 
                 self.line_list.append(temp_line_object)
                 self.line_num_list.append(i+k)
-                self.table.table.insert("", "end", values=(temp_line_object.num, format(temp_line_object.offset_dist, '.2f'), \
-                                                           temp_line_object.line_type, int(temp_line_object.cutspeed_work)))
+                self.table.table.insert("", "end", values=(temp_line_object.num, format(temp_line_object.offset_dist, '.4f'), \
+                                                           temp_line_object.line_type, format(temp_line_object.cutspeed_work,'.2f')))
                 k += 1
             j += 1
             
@@ -331,8 +331,8 @@ class dxf_file:
             temp_item_num = table_item_list[i]
             line_num = self.line_num_list[item2num(temp_item_num)]
             temp_line_object = self.line_list[line_num]
-            self.table.table.item(temp_item_num, values=(temp_line_object.num, format(temp_line_object.offset_dist, '.2f'), \
-                                                         temp_line_object.line_type, int(temp_line_object.cutspeed_work)))
+            self.table.table.item(temp_item_num, values=(temp_line_object.num, format(temp_line_object.offset_dist, '.4f'), \
+                                                         temp_line_object.line_type, format(temp_line_object.cutspeed_work,'.2f')))
             i += 1
 
     
@@ -360,7 +360,7 @@ class dxf_file:
                     alpha_vect = 0.1
                     alpha_offset = 0
                     
-                self.ax.plot(temp_line_object.x, temp_line_object.y, color = col, alpha = alpha_line)
+                self.ax.plot(temp_line_object.x, temp_line_object.y, color = col, alpha = alpha_line, marker='o', markersize=2)
                 X,Y = temp_line_object.x[0], temp_line_object.y[0]
                 U,V = temp_line_object.x[1], temp_line_object.y[1]
                 self.ax.quiver(X,Y,U-X,V-Y,color = col, alpha = alpha_vect)
@@ -438,8 +438,8 @@ class dxf_file:
             temp_line_object.toggle_cut_dir()
             temp_line_object.toggle_offset_dir()
             temp_line_object.update()
-            self.table.table.item(temp_item_num, values=(temp_line_object.num, format(temp_line_object.offset_dist, '.2f'), \
-                                                         temp_line_object.line_type, int(temp_line_object.cutspeed_work)))
+            self.table.table.item(temp_item_num, values=(temp_line_object.num, format(temp_line_object.offset_dist, '.4f'), \
+                                                         temp_line_object.line_type, format(temp_line_object.cutspeed_work,'.2f')))
             i += 1   
         self.table_reload()
         self.plot()
@@ -454,8 +454,8 @@ class dxf_file:
             temp_line_object = self.line_list[line_num]
             temp_line_object.toggle_offset_dir()
             temp_line_object.update()
-            self.table.table.item(temp_item_num, values=(temp_line_object.num, format(temp_line_object.offset_dist, '.2f'), \
-                                                         temp_line_object.line_type, int(temp_line_object.cutspeed_work)))
+            self.table.table.item(temp_item_num, values=(temp_line_object.num, format(temp_line_object.offset_dist, '.4f'), \
+                                                         temp_line_object.line_type, format(temp_line_object.cutspeed_work,'.2f')))
             i += 1      
         self.table_reload()
         self.plot()

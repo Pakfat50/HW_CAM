@@ -392,16 +392,20 @@ def load_offset_func(config, offset_func_entry, MessageWindow):
     MessageWindow.set_messeage(config.MESSEAGE)
 
 
-def open_dxf_explorer(dxf_obj, entry, messeage_window):
+def open_dxf_explorer(dxf_obj, entry, isRefineValue, messeage_window):
     open_file_explorer(entry)
-    load_file(dxf_obj, entry, messeage_window)
+    load_file(dxf_obj, entry, isRefineValue, messeage_window)
 
 
-def load_file(dxf_obj, entry, messeage_window):
+def load_file(dxf_obj, entry, isRefineValue, messeage_window):
     filename = entry.get()
+    is_refine = isRefineValue.get()
     if file_chk(filename) == 1:
-        dxf_obj.load_file(filename)
-        messeage_window.set_messeage("%sを読み込みました。\n"%filename)
+        dxf_obj.load_file(filename, is_refine)
+        if is_refine == True:
+            messeage_window.set_messeage("%sを点列をリファインして読み込みました。\n"%filename)
+        else:
+            messeage_window.set_messeage("%sをDXFファイルの座標点のまま読み込みました。\n"%filename)
     if file_chk(filename) == 0:
         messeage_window.set_messeage("%sを読み込めません。拡張子が.dxfであることを確認して下さい。\n"%filename)  
         
@@ -425,6 +429,21 @@ def EnableRemoveSelfCollision(removeSelfCollisionValue, messeage_window):
         messeage_window.set_messeage("自己交差除去を有効化\n")
     else:
         messeage_window.set_messeage("自己交差除去を無効化\n")
+
+
+def EnableSplineRefine(isRefineValue, messeage_window):
+    if isRefineValue.get():
+        messeage_window.set_messeage("スプライン点列のリファインを有効化\n")
+    else:
+        messeage_window.set_messeage("スプライン点列のリファインを無効化\n")
+
+
+def Enable3dPathCheck(is3dPathCheck, messeage_window):
+    if is3dPathCheck.get():
+        messeage_window.set_messeage("パスチェックを3Dで実施\n")
+    else:
+        messeage_window.set_messeage("パスチェックを2Dで実施\n")
+
 
 
 def swap_line(dxf_obj, messeage_window):
@@ -974,22 +993,23 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
     
 #Ver2.1変更　引数追加，距離別指定可能
 def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
-             entry_XYDist, entry_UVDist, entry_MachDist, entry_dl, messeage_window):
+             entry_XYDist, entry_UVDist, entry_MachDist, entry_dl, use3dValue, messeage_window):
+    is_plot_3d = use3dValue.get()
     
-    Window_3d_plot = tk.Toplevel(Root)
-    Window_3d_plot.wm_title("Cut Path")
-    Window_3d_plot.geometry("1500x800")
     
     fig = Figure(figsize=(15, 8), dpi=70)
-    
-    canvas = FigureCanvasTkAgg(fig, master = Window_3d_plot)
-    
-    ax1 = fig.add_subplot(121, projection="3d", proj_type = 'ortho')
-    ax2 = fig.add_subplot(122)
-
-    toolbar = NavigationToolbar2Tk(canvas, Window_3d_plot)
+    Window_plot = tk.Toplevel(Root)
+    Window_plot.wm_title("Cut Path")
+    Window_plot.geometry("1500x800")
+    canvas = FigureCanvasTkAgg(fig, master = Window_plot)
+    toolbar = NavigationToolbar2Tk(canvas, Window_plot)
     toolbar.update()
-    canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+    canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)    
+
+    if is_plot_3d == True:
+        ax = fig.add_subplot(111, projection="3d", proj_type = 'ortho')
+    else:
+        ax = fig.add_subplot(111)
     
     entry_ox_value = entry_ox.get()
     entry_oy_value = entry_oy.get()
@@ -1113,34 +1133,39 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
             #オフセット面の作成
             x_m_array, y_m_array, u_m_array, v_m_array = make_offset_path(x_array, y_array, u_array, v_array, Z_XY, Z_UV, Z_Mach)
             
-            point_dist_array = plot_3d_cut_path(ax1, x_array, y_array, u_array, v_array, x_m_array, y_m_array, u_m_array, v_m_array, Z_XY, Z_UV, Z_Mach, int(length_sum/DIST_CUTPATH_PLOT))
             
-            ax1.view_init(elev=90, azim=-90) 
+            if is_plot_3d == True:
+                point_dist_array = plot_3d_cut_path(ax, x_array, y_array, u_array, v_array, x_m_array, y_m_array, u_m_array, v_m_array, Z_XY, Z_UV, Z_Mach, int(length_sum/DIST_CUTPATH_PLOT))
+                
+                ax.view_init(elev=90, azim=-90) 
+                
+                x_max = max(max(x_array), max(u_array))
+                x_min = min(min(x_array), min(u_array))
+                y_max = max(max(y_array), max(v_array))
+                y_min = min(min(y_array), min(v_array))
+                
+                z_max = Z_Mach
+                z_min = 0.0
+                
+                max_range = max(np.array([x_max - x_min, y_max - y_min, z_max - z_min])) * 0.5
+                mid_x = (x_max + x_min) * 0.5
+                mid_y = (y_max + y_min) * 0.5
+                mid_z = (z_max + z_min) * 0.5
+                ax.set_xlim(mid_x - max_range, mid_x + max_range)
+                ax.set_ylim(mid_y - max_range, mid_y + max_range)
+                ax.set_zlim(mid_z - max_range, mid_z + max_range)
+                canvas.draw()
             
-            x_max = max(max(x_array), max(u_array))
-            x_min = min(min(x_array), min(u_array))
-            y_max = max(max(y_array), max(v_array))
-            y_min = min(min(y_array), min(v_array))
+            else:
+                point_dist_array = calc_point_dist(x_m_array, y_m_array, u_m_array, v_m_array, 0, Z_Mach)
+                ax.plot(x_m_array, y_m_array, "b", label = "XY Mech Path")
+                ax.plot(u_m_array, v_m_array, "r", label = "UV Mech Path")
+                ax.plot(x_array, y_array, "b--", label = "XY Work Path")
+                ax.plot(u_array, v_array, "r--", label = "UV Work Path")
+                ax.set_aspect('equal')
+                ax.legend()
             
-            z_max = Z_Mach
-            z_min = 0.0
             
-            max_range = max(np.array([x_max - x_min, y_max - y_min, z_max - z_min])) * 0.5
-            mid_x = (x_max + x_min) * 0.5
-            mid_y = (y_max + y_min) * 0.5
-            mid_z = (z_max + z_min) * 0.5
-            ax1.set_xlim(mid_x - max_range, mid_x + max_range)
-            ax1.set_ylim(mid_y - max_range, mid_y + max_range)
-            ax1.set_zlim(mid_z - max_range, mid_z + max_range)
-
-            ax2.plot(x_m_array, y_m_array, "b", label = "XY Mech Path")
-            ax2.plot(u_m_array, v_m_array, "r", label = "UV Mech Path")
-            ax2.plot(x_array, y_array, "b--", label = "XY Work Path")
-            ax2.plot(u_array, v_array, "r--", label = "UV Work Path")
-            ax2.set_aspect('equal')
-            ax2.legend()
-            
-            canvas.draw()
             
             messeage_window.set_messeage("パスを描画しました。ワイヤーの最大長は%s mmです。（初期長%s mm）\n"%(int(max(point_dist_array)), int(Z_Mach)))
             messeage_window.set_messeage("\n【加工範囲】 \nX: %smm～%smm\nY: %smm～%smm\nU: %smm～%smm\nV: %smm～%smm\n\n"
@@ -1245,15 +1270,15 @@ if __name__ == "__main__":
     #======================================================================================================================================
    
     #【X-Y ラインテーブル】
-    table0 = super_table(root, y_height = 17, x = 850,y = 60)        #XYテーブルの枠となるインスタンスを生成
+    table0 = super_table(root, y_height = 15, x = 850,y = 100)       #XYテーブルの枠となるインスタンスを生成
     table0Label = tk.Label(root, text="X-Y",font=("",20))            #XYテーブル用のテキスト
-    table0Label.place(x = 860, y = 0)                                #XYテーブル用のテキストを配置
+    table0Label.place(x = 860, y = 40)                               #XYテーブル用のテキストを配置
 
     
     #【U-V ラインテーブル】
-    table1 = super_table(root, y_height = 17, x = 1250,y = 60)       #UVテーブルの枠となるインスタンスを生成
+    table1 = super_table(root, y_height = 15, x = 1250,y = 100)      #UVテーブルの枠となるインスタンスを生成
     table1Label = tk.Label(root, text="U-V",font=("",20))            #UVテーブル用のテキスト
-    table1Label.place(x = 1260, y = 0)                               #UVテーブル用のテキストを配置  
+    table1Label.place(x = 1260, y = 40)                              #UVテーブル用のテキストを配置  
 
 
     #======================================================================================================================================
@@ -1272,9 +1297,9 @@ if __name__ == "__main__":
     #Ver2.0 位置変更(下に40pix)
     #【メッセージウィンドウ】
     MessageWindow = messeage_window(root, width=110, height = 9)
-    MessageWindow.place(x = 852, y = 815)
+    MessageWindow.place(x = 852, y = 805)
     MessageWindowLabel = tk.Label(root, text="メッセージウィンドウ",font=("",12))
-    MessageWindowLabel.place(x = 860, y = 790)
+    MessageWindowLabel.place(x = 860, y = 780)
 
 
     #======================================================================================================================================
@@ -1284,13 +1309,13 @@ if __name__ == "__main__":
     #【X-Y用 dxfファイル名の入力コンソール】
     FileNameEntry0 = tk.Entry(root, width=50) 
     FileNameEntry0.insert(tk.END, config.FILENAME_XY) 
-    FileNameEntry0.place(x = 852, y = 35)
+    FileNameEntry0.place(x = 852, y = 75)
     
     
     #【U-V用 dxfファイル名の入力コンソール】
     FileNameEntry1 = tk.Entry(root, width=50) 
     FileNameEntry1.insert(tk.END, config.FILENAME_UV)   
-    FileNameEntry1.place(x = 1252, y = 35) 
+    FileNameEntry1.place(x = 1252, y = 75) 
 
 
     #【X-Y用オフセット距離の入力コンソール】
@@ -1441,20 +1466,20 @@ if __name__ == "__main__":
     #======================================================================================================================================
 
     #【X-Y用 dxfファイル読込用のエクスプローラーを開くボタン】
-    LoadBtn0 = tk.Button(root, text="開く", command = lambda: open_dxf_explorer(dxf0, FileNameEntry0, MessageWindow))
-    LoadBtn0.place(x=1160, y=30)  
+    LoadBtn0 = tk.Button(root, text="開く", command = lambda: open_dxf_explorer(dxf0, FileNameEntry0, isRefineSpline, MessageWindow))
+    LoadBtn0.place(x=1160, y=70)  
 
     #【U-V用 dxfファイル読込用のエクスプローラーを開くボタン】   
-    LoadBtn1 = tk.Button(root, text="開く", command = lambda: open_dxf_explorer(dxf1, FileNameEntry1, MessageWindow))
-    LoadBtn1.place(x=1560, y=30)    
+    LoadBtn1 = tk.Button(root, text="開く", command = lambda: open_dxf_explorer(dxf1, FileNameEntry1, isRefineSpline, MessageWindow))
+    LoadBtn1.place(x=1560, y=70)    
 
     #【X-Y用 dxfファイル名の読込ボタン】
-    LoadBtn0 = tk.Button(root, text="再読込", command = lambda: load_file(dxf0, FileNameEntry0, MessageWindow))
-    LoadBtn0.place(x=1200, y=30)  
+    LoadBtn0 = tk.Button(root, text="再読込", command = lambda: load_file(dxf0, FileNameEntry0, isRefineSpline, MessageWindow))
+    LoadBtn0.place(x=1200, y=70)  
 
     #【U-V用 dxfファイル名の読込ボタン】   
-    LoadBtn1 = tk.Button(root, text="再読込", command = lambda: load_file(dxf1, FileNameEntry1, MessageWindow))
-    LoadBtn1.place(x=1600, y=30)    
+    LoadBtn1 = tk.Button(root, text="再読込", command = lambda: load_file(dxf1, FileNameEntry1, isRefineSpline, MessageWindow))
+    LoadBtn1.place(x=1600, y=70)    
 
 
     #【X-Y用 オフセット距離反映ボタン】
@@ -1539,15 +1564,15 @@ if __name__ == "__main__":
 
     #Ver2.0 変更　WorkDistWntryを追加
     #【パスチェックボタン】    
-    ChkPassBtn = tk.Button(root, text = "パスチェック", height = 2, width = 14,font=("",12), bg='#3cb371', \
+    ChkPassBtn = tk.Button(root, text = "パスチェック", height = 2, width = 12,font=("",12), bg='#3cb371', \
                            command = lambda: path_chk(root, dxf0, dxf1, AutoAlignmentEntry_X, AutoAlignmentEntry_Y, CutEndEntry_X, CutEndEntry_Y, \
-                                                      XYDistEntry, UVDistEntry, MachDistEntry, dlEntry, MessageWindow))
+                                                      XYDistEntry, UVDistEntry, MachDistEntry, dlEntry, is3dPathCheck, MessageWindow))
     ChkPassBtn.place(x = 1530, y = 660)
     
 
     #Ver2.0 変更　MechDistEntry, WorkDistWntryを追加
     #【Gコード生成ボタン】        
-    GenGCodeBtn = tk.Button(root, text = "Gコード生成", height = 2, width = 14,font=("",12), bg='#ff6347', \
+    GenGCodeBtn = tk.Button(root, text = "Gコード生成", height = 2, width = 12,font=("",12), bg='#ff6347', \
                             command = lambda: gen_g_code(dxf0, dxf1, AutoAlignmentEntry_X, AutoAlignmentEntry_Y, CutEndEntry_X, CutEndEntry_Y, \
                                                          XYDistEntry, UVDistEntry, MachDistEntry, CutSpeedEntry, CutSpeedDefCB, CNCSpeedDefCB, \
                                                          dlEntry, MessageWindow, config))
@@ -1562,14 +1587,22 @@ if __name__ == "__main__":
     #【U-V画面とX-Y画面の連動チェックボックス】
     chkValue = tk.BooleanVar()
     chk0 = tk.Checkbutton(root, text="X-Y画面とU-V画面を連動させる", var=chkValue , command =  lambda: XY_UV_Link(chkValue, table0, table1, MessageWindow))
-    chk0.place(x=1500, y=5)
+    chk0.place(x=1490, y=5)
 
     #【自己交差除去チェックボックス】
     removeSelfCollisionValue = tk.BooleanVar()
     chk1 = tk.Checkbutton(root, text="自己交差除去有効化", var=removeSelfCollisionValue, command =  lambda: EnableRemoveSelfCollision(removeSelfCollisionValue, MessageWindow))
-    chk1.place(x=1360, y=5)
+    chk1.place(x=1350, y=5)
     
-    
+    #【スプラインをリファインするかどうかのチェックボックス】
+    isRefineSpline = tk.BooleanVar()
+    chk2 = tk.Checkbutton(root, text="スプライン点列をリファインする", var=isRefineSpline, command =  lambda: EnableSplineRefine(isRefineSpline, MessageWindow))
+    chk2.place(x=1180, y=5)  
+
+    #【パスチェックを3Dで実施するかどうかのチェックボックス】
+    is3dPathCheck = tk.BooleanVar()
+    chk3 = tk.Checkbutton(root, text="3Dでパスチェックする", var=is3dPathCheck, command =  lambda: Enable3dPathCheck(is3dPathCheck, MessageWindow))
+    chk3.place(x=1525, y=635)  
 
     #======================================================================================================================================
     #                 メインループ

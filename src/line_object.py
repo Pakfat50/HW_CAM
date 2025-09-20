@@ -109,7 +109,21 @@ from cam_global import *
 
 
 class line_object:
-    def __init__(self, x_points, y_points, num):
+    def __init__(self, x_points, y_points, num, is_refine, interp_mode = "cubic"):
+        self.interp_mode = interp_mode  #ver.2.2追加 "cubic":3d-spline, "linear":1d-line, ポリラインの指定用
+        if len(x_points)<2:
+            self.line_type = "point"
+        elif len(x_points)==2:
+            self.line_type = "line"
+        else: #len(x_points)>2
+            self.line_type = "spline"
+            if (is_refine == True) and (self.interp_mode == "cubic"):
+                length = get_spline_length(x_points, y_points)
+                N_refine = int(length/DIST_REFINE_SPLINE)
+                if N_refine < N_REFINE_SPLINE_MIN:
+                    N_refine = N_REFINE_SPLINE_MIN
+                x_points, y_points = refine_spline_curvature(x_points, y_points, N_refine)              
+                
         self.x_dxf = np.array(x_points)
         self.y_dxf = np.array(y_points)
         self.x_raw = np.array(x_points)
@@ -125,21 +139,21 @@ class line_object:
         self.cutspeed_mech = CUTSPEED_DEFAULT
         self.x = x_points
         self.y = y_points
-        self.interp_mode = "cubic" #ver.2.2追加 "cubic":3d-spline, "linear":1d-line, ポリラインの指定用
         self.offset_ox = 0
         self.offset_oy = 0
         self.remove_self_collision = False
         self.self_collision = False
-
+        
+        
+    def reset_point(self, x_points, y_points, offset_ox, offset_oy, interp_mode = "cubic"):
+        self.interp_mode = interp_mode #ver.2.2追加 "cubic":3d-spline, "linear":1d-line, ポリラインの指定用
         if len(x_points)<2:
             self.line_type = "point"
-        if len(x_points)==2:
+        elif len(x_points)==2:
             self.line_type = "line"
-        if len(x_points)>2:
+        else: # len(x_points)>2
             self.line_type = "spline"
-       
-        
-    def reset_point(self, x_points, y_points, offset_ox, offset_oy):
+                
         self.x_dxf = np.array(x_points)
         self.y_dxf = np.array(y_points)
         self.offset_ox = offset_ox
@@ -151,16 +165,8 @@ class line_object:
         self.N = max(len(x_points), len(y_points))
         self.x = np.array(x_points) + offset_ox
         self.y = np.array(y_points) + offset_oy
-        self.interp_mode = "cubic"
         self.self_collision = False
 
-        if len(x_points)<2:
-            self.line_type = "point"
-        if len(x_points)==2:
-            self.line_type = "line"
-        if len(x_points)>2:
-            self.line_type = "spline"        
-    
     
     def update(self):
         if self.cut_dir == "R":
@@ -262,25 +268,7 @@ class line_object:
             length_array.append(dl)
         
         if self.line_type == "spline":
-            dl = 0
-            dt = 1
-            s_l = 0
-            t_p = np.linspace(0, dt * len(x), len(x))
-
-            fx_t = intp.CubicSpline(t_p, x)
-            fy_t = intp.CubicSpline(t_p, y)
-            
-            dfx_t = fx_t.derivative(1)
-            dfy_t = fy_t.derivative(1)
-            
-            fdl = lambda t: np.sqrt(dfx_t(t)**2 + dfy_t(t)**2)
-            
-            i = 0
-            while i < len(t_p) - 1:
-                dl = quad(fdl, t_p[i], t_p[i+1])
-                s_l += dl[0]
-                length_array.append(s_l)
-                i += 1
+            length_array = get_spline_length_array(x, y)
             
         return np.array(length_array)
     
@@ -304,25 +292,7 @@ class line_object:
             length = np.sqrt((x[0]-x[1])**2 + (y[0]-y[1])**2)
         
         if self.line_type == "spline":
-            dl = 0
-            dt = 1
-            s_l = 0
-            t_p = np.linspace(0, dt * len(x), len(x))
-
-            fx_t = intp.CubicSpline(t_p, x)
-            fy_t = intp.CubicSpline(t_p, y)
-            
-            dfx_t = fx_t.derivative(1)
-            dfy_t = fy_t.derivative(1)
-            
-            fdl = lambda t: np.sqrt(dfx_t(t)**2 + dfy_t(t)**2)
-            
-            i = 0
-            while i < len(t_p) - 1:
-                dl = quad(fdl, t_p[i], t_p[i+1])
-                s_l += dl[0]
-                i += 1
-            length = s_l
+            length = get_spline_length(x, y)
         
         return length
 

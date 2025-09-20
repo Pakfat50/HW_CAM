@@ -8,6 +8,7 @@ Created on Mon Aug 11 15:37:04 2025
 import numpy as np
 from matplotlib import pyplot as plt
 from scipy import interpolate as intp
+from scipy.integrate import quad
 import os.path as op
 import os
 import sys
@@ -165,6 +166,143 @@ def item2num(item_num):
     num = int(temp,0) - 1    
     return num
 
+def removeSamePoint(x, y):
+    i = 1
+    new_x = [x[0]]
+    new_y = [y[0]]
+    while i < len(x):
+        if norm(new_x[-1], new_y[-1], x[i], y[i]) > DIST_DELTA:
+            new_x.append(x[i])
+            new_y.append(y[i])
+        i += 1
+        
+    return new_x, new_y
+
+def get_spline_length_array(x, y):
+    length_array = [0]
+    
+    dl = 0
+    dt = 1
+    s_l = 0
+    t_p = np.linspace(0, dt * len(x), len(x))
+
+    fx_t = intp.CubicSpline(t_p, x)
+    fy_t = intp.CubicSpline(t_p, y)
+    
+    dfx_t = fx_t.derivative(1)
+    dfy_t = fy_t.derivative(1)
+    
+    fdl = lambda t: np.sqrt(dfx_t(t)**2 + dfy_t(t)**2)
+    
+    i = 0
+    while i < len(t_p) - 1:
+        dl = quad(fdl, t_p[i], t_p[i+1])
+        s_l += dl[0]
+        length_array.append(s_l)
+        i += 1
+        
+    return np.array(length_array)
+    
+
+def get_spline_length(x, y):
+    length_array = get_spline_length_array(x, y)
+    length = length_array[-1]
+    
+    return length
+
+
+def refine_spline_curvature(x, y, N):
+    x, y = removeSamePoint(x,y)
+    
+    N = int(N)
+    if N < 4:
+        N = 4
+    
+    length_array = get_spline_length_array(x, y)
+    sum_length = length_array[-1]
+    u = length_array/sum_length
+    t = np.linspace(0, 1, N)
+    
+    if REFINE_SPLINE_PCHIP == True:
+        fx = intp.PchipInterpolator(u, x)
+        fy = intp.PchipInterpolator(u, y)
+        dfx = fx.derivative(1)
+        dfy = fy.derivative(1)
+        d2fx = fx.derivative(2)
+        d2fy = fy.derivative(2)
+        dx = dfx(t)
+        dy = dfy(t)
+        d2x = d2fx(t)
+        d2y = d2fy(t)
+    else:
+        tck, u = intp.splprep([x, y], k=3, s=0)
+        dp = intp.splev(t, tck, 1)
+        d2p = intp.splev(t, tck, 2)
+        dx = dp[0]
+        dy = dp[1]
+        d2x = d2p[0]
+        d2y = d2p[1]
+    
+    curvature = []
+        
+    i = 0
+    while i < len(t):
+        det = (dx[i]**2 + dy[i]**2)**1.5
+        if det < DIST_DELTA:
+            c = 1/R_C_MIN
+        else:
+            c = np.abs(dx[i]*d2y[i] - dy[i]*d2x[i])/det
+            if c < 1/R_C_MAX:
+                c = 1/R_C_MAX
+            if c > 1/R_C_MIN:
+                c = 1/R_C_MIN
+                
+        curvature.append(c)
+        i += 1
+    
+    sum_curvature = [0]
+    i = 0
+    while i < len(t)-1:
+        sum_curvature.append(sum_curvature[-1] + (curvature[i] + curvature[i+1])/2)
+        i += 1
+    sum_curvature = np.array(sum_curvature)
+    u = sum_curvature/sum_curvature[-1]
+    
+    fu = intp.interp1d(u, t, kind = 'linear')
+    
+    u_acc = fu(t)
+    u_acc_st = u_acc[1]
+    u_acc_ed = u_acc[-2]
+    
+    if REFINE_SPLINE_EDGE == True:
+        delta = DIST_SPLINE_EDGE/sum_length
+        
+        i = 1
+        while i <= N_SPLINE_EDGE:
+            p_st = delta*i
+            p_ed = 1 - delta*i
+            if p_st < u_acc_st:
+                u_acc = np.insert(u_acc, i, p_st)
+            if p_ed > u_acc_ed:
+                u_acc = np.insert(u_acc, -i, p_ed)
+            i += 1
+    
+    if REFINE_SPLINE_PCHIP == True:
+        x_p = fx(u_acc)
+        y_p = fy(u_acc)
+    else:
+        p = intp.splev(u_acc, tck, 0)
+        x_p = p[0]
+        y_p = p[1]
+        
+    return x_p, y_p
+
+
+def refine_line(x, y, N):
+    xp = np.linspace(x[0], x[-1], N)
+    yp = np.linspace(y[0], y[-1], N)
+
+    return xp, yp
 
 def generate_arc_length_points(line_object, N):
     
@@ -174,32 +312,45 @@ def generate_arc_length_points(line_object, N):
     
     x = line_object.x
     y = line_object.y
+
+    length_array = line_object.calc_length_array()
+    sum_length = length_array[-1]
+    
+    t_p = length_array/sum_length
     
     if line_object.line_type == "point":  
         x_p = x
         y_p = y
         
     if line_object.line_type == "line":  
-        fx_t = intp.interp1d([0,1], x, kind = "linear")
-        fy_t = intp.interp1d([0,1], y, kind = "linear")
-            
-        t_p_arc = np.linspace(0, 1, N)
-        
-        x_p = fx_t(t_p_arc)
-        y_p = fy_t(t_p_arc)
+        x_p, y_p = refine_line(x, y, N)
 
     if line_object.line_type == "spline":
         if line_object.interp_mode == "linear":
-            dim = 1
-        else:
-            dim = 3
+            fx_t = intp.interp1d(t_p, x, kind = "linear")
+            fy_t = intp.interp1d(t_p, y, kind = "linear")
+                
+            t_p_arc = np.linspace(t_p[0], t_p[-1], N)
             
-        tck, u = intp.splprep([x, y], k=dim, s=0)
-        u_arc = np.linspace(0, 1, N)
-        p = intp.splev(u_arc, tck, 0)
-        
-        x_p = p[0]
-        y_p = p[1]
+            t_p_arc_add_orgine_point = np.append(t_p, t_p_arc)
+            t_p_arc_add_orgine_point = np.sort(t_p_arc_add_orgine_point)              
+                    
+            x_p = fx_t(t_p_arc_add_orgine_point)
+            y_p = fy_t(t_p_arc_add_orgine_point)
+            
+
+        else:
+            if USE_PCHIP == True:
+                fx_t = intp.PchipInterpolator(t_p, x)
+                fy_t = intp.PchipInterpolator(t_p, y) 
+            else:
+                fx_t = intp.CubicSpline(t_p, x)
+                fy_t = intp.CubicSpline(t_p, y)
+            
+            t_p_arc = np.linspace(t_p[0], t_p[-1], N)
+            
+            x_p = fx_t(t_p_arc)
+            y_p = fy_t(t_p_arc)
             
     return x_p, y_p
     
@@ -217,6 +368,20 @@ def generate_arc_length_points4line(x_st, y_st, x_ed, y_ed, N):
     
     return x_p, y_p
 
+
+def calc_point_dist(x, y, u, v, z1, z2):
+    point_dist_list = []
+    
+    if len(x) == len(y) == len(u) == len(v):
+        i = 0
+        while i < len(x):
+            temp_norm = norm_3d(x[i], y[i], z1, u[i], v[i], z2)
+            point_dist_list.append(temp_norm)
+            i += 1
+        return np.array(point_dist_list)
+        
+    else:
+        return np.array([])
 
 # Ver2.1変更 　引数追加
 def plot_3d_cut_path(ax, x, y, u, v, xm, ym, um, vm, z_xy, z_uv, z_m, n_plot):
@@ -578,6 +743,7 @@ def max_min_cross(p1, p2, p3, p4):
 
 # https://qiita.com/wihan23/items/03efd7cd40dfec96a987
 def cross_judge(a, b, c, d):
+    
     # x座標による判定
     if not max_min_cross(a[0], b[0], c[0], d[0]):
         return False
@@ -585,7 +751,7 @@ def cross_judge(a, b, c, d):
     # y座標による判定
     if not max_min_cross(a[1], b[1], c[1], d[1]):
         return False
-
+    
     tc1 = (a[0] - b[0]) * (c[1] - a[1]) + (a[1] - b[1]) * (a[0] - c[0])
     tc2 = (a[0] - b[0]) * (d[1] - a[1]) + (a[1] - b[1]) * (a[0] - d[0])
     td1 = (c[0] - d[0]) * (a[1] - c[1]) + (c[1] - d[1]) * (c[0] - a[0])
@@ -594,6 +760,9 @@ def cross_judge(a, b, c, d):
 
 
 def remove_self_collision(x, y):
+    # 同一点があると正しく自己交差を検出できないため、削除する
+    x, y = removeSamePoint(x, y)
+    
     new_x = [x[0]]
     new_y = [y[0]]
     detection = False

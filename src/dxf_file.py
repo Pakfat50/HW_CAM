@@ -258,7 +258,7 @@ class dxf_file:
         if AUTOSORT_WHEN_LOADFILE == True:
             self.SortLine()
         else:
-            self.plot()
+            self.plot(keep_view=False)
 
     def reload(self, is_refine):
         dwg = ez.readfile(self.filename)
@@ -336,7 +336,9 @@ class dxf_file:
             i += 1
 
     
-    def plot(self):
+    def plot(self, keep_view=True):
+        xlim = self.ax.get_xlim()
+        ylim = self.ax.get_ylim()
         self.ax.clear()
         self.ax.set_title(self.name)
         self.ax.set_aspect('equal')
@@ -355,12 +357,14 @@ class dxf_file:
                     alpha_line = 1
                     alpha_vect = 1
                     alpha_offset = 1
+                    pick = True
                 else:
                     alpha_line = 0.1
                     alpha_vect = 0.1
                     alpha_offset = 0
+                    pick = None
                     
-                self.ax.plot(temp_line_object.x, temp_line_object.y, color = col, alpha = alpha_line, marker='o', markersize=2)
+                self.ax.plot(temp_line_object.x, temp_line_object.y, color = col, alpha = alpha_line, marker='o', markersize=2, picker = pick)
                 X,Y = temp_line_object.x[0], temp_line_object.y[0]
                 U,V = temp_line_object.x[1], temp_line_object.y[1]
                 self.ax.quiver(X,Y,U-X,V-Y,color = col, alpha = alpha_vect)
@@ -374,6 +378,9 @@ class dxf_file:
                     self.ax.quiver(X,Y,U-X,V-Y,color = "y", alpha = alpha_offset) #ver2.2 バグ修正 Y を y に変更
   
             i += 1
+        if keep_view == True:
+            self.ax.set_xlim(xlim)
+            self.ax.set_ylim(ylim)
         self.canvas.draw()
         
         
@@ -734,7 +741,7 @@ class dxf_file:
             self.table_reload()
             self.table.table.selection_set(items[0])
             self.table.table.see(items[0])
-            self.plot()
+            self.plot(keep_view=False)
             return 1
 
 

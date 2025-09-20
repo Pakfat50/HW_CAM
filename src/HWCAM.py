@@ -1207,6 +1207,16 @@ def offset_origin(dxf_obj0, dxf_obj1, entry_offset_ox, entry_offset_oy, messeage
         messeage_window.set_messeage("オフセット中にエラーが発生しました\n")
 
 
+
+def onpick(event):
+    line = event.artist
+    xdata, ydata = line.get_data()
+    ind = event.ind
+    print('on pick line:', np.array([xdata[ind], ydata[ind]]).T)
+    print(line.pickable())
+    plt.gca().plot(xdata[ind], ydata[ind], "ro")
+
+
 #======================================================================================================================================
 #            メイン関数
 #======================================================================================================================================
@@ -1251,7 +1261,7 @@ if __name__ == "__main__":
     toolbar0 = NavigationToolbar2Tk(canvas0, toolbarFrame0)          #ツールバーをグラフとリンク
     toolbar0.update()                                                #ツールバーを更新
     toolbarFrame0.place(x = 320, y = 430)                            #ツールバーを配置
-    
+    canvas0.mpl_connect('pick_event', onpick)
     
     #【U-V グラフ】
     fig1 = plt.Figure(dpi=100, figsize=(8,4.05))                     #UVグラフの枠となるインスタンス．UVグラフは1番とする．figsize（単位：インチ）  

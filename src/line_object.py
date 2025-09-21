@@ -261,7 +261,7 @@ class line_object:
             y = self.y           
             
         if self.line_type == "point":
-            length_array = []
+            length_array = [0]
         
         if self.line_type == "line":
             dl = np.sqrt((x[0]-x[1])**2 + (y[0]-y[1])**2)

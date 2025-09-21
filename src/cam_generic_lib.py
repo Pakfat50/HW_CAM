@@ -135,21 +135,24 @@ def offset_line(x, y, d, cut_dir, interp_mode): #ver2.2 interp_mode 追加　ポ
             
         else:
             i = 0
-            x, y = removeSamePoint(x, y)
             while i < len(x):
                 if i == 0:
-                    k = np.arctan2((y[1]-y[0]), (x[1]-x[0]))
-
+                    if norm(x[0],y[0],x[1],y[1])>DIST_NEAR:
+                        k = np.arctan2((y[1]-y[0]), (x[1]-x[0]))
+                        new_x.append(x[0] - d*np.sin(k))      
+                        new_y.append(y[0] + d*np.cos(k))
                 elif i == len(x) - 1:
-                    k = np.arctan2((y[i]-y[i-1]), (x[i]-x[i-1]))
-                    
+                    if norm(x[i-1],y[i-1],x[i],y[i])>DIST_NEAR:
+                        k = np.arctan2((y[i]-y[i-1]), (x[i]-x[i-1]))
+                        new_x.append(x[i] - d*np.sin(k))      
+                        new_y.append(y[i] + d*np.cos(k))                    
                 else:
-                    k = np.arctan2((y[i+1]-y[i-1]), (x[i+1]-x[i-1]))
-
-                new_x.append(x[i] - d*np.sin(k))      
-                new_y.append(y[i] + d*np.cos(k))
+                    if norm(x[i-1],y[i-1],x[i+1],y[i+1])>DIST_NEAR:
+                        k = np.arctan2((y[i+1]-y[i-1]), (x[i+1]-x[i-1]))
+                        new_x.append(x[i] - d*np.sin(k))      
+                        new_y.append(y[i] + d*np.cos(k))
                 i += 1
-    
+
     return np.array(new_x), np.array(new_y)
 
 
@@ -314,19 +317,19 @@ def generate_arc_length_points(line_object, N):
     x = line_object.x
     y = line_object.y
 
-    length_array = line_object.calc_length_array()
-    sum_length = length_array[-1]
-    
-    t_p = length_array/sum_length
     
     if line_object.line_type == "point":  
-        x_p = x
-        y_p = y
+        x_p = [x]*N
+        y_p = [y]*N
         
     if line_object.line_type == "line":  
         x_p, y_p = refine_line(x, y, N)
 
     if line_object.line_type == "spline":
+        length_array = line_object.calc_length_array()
+        sum_length = length_array[-1]
+        t_p = length_array/sum_length
+        
         if line_object.interp_mode == "linear":
             fx_t = intp.interp1d(t_p, x, kind = "linear")
             fy_t = intp.interp1d(t_p, y, kind = "linear")

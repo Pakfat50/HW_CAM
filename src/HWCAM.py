@@ -519,9 +519,12 @@ def separate_line(dxf_obj, name, messeage_window):
     else:
         if not (len(line_nums) == 1):
             messeage_window.set_messeage("%sで%s本のラインが選択されています。1本のみ選択してださい\n"%(name,len(line_nums)))
-        else:
+        elif point_index == None:
             messeage_window.set_messeage("%sで分割点を選択してださい\n"%name)
-    
+        else:
+            messeage_window.set_messeage("%sで端点が選択されています。端点以外を選択してださい\n"%name)
+        
+        
 def delete_line(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):
     dxf_obj.delete_Selected_line()
     messeage_window.set_messeage("%sの選択したラインを削除しました。\n"%name)

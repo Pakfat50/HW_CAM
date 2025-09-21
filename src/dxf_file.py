@@ -270,10 +270,20 @@ class dxf_file:
         
         if AUTOSORT_WHEN_LOADFILE == True:
             self.SortLine()
+            self.reset_line_num()
         else:
             self.plot(keep_view=False)
 
     
+    def reset_line_num(self):
+        i = 0
+        for line in self.line_list:
+            print(line.num)
+            line.num = i
+            i += 1
+        self.table_reload()
+            
+
     def get_index(self, all = False):
         if all == True:
             items = self.table.table.get_children()
@@ -374,7 +384,7 @@ class dxf_file:
                 k += 1
             j += 1
             
-        self.line_num_max = i+k
+        self.line_num_max = i+k-1
         
     def table_reload(self):
         all_items = self.get_item(all=True)
@@ -603,47 +613,50 @@ class dxf_file:
             line_nums.append(line.num)
         point_index = self.selected_point.index
         
-        if (len(items) == 1) and (not(point_index == None)): 
+        if (len(items) == 1):
             index_org = self.get_index_from_item(items)[0]
             line_org = self.line_list[index_org]
 
             x_org = line_org.x_dxf.tolist()
             y_org = line_org.y_dxf.tolist()
             
-            if not(line_org.cut_dir == 'F'):
-                point_index = len(x_org) - point_index -1
+            if (not(point_index == None)) and (not(point_index == 0)) \
+                and (not(point_index == len(x_org)-1)):
             
-            x1 = x_org[:point_index+1]
-            y1 = y_org[:point_index+1]
-            x2 = x_org[point_index:]
-            y2 = y_org[point_index:]
-            
-            x1, y1 = removeSamePoint(x1, y1)
-            x2, y2 = removeSamePoint(x2, y2)
-            
-            line1 = copy.deepcopy(line_org)
-            line2 = copy.deepcopy(line_org)
-            
-            line1.reset_point(x1, y1, line_org.offset_ox, line_org.offset_oy)
-            line2.reset_point(x2, y2, line_org.offset_ox, line_org.offset_oy)
-            
-            num_new = self.line_num_max + 1
-            self.line_num_max = num_new  
-            line_nums.append(num_new)
-            
-            if line_org.cut_dir == 'F':
-                self.line_list[index_org] = line1
-                line2.num = num_new
-                self.add_line(items, line2)
-            else:
-                self.line_list[index_org] = line2
-                line1.num = num_new
-                self.add_line(items, line1)
-            
-            self.selected_point.reset()
-            self.table_reload()
-            self.plot()
-            result = True
+                if not(line_org.cut_dir == 'F'):
+                    point_index = len(x_org) - point_index -1
+                
+                x1 = x_org[:point_index+1]
+                y1 = y_org[:point_index+1]
+                x2 = x_org[point_index:]
+                y2 = y_org[point_index:]
+                
+                x1, y1 = removeSamePoint(x1, y1)
+                x2, y2 = removeSamePoint(x2, y2)
+                
+                line1 = copy.deepcopy(line_org)
+                line2 = copy.deepcopy(line_org)
+                
+                line1.reset_point(x1, y1, line_org.offset_ox, line_org.offset_oy)
+                line2.reset_point(x2, y2, line_org.offset_ox, line_org.offset_oy)
+                
+                num_new = self.line_num_max + 1
+                self.line_num_max = num_new  
+                line_nums.append(num_new)
+                
+                if line_org.cut_dir == 'F':
+                    self.line_list[index_org] = line1
+                    line2.num = num_new
+                    self.add_line(items, line2)
+                else:
+                    self.line_list[index_org] = line2
+                    line1.num = num_new
+                    self.add_line(items, line1)
+                
+                self.selected_point.reset()
+                self.table_reload()
+                self.plot()
+                result = True
 
         return result, line_nums, point_index
 

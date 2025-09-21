@@ -231,6 +231,17 @@ class super_table:
 #   【戻り値】　なし
 #   【機能】　テーブルで表示しているラインの座標点を、offset_ox, offset_oyで指定される分だけオフセットする．　　　　　　　
 
+class selected_point:
+    def __init__(self, x, y, index):
+        self.x = x
+        self.y = y
+        self.index = index
+    
+    def reset(self):
+        self.x = np.nan
+        self.y = np.nan
+        self.index = None
+
 class dxf_file:
     def __init__(self, ax, canvas, table, x_table, name):
         self.ax = ax
@@ -240,6 +251,7 @@ class dxf_file:
         self.name = name
         self.line_list = []
         self.line_num_list = []
+        self.selected_point = selected_point(np.nan, np.nan, None)
     
     
     def load_file(self, filename, is_refine):
@@ -250,6 +262,7 @@ class dxf_file:
         self.reload(is_refine)
         self.table.table.bind("<<TreeviewSelect>>", self.selected)
         self.table.table.loaded_item_num = len(self.table.table.get_children())
+        self.selected_point.reset()
         
         items = self.table.table.get_children()
         self.table.table.selection_set(items[0])
@@ -378,6 +391,9 @@ class dxf_file:
                     self.ax.quiver(X,Y,U-X,V-Y,color = "y", alpha = alpha_offset) #ver2.2 バグ修正 Y を y に変更
   
             i += 1
+        
+        self.ax.plot(self.selected_point.x, self.selected_point.y, "ro")
+        
         if keep_view == True:
             self.ax.set_xlim(xlim)
             self.ax.set_ylim(ylim)
@@ -397,8 +413,17 @@ class dxf_file:
         return ret
     
     
+    def get_selected_point(self, event):
+        line = event.artist
+        x, y = line.get_data()
+        index = event.ind[0]
+        self.selected_point = selected_point(x[index], y[index], index)
+        self.plot()
+        
+    
     def selected(self, event):
         selected_items = self.table.table.selection()
+        self.selected_point.reset()
         if not len(selected_items) == 0:
             self.plot()
             
@@ -570,6 +595,25 @@ class dxf_file:
         parent_line.reset_point(new_x, new_y, parent_line.offset_ox, parent_line.offset_oy)
         return True    
     
+    """
+    def Separate_line(self):
+        selected_item = self.table.table.selection()
+        
+        if len(selected_items) == 1: 
+            
+            result = self.Merge_line(selected_items[0], selected_items[i])
+            self.delete_line(selected_items[i])
+
+
+            self.table_reload()
+            self.plot()
+            
+        else:
+            result_list = []
+            line_num_list = []
+            
+        return result_list, line_num_list        
+    """
     
     def delete_Selected_line(self):
         selected_items = self.table.table.selection()

@@ -1261,7 +1261,7 @@ if __name__ == "__main__":
     toolbar0 = NavigationToolbar2Tk(canvas0, toolbarFrame0)          #ツールバーをグラフとリンク
     toolbar0.update()                                                #ツールバーを更新
     toolbarFrame0.place(x = 320, y = 430)                            #ツールバーを配置
-    canvas0.mpl_connect('pick_event', onpick)
+    
     
     #【U-V グラフ】
     fig1 = plt.Figure(dpi=100, figsize=(8,4.05))                     #UVグラフの枠となるインスタンス．UVグラフは1番とする．figsize（単位：インチ）  
@@ -1299,6 +1299,8 @@ if __name__ == "__main__":
     dxf0 = dxf_file(ax0, canvas0, table0, table1, "X-Y")
     dxf1 = dxf_file(ax1, canvas1, table1, table0, "U-V")
 
+    canvas0.mpl_connect('pick_event', dxf0.get_selected_point)
+    canvas1.mpl_connect('pick_event', dxf1.get_selected_point)
 
     #======================================================================================================================================
     #      messeage_windowインスタンスの生成

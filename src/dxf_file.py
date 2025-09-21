@@ -250,7 +250,6 @@ class dxf_file:
         self.x_table = x_table
         self.name = name
         self.line_list = []
-        self.line_num_list = []
         self.selected_point = selected_point(np.nan, np.nan, None)
     
     
@@ -258,7 +257,6 @@ class dxf_file:
         self.table.reset()
         self.filename = filename
         self.line_list = []
-        self.line_num_list = []
         self.reload(is_refine)
         self.table.table.bind("<<TreeviewSelect>>", self.selected)
         self.table.table.loaded_item_num = len(self.table.table.get_children())
@@ -273,80 +271,116 @@ class dxf_file:
         else:
             self.plot(keep_view=False)
 
+    
+    def get_index(self, all = False):
+        if all == True:
+            items = self.table.table.get_children()
+        else:
+            items = self.table.table.selection()
+        indexs = []
+        if not len(items) == 0:
+            for item in items:
+                index = self.table.table.get_children().index(item)
+                indexs.append(index)
+        return indexs
+    
+    def get_item(self, all = False):
+        if all == True:
+            items = self.table.table.get_children()
+        else:
+            items = self.table.table.selection()
+        return items        
+    
+    def get_item_from_index(self, indexs):
+        if isinstance(indexs, str) == True:
+            item = self.table.table.get_children()[indexs]
+            return item
+        else:
+            items = []
+            for index in indexs:
+                item = self.table.table.get_children()[index]
+                items.append(item)
+            return items
+
+    def get_index_from_item(self, items):
+        if isinstance(items, str) == True:
+            index = self.table.table.get_children().index(items)
+            return index
+        
+        else:
+            indexs = []
+            for item in items:
+                index = self.table.table.get_children().index(item)
+                indexs.append(index)
+            return indexs
+
     def reload(self, is_refine):
         dwg = ez.readfile(self.filename)
         modelspace = dwg.modelspace()
-        line_obj = modelspace.query('LINE')
+        line_segment_obj = modelspace.query('LINE')
         spline_obj = modelspace.query('SPLINE')
         arc_obj = modelspace.query('ARC') #ver2.2追加
         poly_obj = modelspace.query('LWPOLYLINE') #ver2.2追加
         
         i = 0
         while i < len(spline_obj):
-            temp_spline = spline_obj[i]
-            temp_spline_data = np.array(temp_spline.control_points)[:]
-            temp_line_object = line_object(temp_spline_data[:,0], temp_spline_data[:,1], i, is_refine) 
-            self.line_list.append(temp_line_object)
-            self.line_num_list.append(i)
-            self.table.table.insert("", "end", values=(temp_line_object.num, format(temp_line_object.offset_dist, '.4f'),\
-                                                       temp_line_object.line_type, format(temp_line_object.cutspeed_work,'.2f')))
+            spline = spline_obj[i]
+            spline_data = np.array(spline.control_points)[:]
+            line = line_object(spline_data[:,0], spline_data[:,1], i, is_refine) 
+            self.line_list.append(line)
+            self.table.table.insert("", "end", values=(line.num, format(line.offset_dist, '.4f'),\
+                                                       line.line_type, format(line.cutspeed_work,'.2f')))
             i += 1
  
         #ver2.2追加　円弧，ポリラインの読み込み　ここから
         i_arc = 0        
         while i_arc < len(arc_obj):
-            temp_arc = arc_obj[i_arc]
-            temp_arc_data = arc_to_spline(temp_arc)
-            temp_line_object = line_object(temp_arc_data[:,0], temp_arc_data[:,1], i + i_arc, is_refine) 
-            self.line_list.append(temp_line_object)
-            self.line_num_list.append(i + i_arc)
-            self.table.table.insert("", "end", values=(temp_line_object.num, format(temp_line_object.offset_dist, '.4f'), \
-                                                       temp_line_object.line_type, format(temp_line_object.cutspeed_work,'.2f')))
+            arc = arc_obj[i_arc]
+            arc_data = arc_to_spline(arc)
+            line = line_object(arc_data[:,0], arc_data[:,1], i + i_arc, is_refine) 
+            self.line_list.append(line)
+            self.table.table.insert("", "end", values=(line.num, format(line.offset_dist, '.4f'), \
+                                                       line.line_type, format(line.cutspeed_work,'.2f')))
             i_arc += 1        
         i = i + i_arc
 
         i_poly = 0
         while i_poly < len(poly_obj):
-            temp_poly = poly_obj[i_poly]
-            temp_poly_data = poly_to_spline(temp_poly)
-            temp_line_object = line_object(temp_poly_data[:,0], temp_poly_data[:,1], i + i_poly, is_refine) 
-            temp_line_object.interp_mode = "linear" #poly_lineであることを設定する
-            self.line_list.append(temp_line_object)
-            self.line_num_list.append(i + i_poly)
-            self.table.table.insert("", "end", values=(temp_line_object.num, format(temp_line_object.offset_dist, '.4f'), \
-                                                       temp_line_object.line_type, format(temp_line_object.cutspeed_work,'.2f')))
+            poly = poly_obj[i_poly]
+            poly_data = poly_to_spline(poly)
+            line = line_object(poly_data[:,0], poly_data[:,1], i + i_poly, is_refine) 
+            line.interp_mode = "linear" #poly_lineであることを設定する
+            self.line_list.append(line)
+            self.table.table.insert("", "end", values=(line.num, format(line.offset_dist, '.4f'), \
+                                                       line.line_type, format(line.cutspeed_work,'.2f')))
             i_poly += 1    
         i = i + i_poly
         #ver2.2追加　ここまで
 
         j = 0
         k = 0
-        while j < len(line_obj):
-            temp_line = line_obj[j]
-            temp_line_data = []
-            temp_line_data.append(temp_line.dxf.start)
-            temp_line_data.append(temp_line.dxf.end)
-            temp_line_data = np.array(temp_line_data)[:,0:2]
-            if norm(temp_line_data[0,0],temp_line_data[0,1],temp_line_data[1,0],temp_line_data[1,1]) != 0:
-                temp_line_object = line_object(temp_line_data[:,0], temp_line_data[:,1], i+k, is_refine) 
-                self.line_list.append(temp_line_object)
-                self.line_num_list.append(i+k)
-                self.table.table.insert("", "end", values=(temp_line_object.num, format(temp_line_object.offset_dist, '.4f'), \
-                                                           temp_line_object.line_type, format(temp_line_object.cutspeed_work,'.2f')))
+        while j < len(line_segment_obj):
+            line_segment = line_segment_obj[j]
+            line_segment_data = [line_segment.dxf.start, line_segment.dxf.end]
+            line_segment_data = np.array(line_segment_data)[:,0:2]
+            
+            if norm(line_segment_data[0,0],line_segment_data[0,1],line_segment_data[1,0],line_segment_data[1,1]) > DIST_NEAR:
+                line = line_object(line_segment_data[:,0], line_segment_data[:,1], i+k, is_refine) 
+                self.line_list.append(line)
+                self.table.table.insert("", "end", values=(line.num, format(line.offset_dist, '.4f'), \
+                                                           line.line_type, format(line.cutspeed_work,'.2f')))
                 k += 1
             j += 1
             
 
     def table_reload(self):
-        table_item_list = self.table.table.get_children()
-        i = 0
-        while i < len(table_item_list):
-            temp_item_num = table_item_list[i]
-            line_num = self.line_num_list[item2num(temp_item_num)]
-            temp_line_object = self.line_list[line_num]
-            self.table.table.item(temp_item_num, values=(temp_line_object.num, format(temp_line_object.offset_dist, '.4f'), \
-                                                         temp_line_object.line_type, format(temp_line_object.cutspeed_work,'.2f')))
-            i += 1
+        all_items = self.get_item(all=True)
+        
+        for item in all_items:
+            index = self.get_index_from_item(item)
+            line = self.line_list[index]
+            self.table.table.item(item, values=(line.num, format(line.offset_dist, '.4f'), \
+                                                    line.line_type, format(line.cutspeed_work,'.2f')))
 
     
     def plot(self, keep_view=True):
@@ -355,40 +389,40 @@ class dxf_file:
         self.ax.clear()
         self.ax.set_title(self.name)
         self.ax.set_aspect('equal')
+        indexs = self.get_index()
+        
         i = 0
-        while i < len(self.line_num_list):
-            line_num = self.line_num_list[i]
-            if line_num >= 0:
-                temp_line_object = self.line_list[line_num]
-                temp_line_object.update()
-                if temp_line_object.line_type == "line":
-                    col = "b"
-                else:
-                    col = "b"
-                    
-                if line_num in self.get_selected_lines():
-                    alpha_line = 1
-                    alpha_vect = 1
-                    alpha_offset = 1
-                    pick = True
-                else:
-                    alpha_line = 0.1
-                    alpha_vect = 0.1
-                    alpha_offset = 0
-                    pick = None
-                    
-                self.ax.plot(temp_line_object.x, temp_line_object.y, color = col, alpha = alpha_line, marker='o', markersize=2, picker = pick)
-                X,Y = temp_line_object.x[0], temp_line_object.y[0]
-                U,V = temp_line_object.x[1], temp_line_object.y[1]
-                self.ax.quiver(X,Y,U-X,V-Y,color = col, alpha = alpha_vect)
-                if temp_line_object.cut_dir == "F":
-                    X,Y = temp_line_object.x_raw[0], temp_line_object.y_raw[0]
-                    U,V = temp_line_object.x[0], temp_line_object.y[0]
-                else:
-                    X,Y = temp_line_object.x_raw[-1], temp_line_object.y_raw[-1]
-                    U,V = temp_line_object.x[0], temp_line_object.y[0]            
-                if norm(X,Y,U,V) != 0:
-                    self.ax.quiver(X,Y,U-X,V-Y,color = "y", alpha = alpha_offset) #ver2.2 バグ修正 Y を y に変更
+        while i < len(self.line_list):
+            line = self.line_list[i]
+            line.update()
+            if line.line_type == "line":
+                col = "b"
+            else:
+                col = "b"
+                
+            if i in indexs:
+                alpha_line = 1
+                alpha_vect = 1
+                alpha_offset = 1
+                pick = True
+            else:
+                alpha_line = 0.1
+                alpha_vect = 0.1
+                alpha_offset = 0
+                pick = None
+                
+            self.ax.plot(line.x, line.y, color = col, alpha = alpha_line, marker='o', markersize=2, picker = pick)
+            X,Y = line.x[0], line.y[0]
+            U,V = line.x[1], line.y[1]
+            self.ax.quiver(X,Y,U-X,V-Y,color = col, alpha = alpha_vect)
+            if line.cut_dir == "F":
+                X,Y = line.x_raw[0], line.y_raw[0]
+                U,V = line.x[0], line.y[0]
+            else:
+                X,Y = line.x_raw[-1], line.y_raw[-1]
+                U,V = line.x[0], line.y[0]            
+            if norm(X,Y,U,V) != 0:
+                self.ax.quiver(X,Y,U-X,V-Y,color = "y", alpha = alpha_offset) #ver2.2 バグ修正 Y を y に変更
   
             i += 1
         
@@ -399,19 +433,6 @@ class dxf_file:
             self.ax.set_ylim(ylim)
         self.canvas.draw()
         
-        
-    def get_selected_lines(self):
-        selected_items = self.table.table.selection()
-        if not selected_items:
-            return [9999]
-        
-        ret = []
-        for item in selected_items:
-            item_num = item2num(item)
-            line_num = self.line_num_list[item_num]
-            ret.append(line_num)
-        return ret
-    
     
     def get_selected_point(self, event):
         line = event.artist
@@ -419,12 +440,13 @@ class dxf_file:
         index = event.ind[0]
         self.selected_point = selected_point(x[index], y[index], index)
         self.plot()
-        
+      
     
     def selected(self, event):
-        selected_items = self.table.table.selection()
+        items = self.get_item()
+
         self.selected_point.reset()
-        if not len(selected_items) == 0:
+        if not len(items) == 0:
             self.plot()
             
             if self.table.sync == True:
@@ -432,9 +454,9 @@ class dxf_file:
                     self.x_table.sync_update = False
                     try:
                         x_selected_items = []
-                        for item in selected_items:
-                            item_index = self.table.table.get_children().index(item)
-                            x_item = self.x_table.table.get_children()[item_index]
+                        for item in items:
+                            index = self.get_index_from_item(item)
+                            x_item = self.x_table.table.get_children()[index]
                             x_selected_items.append(x_item)
                         self.x_table.table.selection_set(x_selected_items)
                         self.x_table.table.see(x_selected_items)
@@ -448,152 +470,145 @@ class dxf_file:
             
                 
     def set_offset_dist(self, offset_dist):
-        table_item_list = self.table.table.get_children()
-        i = 0
-        while i < len(table_item_list):
-            temp_item_num = table_item_list[i]
-            line_num = self.line_num_list[item2num(temp_item_num)]
-            temp_line_object = self.line_list[line_num]
-            temp_line_object.offset_dist = offset_dist
-            temp_line_object.update()
-            i += 1   
+        all_items = self.get_item(all=True)
+
+        for item in all_items:
+            index = self.get_index_from_item(item)
+            line = self.line_list[index]
+            line.offset_dist = offset_dist
+            line.update()
+
         self.table_reload()
         self.plot()
     
     def Change_CutDir(self):
-        selected_items = self.table.table.selection()
-        i = 0
-        while i < len(selected_items):
-            temp_item_num = selected_items[i]
-            line_num = self.line_num_list[item2num(temp_item_num)]
-            temp_line_object = self.line_list[line_num]
-            temp_line_object.toggle_cut_dir()
-            temp_line_object.toggle_offset_dir()
-            temp_line_object.update()
-            self.table.table.item(temp_item_num, values=(temp_line_object.num, format(temp_line_object.offset_dist, '.4f'), \
-                                                         temp_line_object.line_type, format(temp_line_object.cutspeed_work,'.2f')))
-            i += 1   
+        items = self.get_item()
+
+        for item in items:
+            index = self.get_index_from_item(item)
+            line = self.line_list[index]
+            line.toggle_cut_dir()
+            line.toggle_offset_dir()
+            line.update()
+            self.table.table.item(item, values=(line.num, format(line.offset_dist, '.4f'), \
+                                                         line.line_type, format(line.cutspeed_work,'.2f')))
         self.table_reload()
         self.plot()
     
     
     def Change_OffsetDir(self):
-        selected_items = self.table.table.selection()
-        i = 0
-        while i < len(selected_items):
-            temp_item_num = selected_items[i]
-            line_num = self.line_num_list[item2num(temp_item_num)]
-            temp_line_object = self.line_list[line_num]
-            temp_line_object.toggle_offset_dir()
-            temp_line_object.update()
-            self.table.table.item(temp_item_num, values=(temp_line_object.num, format(temp_line_object.offset_dist, '.4f'), \
-                                                         temp_line_object.line_type, format(temp_line_object.cutspeed_work,'.2f')))
-            i += 1      
+        items = self.get_item()
+        
+        for item in items:
+            index = self.get_index_from_item(item)
+            line = self.line_list[index]
+            line.toggle_offset_dir()
+            line.update()
+            self.table.table.item(item, values=(line.num, format(line.offset_dist, '.4f'), \
+                                                         line.line_type, format(line.cutspeed_work,'.2f')))  
         self.table_reload()
         self.plot()
 
 
     def Swap_Selected_line(self):
-        selected_items = self.table.table.selection()
-        if len(selected_items) == 2:
-            swap_line_num0 = item2num(selected_items[0])
-            swap_line_num1 = item2num(selected_items[1])
-            self.Swap_line(swap_line_num0, swap_line_num1)
+        items = self.get_item()
+        
+        if len(items) == 2:
+            indexs = self.get_index_from_item(items)
+            self.line_list[indexs[0]], self.line_list[indexs[1]] = self.line_list[indexs[1]], self.line_list[indexs[0]]   
             self.table_reload()
             self.plot()
-        return selected_items
+        return indexs
     
 
-    def Swap_line(self, item_num0, item_num1):
-        self.line_num_list[item_num0], self.line_num_list[item_num1] = self.line_num_list[item_num1], self.line_num_list[item_num0]    
-
-
     def Merge_Selected_line(self):
-        selected_items = self.table.table.selection()
+        items = self.get_item()
+        line_nums = []
+        results = []
         
-        if len(selected_items) >= 2:
-            result_list= [True]
-            line_num_list = []
-            for item in selected_items:
-                line_num_list.append(self.line_num_list[item2num(item)])
+        for item in items:
+            index = self.get_index_from_item(item)
+            line = self.line_list[index]
+            line_nums.append(line.num)
+            
+        if len(items) >= 2:
+            results.append(True)
             
             i = 1
-            while i < len(selected_items):      
-                result = self.Merge_line(selected_items[0], selected_items[i])
-                self.delete_line(selected_items[i])
-                result_list.append(result)
+            while i < len(items):
+                parent_index = self.get_index_from_item(items[0])
+                child_index = self.get_index_from_item(items[i])
+                parent_line = self.line_list[parent_index]
+                child_line = self.line_list[child_index]
+                
+                x_p_st = parent_line.st[0]
+                y_p_st = parent_line.st[1]
+                x_c_st = child_line.st[0]
+                y_c_st = child_line.st[1]
+        
+                x_p_ed = parent_line.ed[0]
+                y_p_ed = parent_line.ed[1]
+                x_c_ed = child_line.ed[0]
+                y_c_ed = child_line.ed[1]
+                
+                x_p = parent_line.x_dxf.tolist()
+                y_p = parent_line.y_dxf.tolist()
+                x_c = child_line.x_dxf.tolist()
+                y_c = child_line.y_dxf.tolist()     
+                
+                new_x = []
+                new_y = []
+                
+                if norm(x_p_ed, y_p_ed, x_c_st, y_c_st) < LINE_MARGE_NORM_MN:
+                    # 親ラインに子ラインを接続
+                    new_x.extend(x_p)
+                    new_y.extend(y_p)
+                    new_x.extend(x_c)
+                    new_y.extend(y_c)
+                    result = True
+                elif norm(x_p_ed, y_p_ed, x_c_ed, y_c_ed) < LINE_MARGE_NORM_MN:
+                    # 子ラインを反転させたのち、親ラインに子ラインを接続
+                    x_c.reverse()
+                    y_c.reverse()
+                    new_x.extend(x_p)
+                    new_y.extend(y_p)
+                    new_x.extend(x_c)
+                    new_y.extend(y_c)
+                    result = True
+                elif norm(x_p_st, y_p_st, x_c_ed, y_c_ed) < LINE_MARGE_NORM_MN:
+                    # 子ラインに親ラインを接続
+                    new_x.extend(x_c)
+                    new_y.extend(y_c)
+                    new_x.extend(x_p)
+                    new_y.extend(y_p)
+                    result = True
+                elif norm(x_p_st, y_p_st, x_c_st, y_c_st) < LINE_MARGE_NORM_MN:
+                    # 子ラインを反転させたのち、子ラインに親ラインに接続
+                    x_c.reverse()
+                    y_c.reverse()
+                    new_x.extend(x_c)
+                    new_y.extend(y_c)
+                    new_x.extend(x_p)
+                    new_y.extend(y_p)
+                    result = True
+                else:
+                    # 端点が隣接していない線同士であるので、結合すべきではない。
+                    result = False
+                
+                if result == True:
+                    parent_line.reset_point(new_x, new_y, parent_line.offset_ox, parent_line.offset_oy)
+                    self.delete_line(items[i])
+                
+                results.append(result)
                 i += 1
             self.table_reload()
             self.plot()
-        elif len(selected_items) == 1:
-            result_list = [True]
-            line_num_list = [self.line_num_list[item2num(selected_items[0])]]
+        elif len(items) == 1:
+            results = [True]
         else:
-            result_list = []
-            line_num_list = []
+            results = []
             
-        return result_list, line_num_list
-
-
-    def Merge_line(self, parent_item_num, child_item_num):
-        parent_line_num = self.line_num_list[item2num(parent_item_num)]
-        child_line_num = self.line_num_list[item2num(child_item_num)]
-        parent_line = self.line_list[parent_line_num]
-        child_line = self.line_list[child_line_num]
-        
-        x_p_st = parent_line.st[0]
-        y_p_st = parent_line.st[1]
-        x_c_st = child_line.st[0]
-        y_c_st = child_line.st[1]
-
-        x_p_ed = parent_line.ed[0]
-        y_p_ed = parent_line.ed[1]
-        x_c_ed = child_line.ed[0]
-        y_c_ed = child_line.ed[1]
-        
-        x_p = parent_line.x_dxf.tolist()
-        y_p = parent_line.y_dxf.tolist()
-        x_c = child_line.x_dxf.tolist()
-        y_c = child_line.y_dxf.tolist()     
-        
-        new_x = []
-        new_y = []
-        
-        if norm(x_p_ed, y_p_ed, x_c_st, y_c_st) < LINE_MARGE_NORM_MN:
-            # 親ラインに子ラインを接続
-            new_x.extend(x_p)
-            new_y.extend(y_p)
-            new_x.extend(x_c)
-            new_y.extend(y_c)
-        elif norm(x_p_ed, y_p_ed, x_c_ed, y_c_ed) < LINE_MARGE_NORM_MN:
-            # 子ラインを反転させたのち、親ラインに子ラインを接続
-            x_c.reverse()
-            y_c.reverse()
-            new_x.extend(x_p)
-            new_y.extend(y_p)
-            new_x.extend(x_c)
-            new_y.extend(y_c)
-        elif norm(x_p_st, y_p_st, x_c_ed, y_c_ed) < LINE_MARGE_NORM_MN:
-            # 子ラインに親ラインを接続
-            new_x.extend(x_c)
-            new_y.extend(y_c)
-            new_x.extend(x_p)
-            new_y.extend(y_p)
-        elif norm(x_p_st, y_p_st, x_c_st, y_c_st) < LINE_MARGE_NORM_MN:
-            # 子ラインを反転させたのち、子ラインに親ラインに接続
-            x_c.reverse()
-            y_c.reverse()
-            new_x.extend(x_c)
-            new_y.extend(y_c)
-            new_x.extend(x_p)
-            new_y.extend(y_p)
-            
-        else:
-            # 端点が隣接していない線同士であるので、結合すべきではない。
-            return False
-        
-        parent_line.reset_point(new_x, new_y, parent_line.offset_ox, parent_line.offset_oy)
-        return True    
+        return results, line_nums
     
     """
     def Separate_line(self):
@@ -610,133 +625,118 @@ class dxf_file:
             
         else:
             result_list = []
-            line_num_list = []
             
-        return result_list, line_num_list        
+        return result_list        
     """
     
     def delete_Selected_line(self):
-        selected_items = self.table.table.selection()
-        i = 0
-        while i < len(selected_items):
-            self.delete_line(selected_items[i])
-            i += 1             
+        items = self.get_item()
+        for item in items:
+            self.delete_line(item)           
         self.table_reload()
         self.plot()
         
         
-    def delete_line(self, item_num):
-        line_num = self.line_num_list[item2num(item_num)]
-        index = self.line_num_list.index(line_num)
-        if self.line_num_list[index] >= 0:            
-            self.line_num_list[index] = -1
-        self.table.table.delete(item_num)
+    def delete_line(self, item):
+        index = self.get_index_from_item(item)     
+        self.line_list.pop(index)
+        self.table.table.delete(item)
     
     
     def reverse_all(self):
-        alaivable_line_num_list = np.array(np.array(self.line_num_list.copy())[np.where(np.array(self.line_num_list.copy()) >= 0)])
-        new_line_num_list = alaivable_line_num_list[-1::-1]
+        items = self.get_item(all = True)
+        self.line_list.reverse()
         
-        i = 0
-        j = 0
-        while i < len(self.line_num_list):
-            if self.line_num_list[i] >= 0:
-                temp_num = new_line_num_list[j]
-                temp_line = self.line_list[temp_num]
-                temp_line.toggle_cut_dir()
-                temp_line.toggle_offset_dir()
-                self.line_num_list[i] = temp_num                
-                j += 1
-                i += 1
-            else:
-                i += 1
+        for item in items:
+            index = self.get_index_from_item(item)
+            line = self.line_list[index]
+            line.toggle_cut_dir()
+            line.toggle_offset_dir()
         
         self.table_reload()
         self.plot()
         
     
     def SortLine(self):
-        selected_items = self.table.table.selection()   
+        items = self.get_item()
+        all_items = self.get_item(all = True)
         
-        if not(len(selected_items) == 1):
-            return len(selected_items)
+        if not(len(items) == 1):
+            return len(items)
         else:
-            item_num_st = selected_items[0]
-            line_num_st = self.line_num_list[item2num(item_num_st)]
-            line_object_st = self.line_list[line_num_st]
-            cut_dir_st = line_object_st.cut_dir
-            i = 0
+            item_st = items[0]
+            index_st = self.get_index_from_item(item_st)
+            line_st = self.line_list[index_st]
+            cut_dir_st = line_st.cut_dir
             norm_mn = np.inf
             if cut_dir_st == 'F':
-                x0 = line_object_st.ed[0]
-                y0 = line_object_st.ed[1]
-                x_array = np.array(line_object_st.x_raw)
-                y_array = np.array(line_object_st.y_raw)
+                x0 = line_st.ed[0]
+                y0 = line_st.ed[1]
+                x_array = np.array(line_st.x_raw)
+                y_array = np.array(line_st.y_raw)
             else:
-                x0 = line_object_st.st[0]
-                y0 = line_object_st.st[1]   
-                x_array = np.array(line_object_st.x_raw[::-1])
-                y_array = np.array(line_object_st.y_raw[::-1])
+                x0 = line_st.st[0]
+                y0 = line_st.st[1]   
+                x_array = np.array(line_st.x_raw[::-1])
+                y_array = np.array(line_st.y_raw[::-1])
                 
-            alaivable_line_num_list = sorted(np.array(self.line_num_list.copy())[np.where(np.array(self.line_num_list.copy()) >= 0)])
-            new_line_nums = [line_num_st]
-            
-            new_line_num_list = []
+            new_lines = [line_st]
+            new_line_list = []
             x_array_list = []
             y_array_list = []
             
-    
-            while i < len(alaivable_line_num_list) - 1:
+            i = 0
+            while i < len(all_items) - 1:
                 norm_mn = np.inf
                 j = 0
-                while j < len(alaivable_line_num_list):
-                    num1 = alaivable_line_num_list[j]
-                    if (num1 in sum(new_line_num_list, [])) or (num1 in new_line_nums):
+                while j < len(all_items):
+                    index = self.get_index_from_item(all_items[j])
+                    line = self.line_list[index]
+
+                    if (line in sum(new_line_list, [])) or (line in new_lines):
                         pass
                     
                     else:
-                        temp_line1 = self.line_list[num1]
-                        temp_norm_st = norm(x0, y0, temp_line1.st[0], temp_line1.st[1])
-                        temp_norm_ed = norm(x0, y0, temp_line1.ed[0], temp_line1.ed[1])
-                        if min(temp_norm_st, temp_norm_ed) < norm_mn:
-                            temp_line_num1 = num1
-                            norm_mn = min(temp_norm_st, temp_norm_ed)                      
-                            if temp_norm_st < temp_norm_ed:
-                                temp_cut_dir = 'F'
+                        norm_st = norm(x0, y0, line.st[0], line.st[1])
+                        norm_ed = norm(x0, y0, line.ed[0], line.ed[1])
+                        if min(norm_st, norm_ed) < norm_mn:
+                            line_mn = line
+                            norm_mn = min(norm_st, norm_ed)                      
+                            if norm_st < norm_ed:
+                                cut_dir = 'F'
                             else:
-                                temp_cut_dir = 'R'
+                                cut_dir = 'R'
                     j += 1
                     
-                temp_line1 = self.line_list[temp_line_num1]
-                if temp_cut_dir == 'F':
-                    x0 = temp_line1.ed[0]
-                    y0 = temp_line1.ed[1]
-                    temp_x = temp_line1.x_raw
-                    temp_y = temp_line1.y_raw
+                if cut_dir == 'F':
+                    x0 = line_mn.ed[0]
+                    y0 = line_mn.ed[1]
+                    x = line_mn.x_raw
+                    y = line_mn.y_raw
                                              
-                if temp_cut_dir == 'R':
-                    x0 = temp_line1.st[0]
-                    y0 = temp_line1.st[1]
-                    temp_x = temp_line1.x_raw[::-1]
-                    temp_y = temp_line1.y_raw[::-1]
+                if cut_dir == 'R':
+                    x0 = line_mn.st[0]
+                    y0 = line_mn.st[1]
+                    x = line_mn.x_raw[::-1]
+                    y = line_mn.y_raw[::-1]
                           
-                temp_line1.set_cut_dir(temp_cut_dir)
+                line_mn.set_cut_dir(cut_dir)
                 
                 if norm_mn <= DIST_NEAR:
-                    new_line_nums.append(temp_line_num1)
-                    x_array = np.concatenate([x_array, temp_x], 0)
-                    y_array = np.concatenate([y_array, temp_y], 0)
+                    new_lines.append(line_mn)
+                    x_array = np.concatenate([x_array, x], 0)
+                    y_array = np.concatenate([y_array, y], 0)
                 else:
-                    new_line_num_list.append(new_line_nums)
+                    new_line_list.append(new_lines)
                     x_array_list.append(x_array)
                     y_array_list.append(y_array)
-                    new_line_nums = [temp_line_num1]
-                    x_array = np.array(temp_x)
-                    y_array = np.array(temp_y)
+                    new_lines = [line_mn]
+                    x_array = np.array(x)
+                    y_array = np.array(y)
                 
                 i += 1
                 
-            new_line_num_list.append(new_line_nums)
+            new_line_list.append(new_lines)
             x_array_list.append(x_array)
             y_array_list.append(y_array)    
              
@@ -744,101 +744,76 @@ class dxf_file:
             ccw_list = []
             i = 0
             while i < len(x_array_list):
-                temp_x_array = x_array_list[i]
-                temp_y_array = y_array_list[i]
-                temp_ccw = detectRotation(temp_x_array, temp_y_array)
-                ccw_list.append(temp_ccw)
+                x_array = x_array_list[i]
+                y_array = y_array_list[i]
+                ccw = detectRotation(x_array, y_array)
+                ccw_list.append(ccw)
                 i += 1
             
             ccw_st = ccw_list[0]
             i = 0
             while i < len(ccw_list):
-                temp_ccw = ccw_list[i]
-                temp_line_nums = new_line_num_list[i]
-                if not(temp_ccw == ccw_st):
-                    temp_line_nums = temp_line_nums[::-1]
-                    new_line_num_list[i] = temp_line_nums
+                ccw = ccw_list[i]
+                new_lines = new_line_list[i]
+                if not(ccw == ccw_st):
+                    new_line_list[i] = new_lines[::-1]
                     
-                for num in temp_line_nums:
-                    temp_line = self.line_list[num]
-                    if not(temp_ccw == ccw_st):
-                        temp_line.toggle_cut_dir()
+                for line in new_lines:
+                    if not(ccw == ccw_st):
+                        line.toggle_cut_dir()
                     if ccw_st == True:
-                        temp_line.set_offset_dir('O')
+                        line.set_offset_dir('O')
                     else:
-                        temp_line.set_offset_dir('I')
+                        line.set_offset_dir('I')
                 i += 1
             
             
-            i = 0
-            j = 0
-            while i < len(self.line_num_list):
-                if self.line_num_list[i] >= 0:
-                    self.line_num_list[i] = sum(new_line_num_list,[])[j]
-                    j += 1
-                    i += 1
-                else:
-                    i += 1
-            
-            items = self.table.table.get_children()
+
+            self.line_list = sum(new_line_list,[])
+
+            all_items = self.get_item(all=True)
             
             self.table_reload()
-            self.table.table.selection_set(items[0])
-            self.table.table.see(items[0])
+            self.table.table.selection_set(all_items[0])
+            self.table.table.see(all_items[0])
             self.plot(keep_view=False)
             return 1
 
 
     def offset_origin(self, offset_ox, offset_oy):
-        table_item_list = self.table.table.get_children()
-        i = 0
-        while i < len(table_item_list):
-            temp_item_num = table_item_list[i]
-            line_num = self.line_num_list[item2num(temp_item_num)]
-            temp_line_object = self.line_list[line_num]
-            temp_line_object.reset_point(temp_line_object.x_dxf, temp_line_object.y_dxf, offset_ox, offset_oy)
-            temp_line_object.update()
-            i += 1   
+        all_items = self.get_item(all=True)
+        
+        for item in all_items:
+            index = self.get_index_from_item(item)
+            line = self.line_list[index]
+            line.reset_point(line.x_dxf, line.y_dxf, offset_ox, offset_oy)
+            line.update() 
         self.table_reload()
         self.plot()
     
     def set_remove_self_collision(self, val):
-        alaivable_line_num_list = np.array(np.array(self.line_num_list.copy())[np.where(np.array(self.line_num_list.copy()) >= 0)])
+        all_items = self.get_item(all=True)
         
-        i = 0
-        j = 0
-        while i < len(self.line_num_list):
-            if self.line_num_list[i] >= 0:
-                temp_num = alaivable_line_num_list[j]
-                temp_line = self.line_list[temp_num]
-                temp_line.remove_self_collision = val
-                j += 1
-                i += 1
-            else:
-                i += 1    
+        for item in all_items:
+            index = self.get_index_from_item(item)
+            line = self.line_list[index]
+            line.remove_self_collision = val
 
     def check_self_collision(self):
-        alaivable_line_num_list = np.array(np.array(self.line_num_list.copy())[np.where(np.array(self.line_num_list.copy()) >= 0)])
-        col_line_num_list = []
+        all_items = self.get_item(all=True)
+        col_line_nums = []
         
-        i = 0
-        j = 0
-        while i < len(self.line_num_list):
-            if self.line_num_list[i] >= 0:
-                temp_num = alaivable_line_num_list[j]
-                temp_line = self.line_list[temp_num]
-                temp_line.update()
-                
-                if temp_line.self_collision == True:
-                    col_line_num_list.append(temp_num)
-                j += 1
-                i += 1
-            else:
-                i += 1
-                
+        for item in all_items:
+            index = self.get_index_from_item(item)
+            line = self.line_list[index]
+            line.update()
+            
+            if line.self_collision == True:
+                col_line_nums.append(line.num)
+
         self.table_reload()
         self.plot()
-        return col_line_num_list
+        return col_line_nums
     
 
 ###############   dxf_fileクラス   ここまで　　    　#########################################################################################

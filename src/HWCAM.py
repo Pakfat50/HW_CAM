@@ -502,30 +502,30 @@ def Reverse(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):
 
 
 def Merge_line(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):
-    result_list, line_num_list = dxf_obj.Merge_Selected_line()
-    if len(result_list) >= 2:
+    results, line_nums = dxf_obj.Merge_Selected_line()
+    if len(results) >= 2:
         i = 1
-        while i < len(result_list):
-            if result_list[i] == True:
-                messeage_window.set_messeage("%sの%s番目のラインに%s番目のラインを結合しました。\n"%(name,line_num_list[0],line_num_list[i]))
+        while i < len(results):
+            if results[i] == True:
+                messeage_window.set_messeage("%sの%s番目のラインに%s番目のラインを結合しました。\n"%(name,line_nums[0],line_nums[i]))
             else:
-                messeage_window.set_messeage("%sの%s番目のラインを結合できませんでした。ライン端点が接しているかを確認してください。\n"%(name,line_num_list[i]))
+                messeage_window.set_messeage("%sの%s番目のラインを結合できませんでした。ライン端点が接しているかを確認してください。\n"%(name,line_nums[i]))
             i += 1
     else:
-        messeage_window.set_messeage("%sで２本以上のラインを選択して下さい。%s本のラインが選択されています。\n"%(name,len(line_num_list)))
+        messeage_window.set_messeage("%sで２本以上のラインを選択して下さい。%s本のラインが選択されています。\n"%(name,len(line_nums)))
         
     if chkValue.get():
-        x_result_list, x_line_num_list = x_dxf_obj.Merge_Selected_line()
-        if len(x_result_list) >= 2:
+        x_results, x_line_nums = x_dxf_obj.Merge_Selected_line()
+        if len(x_results) >= 2:
             i = 1
-            while i < len(x_result_list):
-                if x_result_list[i] == True:
-                    messeage_window.set_messeage("%sの%s番目のラインに%s番目のラインを結合しました。\n"%(x_name,x_line_num_list[0],x_line_num_list[i]))
+            while i < len(x_results):
+                if x_results[i] == True:
+                    messeage_window.set_messeage("%sの%s番目のラインに%s番目のラインを結合しました。\n"%(x_name,x_line_nums[0],x_line_nums[i]))
                 else:
-                    messeage_window.set_messeage("%sの%s番目のラインを結合できませんでした。ライン端点が接しているかを確認してください。\n"%(x_name,x_line_num_list[i]))
+                    messeage_window.set_messeage("%sの%s番目のラインを結合できませんでした。ライン端点が接しているかを確認してください。\n"%(x_name,x_line_nums[i]))
                 i += 1
         else:
-            messeage_window.set_messeage("%sで２本以上のラインを選択して下さい。%s本のラインが選択されています。\n"%(x_name,len(x_line_num_list)))
+            messeage_window.set_messeage("%sで２本以上のラインを選択して下さい。%s本のラインが選択されています。\n"%(x_name,len(x_line_nums)))
         
         
 def delete_line(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):
@@ -694,9 +694,8 @@ def Set_CutSpeed(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, entry_MachDist,
     entry_CS_value = entry_CS.get()   
     CutSpeedDef = cb_CSDef.get()    
 
-    # 削除済みの線は、インデックスが-1となっているので、有効な線（インデックスが0以上の線）のみを抽出する
-    a_line_num_list0 = np.array(np.array(dxf_obj0.line_num_list.copy())[np.where(np.array(dxf_obj0.line_num_list.copy()) >= 0)])
-    a_line_num_list1 = np.array(np.array(dxf_obj1.line_num_list.copy())[np.where(np.array(dxf_obj1.line_num_list.copy()) >= 0)])
+    all_items0 = dxf_obj0.get_item(all=True)
+    all_items1 = dxf_obj1.get_item(all=True)
     
     try:
         Z_XY = float(entry_XYDist_value)
@@ -704,14 +703,11 @@ def Set_CutSpeed(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, entry_MachDist,
         Z_Mach = float(entry_MachDist_value)
         CutSpeed = float(entry_CS_value)
                     
-        if len(a_line_num_list0) == len(a_line_num_list1):
+        if len(all_items0) == len(all_items1):
             i = 0
-            while i < len(a_line_num_list0):
-                line_num0 = a_line_num_list0[i]
-                line_num1 = a_line_num_list1[i]
-                
-                line0 = dxf_obj0.line_list[line_num0]
-                line1 = dxf_obj1.line_list[line_num1]
+            while i < len(all_items0):
+                line0 = dxf_obj0.line_list[i]
+                line1 = dxf_obj1.line_list[i]
                 
                 line0_length = line0.get_length()
                 line1_length = line1.get_length()
@@ -725,12 +721,10 @@ def Set_CutSpeed(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, entry_MachDist,
                 i += 1
 
         else:
-            for num0 in a_line_num_list0:
-                line0 = dxf_obj0.line_list[num0]
+            for line0 in dxf_obj0.line_list:
                 line0.set_cutspeed(CutSpeed, CutSpeed)
                 
-            for num1 in a_line_num_list1:
-                line1 = dxf_obj1.line_list[num1]
+            for line1 in dxf_obj1.line_list:
                 line1.set_cutspeed(CutSpeed, CutSpeed)
                 
         dxf_obj0.table_reload()
@@ -759,25 +753,22 @@ def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, e
         remove_self_collision = False
         dxf_obj0.set_remove_self_collision(False)
         dxf_obj1.set_remove_self_collision(False)    
+        
+    all_items0 = dxf_obj0.get_item(all=True)
+    all_items1 = dxf_obj1.get_item(all=True)
 
-    # 削除済みの線は、インデックスが-1となっているので、有効な線（インデックスが0以上の線）のみを抽出する
-    a_line_num_list0 = np.array(np.array(dxf_obj0.line_num_list.copy())[np.where(np.array(dxf_obj0.line_num_list.copy()) >= 0)])
-    a_line_num_list1 = np.array(np.array(dxf_obj1.line_num_list.copy())[np.where(np.array(dxf_obj1.line_num_list.copy()) >= 0)])
-    
     try:
         Z_XY = float(entry_XYDist_value)
         Z_UV = float(entry_UVDist_value)
         Z_Mach = float(entry_MachDist_value)
         CutSpeed = float(entry_CS_value)
                     
-        if len(a_line_num_list0) == len(a_line_num_list1):
+        if len(all_items0) == len(all_items1):
             i = 0
-            while i < len(a_line_num_list0):
-                line_num0 = a_line_num_list0[i]
-                line_num1 = a_line_num_list1[i]
-                
-                line0 = dxf_obj0.line_list[line_num0]
-                line1 = dxf_obj1.line_list[line_num1]
+            while i < len(all_items0):
+
+                line0 = dxf_obj0.line_list[i]
+                line1 = dxf_obj1.line_list[i]
                 
                 line0_length = line0.get_length()
                 line1_length = line1.get_length()
@@ -817,7 +808,7 @@ def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, e
                 
             messeage_window.set_messeage("オフセット値を更新しました。\n")
         else:
-            messeage_window.set_messeage("XY座標とUV座標でライン数が一致しません。XY：%s本，UV：%s本\n"%(len(a_line_num_list0),len(a_line_num_list1)))
+            messeage_window.set_messeage("XY座標とUV座標でライン数が一致しません。XY：%s本，UV：%s本\n"%(len(all_items0),len(all_items1)))
 
     except:
         traceback.print_exc()
@@ -869,9 +860,9 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
         #Ver2.0　変更 Gコード出力形式
         code_line_list.append("G00 X%f Y%f U%f V%f\n"%(ox, oy, ox, oy))
         
-        a_line_num_list0 = np.array(np.array(dxf_obj0.line_num_list.copy())[np.where(np.array(dxf_obj0.line_num_list.copy()) >= 0)])
-        a_line_num_list1 = np.array(np.array(dxf_obj1.line_num_list.copy())[np.where(np.array(dxf_obj1.line_num_list.copy()) >= 0)])
-
+        all_items0 = dxf_obj0.get_item(all=True)
+        all_items1 = dxf_obj1.get_item(all=True)
+        
         x_array = np.array([ox])
         y_array = np.array([oy])
         u_array = np.array([ox])
@@ -886,14 +877,11 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
         uv_offset_dist = []
         
         if temp_error_flg == False:
-            if len(a_line_num_list0) == len(a_line_num_list1):
+            if len(all_items0) == len(all_items1):
                 i = 0
-                while i < len(a_line_num_list0):
-                    line_num0 = a_line_num_list0[i]
-                    line_num1 = a_line_num_list1[i]
-                    
-                    line0 = dxf_obj0.line_list[line_num0]
-                    line1 = dxf_obj1.line_list[line_num1]
+                while i < len(all_items1):
+                    line0 = dxf_obj0.line_list[i]
+                    line1 = dxf_obj1.line_list[i]
                     
                     line0_length = line0.get_length()
                     line1_length = line1.get_length()
@@ -910,7 +898,7 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
                     cs_xy = line0.cutspeed_mech
                     cs_uv = line1.cutspeed_mech
                     
-                    if (i != 0) and (i != len(a_line_num_list0)):
+                    if (i != 0) and (i != len(all_items0)):
                         # 始点と終点以外は、フィレット補完する
                         l0_x = [x_array[-2], x_array[-1]]
                         l0_y = [y_array[-2], y_array[-1]]
@@ -981,7 +969,7 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
                 messeage_window.set_messeage("Gコード生成成功。%sで保存しました。\n"%Output_FileName)
             
             else:
-                messeage_window.set_messeage("XY座標とUV座標でライン数が一致しません。XY：%s本，UV：%s本\n"%(len(a_line_num_list0),len(a_line_num_list1)))
+                messeage_window.set_messeage("XY座標とUV座標でライン数が一致しません。XY：%s本，UV：%s本\n"%(len(all_items0),len(all_items1)))
         if temp_error_flg == True:
             messeage_window.set_messeage("入力値に誤りがあります。Gコード生成を中止しました。\n\n")
     except:
@@ -1042,17 +1030,15 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
         if dl < 0.1:
             dl = 0.1
         
-        a_line_num_list0 = np.array(np.array(dxf_obj0.line_num_list.copy())[np.where(np.array(dxf_obj0.line_num_list.copy()) >= 0)])
-        a_line_num_list1 = np.array(np.array(dxf_obj1.line_num_list.copy())[np.where(np.array(dxf_obj1.line_num_list.copy()) >= 0)])
+        all_items0 = dxf_obj0.get_item(all=True)
+        all_items1 = dxf_obj1.get_item(all=True)
         
-        if len(a_line_num_list0) == len(a_line_num_list1):
+        if len(all_items0) == len(all_items1):
             i = 0
-            while i < len(a_line_num_list0):
-                line_num0 = a_line_num_list0[i]
-                line_num1 = a_line_num_list1[i]
-                
-                line0 = dxf_obj0.line_list[line_num0]
-                line1 = dxf_obj1.line_list[line_num1]
+            while i < len(all_items0):
+
+                line0 = dxf_obj0.line_list[i]
+                line1 = dxf_obj1.line_list[i]
                 
                 line0_length = line0.get_length()
                 line1_length = line1.get_length()
@@ -1069,7 +1055,7 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
                 x, y = generate_arc_length_points(line0, N)
                 u, v = generate_arc_length_points(line1, N)
                 
-                if (i != 0) and (i != len(a_line_num_list0)):
+                if (i != 0) and (i != len(all_items0)):
                     # 始点と終点以外は、フィレット補完する
                     l0_x = [x_array[-2], x_array[-1]]
                     l0_y = [y_array[-2], y_array[-1]]
@@ -1177,7 +1163,7 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
                 messeage_window.set_messeage("【警告】\nUV面距離が駆動面距離に対して%s mm 長いです。\n入力値を確認してください。\n\n"%(Z_UV - Z_Mach))
             
         else:
-            messeage_window.set_messeage("XY座標とUV座標でライン数が一致しません。XY：%s本，UV：%s本\n"%(len(a_line_num_list0), len(a_line_num_list1)))
+            messeage_window.set_messeage("XY座標とUV座標でライン数が一致しません。XY：%s本，UV：%s本\n"%(len(all_items0), len(all_items1)))
         
     except:
         traceback.print_exc()

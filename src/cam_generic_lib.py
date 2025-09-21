@@ -135,6 +135,7 @@ def offset_line(x, y, d, cut_dir, interp_mode): #ver2.2 interp_mode 追加　ポ
             
         else:
             i = 0
+            x, y = removeSamePoint(x, y)
             while i < len(x):
                 if i == 0:
                     k = np.arctan2((y[1]-y[0]), (x[1]-x[0]))

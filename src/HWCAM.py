@@ -446,14 +446,6 @@ def Enable3dPathCheck(is3dPathCheck, messeage_window):
 
 
 
-def swap_line(dxf_obj, messeage_window):
-    selected_items = dxf_obj.Swap_Selected_line()
-    if len(selected_items) == 2:
-        messeage_window.set_messeage("%sと%s番目のラインを入れ替えました。\n"%(item2num(selected_items[0]), item2num(selected_items[1])))
-    else:
-        messeage_window.set_messeage("２つのラインを選択して下さい。%s本のラインが選択されています。\n"%len(selected_items))
-
-
 def Change_CutDir(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):
     dxf_obj.Change_CutDir()
     messeage_window.set_messeage("%sのカット方向を逆転\n"%name)
@@ -462,15 +454,6 @@ def Change_CutDir(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):
         messeage_window.set_messeage("%sのカット方向を逆転\n"%x_name)
     
     
-
-def Change_OffsetDir(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):
-    dxf_obj.Change_OffsetDir()
-    messeage_window.set_messeage("%sのオフセット方向を逆転\n"%name)
-    if chkValue.get():
-        x_dxf_obj.Change_OffsetDir()
-        messeage_window.set_messeage("%sのオフセット方向を逆転\n"%x_name)
-    
-
 def AutoLineSort(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window): 
     try:
         ret = dxf_obj.SortLine()      
@@ -527,7 +510,18 @@ def Merge_line(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):
         else:
             messeage_window.set_messeage("%sで２本以上のラインを選択して下さい。%s本のラインが選択されています。\n"%(x_name,len(x_line_nums)))
         
-        
+  
+def separate_line(dxf_obj, name, messeage_window):
+    result, line_nums, point_index = dxf_obj.Separate_line()
+    if result == True:
+        messeage_window.set_messeage("%sで%s番目のラインを分割し、%s番目のラインを作成しました\n"%(name,line_nums[0], line_nums[1]))
+    
+    else:
+        if not (len(line_nums) == 1):
+            messeage_window.set_messeage("%sで%s本のラインが選択されています。1本のみ選択してださい\n"%(name,len(line_nums)))
+        else:
+            messeage_window.set_messeage("%sで分割点を選択してださい\n"%name)
+    
 def delete_line(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):
     dxf_obj.delete_Selected_line()
     messeage_window.set_messeage("%sの選択したラインを削除しました。\n"%name)
@@ -1532,10 +1526,14 @@ if __name__ == "__main__":
     #【X-Yラインテーブル用　ライン結合ボタン】
     SwapBtn0 = tk.Button(root, text="ライン結合", width =15, bg = "#4ba3fb", command = lambda: Merge_line(dxf0, dxf1, chkValue, "XY面", "UV面", MessageWindow))
     SwapBtn0.place(x=855, y=465) 
-        
+    
+    #【X-Yラインテーブル用　ライン分割ボタン】    
+    SeparateBtn0 = tk.Button(root, text="ライン分割", width = 15, bg = "#b45c04", command = lambda: separate_line(dxf0, "XY面", MessageWindow))
+    SeparateBtn0.place(x=990, y=465)
+
     #【X-Yラインテーブル用　ライン削除ボタン】    
     DelateBtn0 = tk.Button(root, text="ライン削除", width = 15, bg = "#ff6347", command = lambda: delete_line(dxf0, dxf1, chkValue, "XY面", "UV面", MessageWindow))
-    DelateBtn0.place(x=990, y=465)
+    DelateBtn0.place(x=1125, y=465)
   
   
     #【U-Vラインテーブル用　カット方向入れ替えボタン】    
@@ -1550,14 +1548,17 @@ if __name__ == "__main__":
     ReverseBtn1 = tk.Button(root, text="カット順逆転", width =15, bg = "#3cb371", command = lambda: Reverse(dxf1, dxf0, chkValue, "UV面", "XY面", MessageWindow))
     ReverseBtn1.place(x=1525, y=435)   
     
-    
     #【U-Vラインテーブル用　ライン結合ボタン】    
     DelateBtn1 = tk.Button(root, text="ライン結合", width = 15, bg = "#4ba3fb" , command = lambda: Merge_line(dxf1, dxf0, chkValue, "UV面", "XY面", MessageWindow))
     DelateBtn1.place(x=1255, y=465)   
  
+    #【U-Vラインテーブル用　ライン分割ボタン】    
+    SeparateBtn1 = tk.Button(root, text="ライン分割", width = 15, bg = "#b45c04", command = lambda: separate_line(dxf1, "UV面", MessageWindow))
+    SeparateBtn1.place(x=1390, y=465) 
+    
     #【U-Vラインテーブル用　ライン削除ボタン】    
     DelateBtn1 = tk.Button(root, text="ライン削除", width = 15, bg = "#ff6347" , command = lambda: delete_line(dxf1, dxf0, chkValue, "UV面", "XY面", MessageWindow))
-    DelateBtn1.place(x=1390, y=465)
+    DelateBtn1.place(x=1525, y=465)
     
 
     #Ver2.0 変更　WorkDistWntryを追加

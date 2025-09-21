@@ -12,6 +12,7 @@ import ezdxf as ez
 import numpy as np
 from matplotlib import pyplot as plt
 import traceback
+import copy
 
 # 内部ライブラリ
 from cam_generic_lib import *
@@ -251,6 +252,7 @@ class dxf_file:
         self.name = name
         self.line_list = []
         self.selected_point = selected_point(np.nan, np.nan, None)
+        self.line_num_max = 0
     
     
     def load_file(self, filename, is_refine):
@@ -289,7 +291,7 @@ class dxf_file:
             items = self.table.table.get_children()
         else:
             items = self.table.table.selection()
-        return items        
+        return items
     
     def get_item_from_index(self, indexs):
         if isinstance(indexs, str) == True:
@@ -372,7 +374,8 @@ class dxf_file:
                 k += 1
             j += 1
             
-
+        self.line_num_max = i+k
+        
     def table_reload(self):
         all_items = self.get_item(all=True)
         
@@ -477,9 +480,11 @@ class dxf_file:
             line = self.line_list[index]
             line.offset_dist = offset_dist
             line.update()
-
+        
+        self.selected_point.reset()
         self.table_reload()
         self.plot()
+    
     
     def Change_CutDir(self):
         items = self.get_item()
@@ -492,34 +497,10 @@ class dxf_file:
             line.update()
             self.table.table.item(item, values=(line.num, format(line.offset_dist, '.4f'), \
                                                          line.line_type, format(line.cutspeed_work,'.2f')))
-        self.table_reload()
-        self.plot()
-    
-    
-    def Change_OffsetDir(self):
-        items = self.get_item()
-        
-        for item in items:
-            index = self.get_index_from_item(item)
-            line = self.line_list[index]
-            line.toggle_offset_dir()
-            line.update()
-            self.table.table.item(item, values=(line.num, format(line.offset_dist, '.4f'), \
-                                                         line.line_type, format(line.cutspeed_work,'.2f')))  
+        self.selected_point.reset()
         self.table_reload()
         self.plot()
 
-
-    def Swap_Selected_line(self):
-        items = self.get_item()
-        
-        if len(items) == 2:
-            indexs = self.get_index_from_item(items)
-            self.line_list[indexs[0]], self.line_list[indexs[1]] = self.line_list[indexs[1]], self.line_list[indexs[0]]   
-            self.table_reload()
-            self.plot()
-        return indexs
-    
 
     def Merge_Selected_line(self):
         items = self.get_item()
@@ -601,6 +582,7 @@ class dxf_file:
                 
                 results.append(result)
                 i += 1
+            self.selected_point.reset()
             self.table_reload()
             self.plot()
         elif len(items) == 1:
@@ -610,38 +592,83 @@ class dxf_file:
             
         return results, line_nums
     
-    """
+    
     def Separate_line(self):
-        selected_item = self.table.table.selection()
+        result = False
+        items = self.get_item()
+        line_nums = []
+        for item in items:
+            index = self.get_index_from_item(item)
+            line = self.line_list[index]
+            line_nums.append(line.num)
+        point_index = self.selected_point.index
         
-        if len(selected_items) == 1: 
+        if (len(items) == 1) and (not(point_index == None)): 
+            index_org = self.get_index_from_item(items)[0]
+            line_org = self.line_list[index_org]
+
+            x_org = line_org.x_dxf.tolist()
+            y_org = line_org.y_dxf.tolist()
             
-            result = self.Merge_line(selected_items[0], selected_items[i])
-            self.delete_line(selected_items[i])
-
-
+            if not(line_org.cut_dir == 'F'):
+                point_index = len(x_org) - point_index -1
+            
+            x1 = x_org[:point_index+1]
+            y1 = y_org[:point_index+1]
+            x2 = x_org[point_index:]
+            y2 = y_org[point_index:]
+            
+            x1, y1 = removeSamePoint(x1, y1)
+            x2, y2 = removeSamePoint(x2, y2)
+            
+            line1 = copy.deepcopy(line_org)
+            line2 = copy.deepcopy(line_org)
+            
+            line1.reset_point(x1, y1, line_org.offset_ox, line_org.offset_oy)
+            line2.reset_point(x2, y2, line_org.offset_ox, line_org.offset_oy)
+            
+            num_new = self.line_num_max + 1
+            self.line_num_max = num_new  
+            line_nums.append(num_new)
+            
+            if line_org.cut_dir == 'F':
+                self.line_list[index_org] = line1
+                line2.num = num_new
+                self.add_line(items, line2)
+            else:
+                self.line_list[index_org] = line2
+                line1.num = num_new
+                self.add_line(items, line1)
+            
+            self.selected_point.reset()
             self.table_reload()
             self.plot()
-            
-        else:
-            result_list = []
-            
-        return result_list        
-    """
+            result = True
+
+        return result, line_nums, point_index
+
     
     def delete_Selected_line(self):
         items = self.get_item()
         for item in items:
             self.delete_line(item)           
+        self.selected_point.reset()
         self.table_reload()
         self.plot()
         
         
     def delete_line(self, item):
-        index = self.get_index_from_item(item)     
+        index = self.get_index_from_item(item)
         self.line_list.pop(index)
         self.table.table.delete(item)
     
+    def add_line(self, item, line):
+        index = self.get_index_from_item(item)[0]
+        insert_index = index+1
+        
+        self.line_list.insert(insert_index, line)
+        self.table.table.insert("",  insert_index, values=(line.num, format(line.offset_dist, '.4f'),\
+                                                   line.line_type, format(line.cutspeed_work,'.2f')))
     
     def reverse_all(self):
         items = self.get_item(all = True)
@@ -653,6 +680,7 @@ class dxf_file:
             line.toggle_cut_dir()
             line.toggle_offset_dir()
         
+        self.selected_point.reset()
         self.table_reload()
         self.plot()
         
@@ -773,6 +801,7 @@ class dxf_file:
 
             all_items = self.get_item(all=True)
             
+            self.selected_point.reset()
             self.table_reload()
             self.table.table.selection_set(all_items[0])
             self.table.table.see(all_items[0])
@@ -788,6 +817,8 @@ class dxf_file:
             line = self.line_list[index]
             line.reset_point(line.x_dxf, line.y_dxf, offset_ox, offset_oy)
             line.update() 
+        
+        self.selected_point.reset()
         self.table_reload()
         self.plot()
     

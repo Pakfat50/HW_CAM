@@ -160,6 +160,9 @@ class line_object:
         self.offset_oy = offset_oy
         self.x_raw = np.array(x_points) + offset_ox
         self.y_raw = np.array(y_points) + offset_oy
+        if self.cut_dir == 'R':
+            self.x_raw = self.x_raw[::-1]
+            self.y_raw = self.y_raw[::-1]
         self.st = np.array([x_points[0], y_points[0]]) + offset_ox
         self.ed = np.array([x_points[-1], y_points[-1]]) + offset_oy
         self.N = max(len(x_points), len(y_points))
@@ -178,7 +181,7 @@ class line_object:
         
         
     def set_offset_dist(self, offset_dist):
-        try:             
+        try:
             self.offset_dist = float(offset_dist)
             if self.offset_dir == "I":
                 self.x, self.y = offset_line(self.x_raw, self.y_raw, self.offset_dist, self.interp_mode) 

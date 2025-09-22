@@ -166,48 +166,41 @@ class line_object:
         self.x = np.array(x_points) + offset_ox
         self.y = np.array(y_points) + offset_oy
         self.self_collision = False
-
-    
-    def update(self):
-        if self.cut_dir == "R":
-            temp_x = self.x_raw[::-1]
-            temp_y = self.y_raw[::-1]
-        else:
-            temp_x = self.x_raw
-            temp_y = self.y_raw
-        
-        if self.offset_dir == "I":
-            self.x, self.y = offset_line(temp_x, temp_y, self.offset_dist, self.cut_dir, self.interp_mode) 
-        else:
-            self.x, self.y = offset_line(temp_x, temp_y, -self.offset_dist, self.cut_dir, self.interp_mode) 
-        
-        
-        if self.remove_self_collision == True:
-            self_col = True
-            detection = False
-            temp_x = self.x
-            temp_y = self.y
-            
-            while self_col == True:
-                temp_x, temp_y, self_col = remove_self_collision(temp_x, temp_y)
-                if self_col == True:
-                    detection = True
-        
-            self.x = temp_x
-            self.y = temp_y
-            self.self_collision = detection
+        self.set_cut_dir(self.cut_dir)
+        self.set_offset_dist(self.offset_dist)
         
     
     def set_offset_dir(self, offset_dir):
         if offset_dir == 'O' or offset_dir == 'I':
-            self.offset_dir = offset_dir
-            self.update()
+            if not(self.offset_dir == offset_dir):
+                self.offset_dir = offset_dir
+                self.set_offset_dist(self.offset_dist)
         
         
     def set_offset_dist(self, offset_dist):
         try:             
             self.offset_dist = float(offset_dist)
-            self.update()
+            if self.offset_dir == "I":
+                self.x, self.y = offset_line(self.x_raw, self.y_raw, self.offset_dist, self.interp_mode) 
+            else:
+                self.x, self.y = offset_line(self.x_raw, self.y_raw, -self.offset_dist, self.interp_mode) 
+            
+            
+            if self.remove_self_collision == True:
+                self_col = True
+                detection = False
+                temp_x = self.x
+                temp_y = self.y
+                
+                while self_col == True:
+                    temp_x, temp_y, self_col = remove_self_collision(temp_x, temp_y)
+                    if self_col == True:
+                        detection = True
+            
+                self.x = temp_x
+                self.y = temp_y
+                self.self_collision = detection
+        
         except:
             traceback.print_exc()
             output_log(traceback.format_exc())
@@ -216,8 +209,13 @@ class line_object:
     
     def set_cut_dir(self, cut_dir):
         if cut_dir == 'F' or cut_dir == 'R':
-            self.cut_dir = cut_dir
-            self.update()
+            if not(self.cut_dir == cut_dir):
+                self.cut_dir = cut_dir
+                self.x_raw = self.x_raw[::-1]
+                self.y_raw = self.y_raw[::-1]
+                self.x = self.x[::-1]
+                self.y = self.y[::-1]
+                
         
             
     def set_cutspeed(self, cutspeed_work, cutspeed_mech):
@@ -236,17 +234,11 @@ class line_object:
     
     def toggle_cut_dir(self):
         if self.cut_dir == "F":
-            self.cut_dir = "R"
+            cut_dir = "R"
         else:
-            self.cut_dir = "F"
-    
-    
-    def toggle_offset_dir(self):
-        if self.offset_dir == "O":
-            self.offset_dir = "I"
-        else:
-            self.offset_dir = "O"
-
+            cut_dir = "F"
+        self.set_cut_dir(cut_dir)
+        
         
     def calc_length_array(self, mode = "offset"):
         

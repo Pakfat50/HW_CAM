@@ -271,6 +271,7 @@ class dxf_file:
         if AUTOSORT_WHEN_LOADFILE == True:
             self.SortLine()
             self.reset_line_num()
+            self.plot(keep_view=False)
         else:
             self.plot(keep_view=False)
 
@@ -278,7 +279,6 @@ class dxf_file:
     def reset_line_num(self):
         i = 0
         for line in self.line_list:
-            print(line.num)
             line.num = i
             i += 1
         self.table_reload()
@@ -407,7 +407,6 @@ class dxf_file:
         i = 0
         while i < len(self.line_list):
             line = self.line_list[i]
-            line.update()
             if line.line_type == "line":
                 col = "b"
             else:
@@ -428,12 +427,9 @@ class dxf_file:
             X,Y = line.x[0], line.y[0]
             U,V = line.x[1], line.y[1]
             self.ax.quiver(X,Y,U-X,V-Y,color = col, alpha = alpha_vect)
-            if line.cut_dir == "F":
-                X,Y = line.x_raw[0], line.y_raw[0]
-                U,V = line.x[0], line.y[0]
-            else:
-                X,Y = line.x_raw[-1], line.y_raw[-1]
-                U,V = line.x[0], line.y[0]            
+            X,Y = line.x_raw[0], line.y_raw[0]
+            U,V = line.x[0], line.y[0]
+            
             if norm(X,Y,U,V) != 0:
                 self.ax.quiver(X,Y,U-X,V-Y,color = "y", alpha = alpha_offset) #ver2.2 バグ修正 Y を y に変更
   
@@ -488,13 +484,36 @@ class dxf_file:
         for item in all_items:
             index = self.get_index_from_item(item)
             line = self.line_list[index]
-            line.offset_dist = offset_dist
-            line.update()
+            line.set_offset_dist(offset_dist)
         
         self.selected_point.reset()
         self.table_reload()
         self.plot()
     
+    def remove_line_collision(self, reload = True):
+        all_items = self.get_item(all=True)
+
+        i = 0
+        while i < len(all_items)-1:
+            index1 = self.get_index_from_item(all_items[i])
+            index2 = self.get_index_from_item(all_items[i+1])
+            line1 = self.line_list[index1]
+            line2 = self.line_list[index2]
+            x1 = line1.x
+            y1 = line1.y
+            x2 = line2.x
+            y2 = line2.y
+            x1, y1, x2, y2 = remove_collision(x1, y1, x2, y2)
+            line1.x = x1
+            line1.y = y1
+            line2.x = x2
+            line2.y = y2
+            i += 1
+        
+        if reload == True:
+            self.selected_point.reset()
+            self.table_reload()
+            self.plot()            
     
     def Change_CutDir(self):
         items = self.get_item()
@@ -503,8 +522,6 @@ class dxf_file:
             index = self.get_index_from_item(item)
             line = self.line_list[index]
             line.toggle_cut_dir()
-            line.toggle_offset_dir()
-            line.update()
             self.table.table.item(item, values=(line.num, format(line.offset_dist, '.4f'), \
                                                          line.line_type, format(line.cutspeed_work,'.2f')))
         self.selected_point.reset()
@@ -691,7 +708,6 @@ class dxf_file:
             index = self.get_index_from_item(item)
             line = self.line_list[index]
             line.toggle_cut_dir()
-            line.toggle_offset_dir()
         
         self.selected_point.reset()
         self.table_reload()
@@ -818,7 +834,7 @@ class dxf_file:
             self.table_reload()
             self.table.table.selection_set(all_items[0])
             self.table.table.see(all_items[0])
-            self.plot(keep_view=False)
+            self.plot()
             return 1
 
 
@@ -829,7 +845,6 @@ class dxf_file:
             index = self.get_index_from_item(item)
             line = self.line_list[index]
             line.reset_point(line.x_dxf, line.y_dxf, offset_ox, offset_oy)
-            line.update() 
         
         self.selected_point.reset()
         self.table_reload()
@@ -850,11 +865,11 @@ class dxf_file:
         for item in all_items:
             index = self.get_index_from_item(item)
             line = self.line_list[index]
-            line.update()
             
             if line.self_collision == True:
                 col_line_nums.append(line.num)
 
+        self.remove_line_collision()
         self.table_reload()
         self.plot()
         return col_line_nums

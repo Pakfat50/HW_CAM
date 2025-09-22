@@ -9,6 +9,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from scipy import interpolate as intp
 from scipy.integrate import quad
+from scipy.optimize import fmin
 import os.path as op
 import os
 import sys
@@ -101,7 +102,7 @@ from error_log import *
 
 
 
-def offset_line(x, y, d, cut_dir, interp_mode): #ver2.2 interp_mode 追加　ポリラインの場合，オフセット点を中点ではなく，点列を使用するため
+def offset_line(x, y, d, interp_mode): #ver2.2 interp_mode 追加　ポリラインの場合，オフセット点を中点ではなく，点列を使用するため
     new_x = []
     new_y = []
     k = 0
@@ -792,3 +793,100 @@ def remove_self_collision(x, y):
         
     return new_x, new_y, detection
 
+
+def remove_collision(x1, y1, x2, y2):
+    # 前提：x1[-1] -> x2[0] と繋がる
+    x1, y1 = removeSamePoint(x1, y1)
+    x2, y2 = removeSamePoint(x2, y2)
+    
+    detection = False 
+    num1 = 0
+    num2 = 0
+    cx = 0
+    cy = 0
+    
+    i = 1
+    while (i < len(x1)) and (detection==False):
+        j = 1
+        p1 = [x1[i-1], y1[i-1]]
+        p2 = [x1[i], y1[i]]
+        while (j < len(x2)) and (detection==False):
+            p3 = [x2[j-1], y2[j-1]]
+            p4 = [x2[j], y2[j]]
+            if cross_judge(p1, p2, p3, p4) == True:
+                detection = True
+                num1 = i
+                num2 = j 
+                cx, cy = getCrossPointFromPoint(p1[0], p1[1], p3[0], p3[1], p2[0], p2[1], p4[0], p4[1])         
+            j += 1
+        i += 1
+        
+    if detection == True:
+        new_x1 = x1[:num1]
+        new_y1 = y1[:num1]
+        new_x2 = x2[num2:]
+        new_y2 = y2[num2:]
+        new_x1 = np.append(new_x1, cx)
+        new_y1 = np.append(new_y1, cy)
+        new_x2 = np.insert(new_x2, 0, cx)
+        new_y2 = np.insert(new_y2, 0, cy)
+        print(num1, num2, len(x1), len(x2))
+        return new_x1, new_y1, new_x2, new_y2
+    else:
+        return x1, y1, x2, y2
+    
+    
+    """
+    # 前提：x1[-1] -> x2[0] と繋がる
+    print(x1, x2)
+    l1 = get_spline_length_array(x1, y1)
+    l2 = get_spline_length_array(x2, y2)
+    u1 = l1/l1[-1]
+    u2 = l2/l2[-1]
+    
+    fx1 = intp.PchipInterpolator(u1, x1)
+    fy1 = intp.PchipInterpolator(u1, y1)
+    fx2 = intp.PchipInterpolator(u2, x2)
+    fy2 = intp.PchipInterpolator(u2, y2)
+    
+    def solver(s):
+        s1 = s[0]
+        s2 = s[1]
+        xp1 = fx1(s1)
+        yp1 = fy1(s1)
+        xp2 = fx2(s2)
+        yp2 = fy2(s2)
+
+        err = np.sqrt((xp1 - xp2)**2 + (yp1 - yp2)**2)
+        return err
+    
+    try:
+        u0 = [0.9, 0.1]
+        u_root = fmin(solver, x0 = u0, disp = 1)
+        err = solver(u_root)
+        u1_root = u_root[0]
+        u2_root = u_root[1]  
+        print(u1_root, u2_root)
+        if (err < 0.001) and (u1_root >= 0) and (u1_root <= 1) \
+            and (u2_root >= 0) and(u2_root <= 1) :
+
+            u1_new = u1[u1<u1_root]
+            u2_new = u2[u2>u2_root]
+            
+            u1_new = np.insert(u1_new, -1, u1_root)
+            u2_new = np.insert(u1_new, 0, u2_root)
+            print(u1_new, u2_new)
+            x1_new = fx1(u1_new)
+            y1_new = fy1(u1_new)
+            x2_new = fx2(u2_new)
+            y2_new = fy2(u2_new)
+            
+            return x1_new, y1_new, x2_new, y2_new
+        else:
+            return x1, y1, x2, y2
+    except:
+        traceback.print_exc()
+        output_log(traceback.format_exc())
+        return x1, y1, x2, y2
+        pass
+    """

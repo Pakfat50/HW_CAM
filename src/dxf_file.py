@@ -493,6 +493,7 @@ class dxf_file:
     
     def remove_line_collision(self):
         all_items = self.get_item(all=True)
+        line_nums = []
 
         i = 0
         while i < len(all_items)-1:
@@ -504,14 +505,17 @@ class dxf_file:
             y1 = line1.y
             x2 = line2.x
             y2 = line2.y
-            x1, y1, x2, y2 = remove_collision(x1, y1, x2, y2)
-            line1.x = x1
-            line1.y = y1
-            line2.x = x2
-            line2.y = y2
+            x1, y1, x2, y2, detection = remove_collision(x1, y1, x2, y2)
+            if detection == True:
+                line1.x = x1
+                line1.y = y1
+                line2.x = x2
+                line2.y = y2
+                line_nums.append([line1.num, line2.num])
             i += 1
 
         self.selected_point.reset()
+        return line_nums
 
     def Change_CutDir(self):
         items = self.get_item()
@@ -520,6 +524,7 @@ class dxf_file:
             index = self.get_index_from_item(item)
             line = self.line_list[index]
             line.toggle_cut_dir()
+            line.toggle_offset_dir()
             self.table.table.item(item, values=(line.num, format(line.offset_dist, '.4f'), \
                                                          line.line_type, format(line.cutspeed_work,'.2f')))
         self.selected_point.reset()
@@ -836,9 +841,9 @@ class dxf_file:
         self.selected_point.reset()
     
     
-    def check_self_collision(self):
+    def remove_collision(self):
         all_items = self.get_item(all=True)
-        col_line_nums = []
+        self_collision_line_nums = []
         
         for item in all_items:
             index = self.get_index_from_item(item)
@@ -846,10 +851,10 @@ class dxf_file:
             detection = line.remove_self_collision()
             
             if detection == True:
-                col_line_nums.append(line.num)
+                self_collision_line_nums.append(line.num)
 
-        self.remove_line_collision()
-        return col_line_nums
+        line_collision_nums = self.remove_line_collision()
+        return self_collision_line_nums, line_collision_nums
     
 
 ###############   dxf_fileクラス   ここまで　　    　#########################################################################################

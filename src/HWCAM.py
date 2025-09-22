@@ -468,9 +468,9 @@ def AutoLineSort(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):
             messeage_window.set_messeage("%sで%s本の線が選択されています。起点とする１本の線のみを選択してください。\n"%(name,ret))
         
         if chkValue.get():
-            x_ret.select_index(0)
             x_ret = x_dxf_obj.SortLine()
             if x_ret == 1:
+                x_dxf_obj.select_index(0)
                 x_dxf_obj.update()
                 messeage_window.set_messeage("%sを自動整列しました。\n"%x_name)
             else:
@@ -554,13 +554,16 @@ def Set_OffsetDist(dxf_obj, entry, x_dxf_obj, x_entry, chkValue, removeSelfColli
         offset_dist = float(entry_value)
         dxf_obj.set_offset_dist(offset_dist)
         messeage_window.set_messeage("%sのオフセット距離を%sに設定しました。\n"%(name, offset_dist))
+        
         if removeSelfCollisionValue.get():
-            self_collision_list = dxf_obj.check_self_collision()
+            self_collision_list, collision_line_list = dxf_obj.remove_collision()
             if len(self_collision_list) > 0:
-                temp_str = ""
                 for num in self_collision_list:
-                    temp_str += "%s "%num
-                messeage_window.set_messeage("%sの%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(name, temp_str))
+                    messeage_window.set_messeage("%sの%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(name, num))
+            if len(collision_line_list) > 0:
+                for nums in collision_line_list:
+                    messeage_window.set_messeage("%sの%s本目と%s本目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(name, nums[0], nums[1]))        
+        
         dxf_obj.update()
         
         if chkValue.get():
@@ -568,13 +571,16 @@ def Set_OffsetDist(dxf_obj, entry, x_dxf_obj, x_entry, chkValue, removeSelfColli
             x_offset_dist = float(x_entry_value)
             x_dxf_obj.set_offset_dist(x_offset_dist)
             messeage_window.set_messeage("%sのオフセット距離を%sに設定しました。\n"%(x_name, x_offset_dist))
+            
             if removeSelfCollisionValue.get():
-                x_self_collision_list = x_dxf_obj.check_self_collision()
+                x_self_collision_list, x_collision_line_list = x_dxf_obj.remove_collision()
                 if len(self_collision_list) > 0:
-                    x_temp_str = ""
                     for num in x_self_collision_list:
-                        x_temp_str += "%s "%num
-                    messeage_window.set_messeage("%sの%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(x_name, x_temp_str))
+                        messeage_window.set_messeage("%sの%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(x_name, num))
+            if len(x_collision_line_list) > 0:
+                for nums in x_collision_line_list:
+                    messeage_window.set_messeage("%sの%s本目と%s本目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(x_name, nums[0], nums[1]))        
+                                
             x_dxf_obj.update()
                 
     except:
@@ -780,20 +786,25 @@ def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, e
                 i += 1
             
             if removeSelfCollisionValue.get():
-                self_collision_list0 = dxf_obj0.check_self_collision()
-                self_collision_list1 = dxf_obj1.check_self_collision()
+                self_collision_list0, collision_line_list0 = dxf_obj0.remove_collision()
+                self_collision_list1, collision_line_list1 = dxf_obj1.remove_collision()
+                
                 if len(self_collision_list0) > 0:
-                    temp_str0 = ""
                     for num in self_collision_list0:
-                        temp_str0 += "%s "%num
-                    messeage_window.set_messeage("XY平面の%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%temp_str0)
+                        messeage_window.set_messeage("XY平面の%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%num)
+                
+                if len(collision_line_list0) > 0:
+                    for nums in collision_line_list0:
+                        messeage_window.set_messeage("XY平面の%s本目と%s本目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(nums[0], nums[1]))
                 
                 if len(self_collision_list1) > 0:
-                    temp_str1 = ""
                     for num in self_collision_list1:
-                        temp_str1 += "%s "%num
-                    messeage_window.set_messeage("UV平面の%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%temp_str1)
-                
+                        messeage_window.set_messeage("UV平面の%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%num)
+
+                if len(collision_line_list1) > 0:
+                    for nums in collision_line_list1:
+                        messeage_window.set_messeage("UV平面の%s本目と%s本目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(nums[0], nums[1]))
+                                
             dxf_obj0.update()
             dxf_obj1.update()
                 

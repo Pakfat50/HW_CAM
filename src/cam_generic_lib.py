@@ -830,7 +830,7 @@ def remove_collision(x1, y1, x2, y2):
         new_y1 = np.append(new_y1, cy)
         new_x2 = np.insert(new_x2, 0, cx)
         new_y2 = np.insert(new_y2, 0, cy)
-        return new_x1, new_y1, new_x2, new_y2
+        return new_x1, new_y1, new_x2, new_y2, detection
     else:
-        return x1, y1, x2, y2
+        return x1, y1, x2, y2, detection
     

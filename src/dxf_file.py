@@ -271,9 +271,6 @@ class dxf_file:
         if AUTOSORT_WHEN_LOADFILE == True:
             self.SortLine()
             self.reset_line_num()
-            self.plot(keep_view=False)
-        else:
-            self.plot(keep_view=False)
 
     
     def reset_line_num(self):
@@ -304,7 +301,7 @@ class dxf_file:
         return items
     
     def get_item_from_index(self, indexs):
-        if isinstance(indexs, str) == True:
+        if isinstance(indexs, int) == True:
             item = self.table.table.get_children()[indexs]
             return item
         else:
@@ -393,7 +390,7 @@ class dxf_file:
             index = self.get_index_from_item(item)
             line = self.line_list[index]
             self.table.table.item(item, values=(line.num, format(line.offset_dist, '.4f'), \
-                                                    line.line_type, format(line.cutspeed_work,'.2f')))
+                                                line.line_type, format(line.cutspeed_work,'.2f')))
 
     
     def plot(self, keep_view=True):
@@ -476,7 +473,12 @@ class dxf_file:
                 else:
                     self.x_table.sync_update = True
                     self.table.sync_update = True
-            
+    
+    
+    def update(self, keep_view=True):
+        self.table_reload()
+        self.plot(keep_view)        
+    
                 
     def set_offset_dist(self, offset_dist):
         all_items = self.get_item(all=True)
@@ -487,10 +489,9 @@ class dxf_file:
             line.set_offset_dist(offset_dist)
         
         self.selected_point.reset()
-        self.table_reload()
-        self.plot()
+
     
-    def remove_line_collision(self, reload = True):
+    def remove_line_collision(self):
         all_items = self.get_item(all=True)
 
         i = 0
@@ -509,12 +510,9 @@ class dxf_file:
             line2.x = x2
             line2.y = y2
             i += 1
-        
-        if reload == True:
-            self.selected_point.reset()
-            self.table_reload()
-            self.plot()            
-    
+
+        self.selected_point.reset()
+
     def Change_CutDir(self):
         items = self.get_item()
 
@@ -525,8 +523,6 @@ class dxf_file:
             self.table.table.item(item, values=(line.num, format(line.offset_dist, '.4f'), \
                                                          line.line_type, format(line.cutspeed_work,'.2f')))
         self.selected_point.reset()
-        self.table_reload()
-        self.plot()
 
 
     def Merge_Selected_line(self):
@@ -609,9 +605,9 @@ class dxf_file:
                 
                 results.append(result)
                 i += 1
+                
             self.selected_point.reset()
-            self.table_reload()
-            self.plot()
+
         elif len(items) == 1:
             results = [True]
         else:
@@ -671,8 +667,6 @@ class dxf_file:
                     self.add_line(items, line1)
                 
                 self.selected_point.reset()
-                self.table_reload()
-                self.plot()
                 result = True
 
         return result, line_nums, point_index
@@ -683,8 +677,6 @@ class dxf_file:
         for item in items:
             self.delete_line(item)           
         self.selected_point.reset()
-        self.table_reload()
-        self.plot()
         
         
     def delete_line(self, item):
@@ -710,9 +702,13 @@ class dxf_file:
             line.toggle_cut_dir()
         
         self.selected_point.reset()
-        self.table_reload()
-        self.plot()
-        
+    
+    
+    def select_index(self, index):
+        item = self.get_item_from_index(index)
+        self.table.table.selection_set(item)
+        self.table.table.see(item)      
+    
     
     def SortLine(self):
         items = self.get_item()
@@ -824,17 +820,8 @@ class dxf_file:
                         line.set_offset_dir('I')
                 i += 1
             
-            
-
             self.line_list = sum(new_line_list,[])
-
-            all_items = self.get_item(all=True)
-            
             self.selected_point.reset()
-            self.table_reload()
-            self.table.table.selection_set(all_items[0])
-            self.table.table.see(all_items[0])
-            self.plot()
             return 1
 
 
@@ -847,17 +834,8 @@ class dxf_file:
             line.reset_point(line.x_dxf, line.y_dxf, offset_ox, offset_oy)
         
         self.selected_point.reset()
-        self.table_reload()
-        self.plot()
     
-    def set_remove_self_collision(self, val):
-        all_items = self.get_item(all=True)
-        
-        for item in all_items:
-            index = self.get_index_from_item(item)
-            line = self.line_list[index]
-            line.remove_self_collision = val
-
+    
     def check_self_collision(self):
         all_items = self.get_item(all=True)
         col_line_nums = []
@@ -865,13 +843,12 @@ class dxf_file:
         for item in all_items:
             index = self.get_index_from_item(item)
             line = self.line_list[index]
+            detection = line.remove_self_collision()
             
-            if line.self_collision == True:
+            if detection == True:
                 col_line_nums.append(line.num)
 
         self.remove_line_collision()
-        self.table_reload()
-        self.plot()
         return col_line_nums
     
 

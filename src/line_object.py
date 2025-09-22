@@ -130,7 +130,6 @@ class line_object:
         self.y_raw = np.array(y_points)
         self.st = np.array([x_points[0], y_points[0]])
         self.ed = np.array([x_points[-1], y_points[-1]])
-        self.N = max(len(x_points), len(y_points))
         self.num = num
         self.offset_dist = 0
         self.offset_dir = "O"
@@ -141,8 +140,6 @@ class line_object:
         self.y = y_points
         self.offset_ox = 0
         self.offset_oy = 0
-        self.remove_self_collision = False
-        self.self_collision = False
         
         
     def reset_point(self, x_points, y_points, offset_ox, offset_oy, interp_mode = "cubic"):
@@ -165,11 +162,8 @@ class line_object:
             self.y_raw = self.y_raw[::-1]
         self.st = np.array([x_points[0], y_points[0]]) + offset_ox
         self.ed = np.array([x_points[-1], y_points[-1]]) + offset_oy
-        self.N = max(len(x_points), len(y_points))
         self.x = np.array(x_points) + offset_ox
         self.y = np.array(y_points) + offset_oy
-        self.self_collision = False
-        self.set_cut_dir(self.cut_dir)
         self.set_offset_dist(self.offset_dist)
         
     
@@ -188,27 +182,26 @@ class line_object:
             else:
                 self.x, self.y = offset_line(self.x_raw, self.y_raw, -self.offset_dist, self.interp_mode) 
             
-            
-            if self.remove_self_collision == True:
-                self_col = True
-                detection = False
-                temp_x = self.x
-                temp_y = self.y
-                
-                while self_col == True:
-                    temp_x, temp_y, self_col = remove_self_collision(temp_x, temp_y)
-                    if self_col == True:
-                        detection = True
-            
-                self.x = temp_x
-                self.y = temp_y
-                self.self_collision = detection
-        
         except:
             traceback.print_exc()
             output_log(traceback.format_exc())
             pass
     
+    def remove_self_collision(self):
+        self_col = True
+        detection = False
+        temp_x = self.x
+        temp_y = self.y
+        
+        while self_col == True:
+            temp_x, temp_y, self_col = remove_self_collision(temp_x, temp_y)
+            if self_col == True:
+                detection = True
+    
+        self.x = temp_x
+        self.y = temp_y
+        return detection
+        
     
     def set_cut_dir(self, cut_dir):
         if cut_dir == 'F' or cut_dir == 'R':

@@ -676,7 +676,7 @@ def generate_offset_interporate_point(l0_x, l0_y, l1_x, l1_y, l0_offset, l1_offs
     try:
         p2p_dist = norm(l0_x[1], l0_y[1], l1_x[0], l1_y[0])
         
-        if (p2p_dist > DIST_NEAR) and (p2p_dist < l0_offset *2) and (p2p_dist < l1_offset *2) :
+        if (p2p_dist > DIST_FILET) and (p2p_dist < l0_offset *2) and (p2p_dist < l1_offset *2) :
             
             # フィレットのRをオフセット距離から決定する（Rが大きいと、線端とフィレット補完点がオーバーラップしうるため、小さい方をRとする）
             r = min(l0_offset, l1_offset)
@@ -830,63 +830,7 @@ def remove_collision(x1, y1, x2, y2):
         new_y1 = np.append(new_y1, cy)
         new_x2 = np.insert(new_x2, 0, cx)
         new_y2 = np.insert(new_y2, 0, cy)
-        print(num1, num2, len(x1), len(x2))
         return new_x1, new_y1, new_x2, new_y2
     else:
         return x1, y1, x2, y2
     
-    
-    """
-    # 前提：x1[-1] -> x2[0] と繋がる
-    print(x1, x2)
-    l1 = get_spline_length_array(x1, y1)
-    l2 = get_spline_length_array(x2, y2)
-    u1 = l1/l1[-1]
-    u2 = l2/l2[-1]
-    
-    fx1 = intp.PchipInterpolator(u1, x1)
-    fy1 = intp.PchipInterpolator(u1, y1)
-    fx2 = intp.PchipInterpolator(u2, x2)
-    fy2 = intp.PchipInterpolator(u2, y2)
-    
-    def solver(s):
-        s1 = s[0]
-        s2 = s[1]
-        xp1 = fx1(s1)
-        yp1 = fy1(s1)
-        xp2 = fx2(s2)
-        yp2 = fy2(s2)
-
-        err = np.sqrt((xp1 - xp2)**2 + (yp1 - yp2)**2)
-        return err
-    
-    try:
-        u0 = [0.9, 0.1]
-        u_root = fmin(solver, x0 = u0, disp = 1)
-        err = solver(u_root)
-        u1_root = u_root[0]
-        u2_root = u_root[1]  
-        print(u1_root, u2_root)
-        if (err < 0.001) and (u1_root >= 0) and (u1_root <= 1) \
-            and (u2_root >= 0) and(u2_root <= 1) :
-
-            u1_new = u1[u1<u1_root]
-            u2_new = u2[u2>u2_root]
-            
-            u1_new = np.insert(u1_new, -1, u1_root)
-            u2_new = np.insert(u1_new, 0, u2_root)
-            print(u1_new, u2_new)
-            x1_new = fx1(u1_new)
-            y1_new = fy1(u1_new)
-            x2_new = fx2(u2_new)
-            y2_new = fy2(u2_new)
-            
-            return x1_new, y1_new, x2_new, y2_new
-        else:
-            return x1, y1, x2, y2
-    except:
-        traceback.print_exc()
-        output_log(traceback.format_exc())
-        return x1, y1, x2, y2
-        pass
-    """

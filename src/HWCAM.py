@@ -402,6 +402,7 @@ def load_file(dxf_obj, entry, isRefineValue, messeage_window):
     is_refine = isRefineValue.get()
     if file_chk(filename) == 1:
         dxf_obj.load_file(filename, is_refine)
+        dxf_obj.update(keep_view = False)
         if is_refine == True:
             messeage_window.set_messeage("%sを点列をリファインして読み込みました。\n"%filename)
         else:
@@ -420,7 +421,7 @@ def XY_UV_Link(chkValue, table_XY, table_UV, messeage_window):
         messeage_window.set_messeage("U-V画面をX-Y画面と連動\n")
     else:
         table_XY.set_sync(False)
-        table_UV.set_sync(False)       
+        table_UV.set_sync(False)   
         messeage_window.set_messeage("U-V画面とX-Y画面の連動を解除\n")
 
 
@@ -448,23 +449,29 @@ def Enable3dPathCheck(is3dPathCheck, messeage_window):
 
 def Change_CutDir(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):
     dxf_obj.Change_CutDir()
+    dxf_obj.update()
     messeage_window.set_messeage("%sのカット方向を逆転\n"%name)
     if chkValue.get():
         x_dxf_obj.Change_CutDir()
+        x_dxf_obj.update()
         messeage_window.set_messeage("%sのカット方向を逆転\n"%x_name)
     
     
 def AutoLineSort(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window): 
     try:
-        ret = dxf_obj.SortLine()      
+        ret = dxf_obj.SortLine()    
         if ret == 1:
+            dxf_obj.select_index(0)
+            dxf_obj.update()
             messeage_window.set_messeage("%sを自動整列しました。\n"%name)
         else:
             messeage_window.set_messeage("%sで%s本の線が選択されています。起点とする１本の線のみを選択してください。\n"%(name,ret))
         
         if chkValue.get():
+            x_ret.select_index(0)
             x_ret = x_dxf_obj.SortLine()
-            if ret == 1:
+            if x_ret == 1:
+                x_dxf_obj.update()
                 messeage_window.set_messeage("%sを自動整列しました。\n"%x_name)
             else:
                 messeage_window.set_messeage("%sで%s本の線が選択されています。起点とする１本の線のみを選択してください。\n"%(x_name,ret))
@@ -477,15 +484,18 @@ def AutoLineSort(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):
 
 def Reverse(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):
     dxf_obj.reverse_all()
+    dxf_obj.update()
     messeage_window.set_messeage("%sのカット順を逆転しました。\n"%name)
     if chkValue.get():
         x_dxf_obj.reverse_all()
+        x_dxf_obj.update()
         messeage_window.set_messeage("%sのカット順を逆転しました。\n"%x_name)
 
 
 
 def Merge_line(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):
     results, line_nums = dxf_obj.Merge_Selected_line()
+    dxf_obj.update()
     if len(results) >= 2:
         i = 1
         while i < len(results):
@@ -499,6 +509,7 @@ def Merge_line(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):
         
     if chkValue.get():
         x_results, x_line_nums = x_dxf_obj.Merge_Selected_line()
+        x_dxf_obj.update()
         if len(x_results) >= 2:
             i = 1
             while i < len(x_results):
@@ -514,6 +525,7 @@ def Merge_line(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):
 def separate_line(dxf_obj, name, messeage_window):
     result, line_nums, point_index = dxf_obj.Separate_line()
     if result == True:
+        dxf_obj.update()
         messeage_window.set_messeage("%sで%s番目のラインを分割し、%s番目のラインを作成しました\n"%(name,line_nums[0], line_nums[1]))
     
     else:
@@ -527,49 +539,43 @@ def separate_line(dxf_obj, name, messeage_window):
         
 def delete_line(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):
     dxf_obj.delete_Selected_line()
+    dxf_obj.update()
     messeage_window.set_messeage("%sの選択したラインを削除しました。\n"%name)
     if chkValue.get():
         x_dxf_obj.delete_Selected_line()
+        x_dxf_obj.update()
         messeage_window.set_messeage("%sの選択したラインを削除しました。\n"%x_name)
     
     
     
 def Set_OffsetDist(dxf_obj, entry, x_dxf_obj, x_entry, chkValue, removeSelfCollisionValue, name, x_name, messeage_window):
     try:
-        if removeSelfCollisionValue.get():
-            remove_self_collision = True
-            dxf_obj.set_remove_self_collision(True)
-            x_dxf_obj.set_remove_self_collision(True)
-        else:
-            remove_self_collision = False
-            dxf_obj.set_remove_self_collision(False)
-            x_dxf_obj.set_remove_self_collision(False)            
-        
         entry_value = entry.get()
         offset_dist = float(entry_value)
         dxf_obj.set_offset_dist(offset_dist)
         messeage_window.set_messeage("%sのオフセット距離を%sに設定しました。\n"%(name, offset_dist))
-        if remove_self_collision == True:
+        if removeSelfCollisionValue.get():
             self_collision_list = dxf_obj.check_self_collision()
             if len(self_collision_list) > 0:
                 temp_str = ""
                 for num in self_collision_list:
                     temp_str += "%s "%num
                 messeage_window.set_messeage("%sの%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(name, temp_str))
+        dxf_obj.update()
         
         if chkValue.get():
             x_entry_value = x_entry.get()
             x_offset_dist = float(x_entry_value)
             x_dxf_obj.set_offset_dist(x_offset_dist)
             messeage_window.set_messeage("%sのオフセット距離を%sに設定しました。\n"%(x_name, x_offset_dist))
-            if remove_self_collision == True:
+            if removeSelfCollisionValue.get():
                 x_self_collision_list = x_dxf_obj.check_self_collision()
                 if len(self_collision_list) > 0:
                     x_temp_str = ""
                     for num in x_self_collision_list:
                         x_temp_str += "%s "%num
                     messeage_window.set_messeage("%sの%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(x_name, x_temp_str))
-
+            x_dxf_obj.update()
                 
     except:
         traceback.print_exc()
@@ -724,10 +730,9 @@ def Set_CutSpeed(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, entry_MachDist,
             for line1 in dxf_obj1.line_list:
                 line1.set_cutspeed(CutSpeed, CutSpeed)
                 
-        dxf_obj0.table_reload()
-        dxf_obj1.table_reload()
-        dxf_obj0.plot()
-        dxf_obj1.plot()        
+        dxf_obj0.update()
+        dxf_obj1.update()
+    
             
     except:
         traceback.print_exc()
@@ -741,15 +746,6 @@ def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, e
     entry_MachDist_value = entry_MachDist.get()
     entry_CS_value = entry_CS.get()   
     CutSpeedDef = cb_CSDef.get()
-    
-    if removeSelfCollisionValue.get():
-        remove_self_collision = True
-        dxf_obj0.set_remove_self_collision(True)
-        dxf_obj1.set_remove_self_collision(True)
-    else:
-        remove_self_collision = False
-        dxf_obj0.set_remove_self_collision(False)
-        dxf_obj1.set_remove_self_collision(False)    
         
     all_items0 = dxf_obj0.get_item(all=True)
     all_items1 = dxf_obj1.get_item(all=True)
@@ -782,12 +778,8 @@ def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, e
                 line1.set_cutspeed(cs_uv_work, cs_uv_mech)
                 
                 i += 1
-            dxf_obj0.table_reload()
-            dxf_obj1.table_reload()
-            dxf_obj0.plot()
-            dxf_obj1.plot()
             
-            if remove_self_collision == True:
+            if removeSelfCollisionValue.get():
                 self_collision_list0 = dxf_obj0.check_self_collision()
                 self_collision_list1 = dxf_obj1.check_self_collision()
                 if len(self_collision_list0) > 0:
@@ -802,6 +794,8 @@ def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, e
                         temp_str1 += "%s "%num
                     messeage_window.set_messeage("UV平面の%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%temp_str1)
                 
+            dxf_obj0.update()
+            dxf_obj1.update()
                 
             messeage_window.set_messeage("オフセット値を更新しました。\n")
         else:
@@ -897,31 +891,32 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
                     
                     if (i != 0) and (i != len(all_items0)):
                         # 始点と終点以外は、フィレット補完する
-                        l0_x = [x_array[-2], x_array[-1]]
-                        l0_y = [y_array[-2], y_array[-1]]
-                        l1_x = [x[0], x[1]]
-                        l1_y = [y[0], y[1]]
+                        if FILET_INTERPOLATE == True:
+                            l0_x = [x_array[-2], x_array[-1]]
+                            l0_y = [y_array[-2], y_array[-1]]
+                            l1_x = [x[0], x[1]]
+                            l1_y = [y[0], y[1]]
+                            
+                            l0_u = [u_array[-2], u_array[-1]]
+                            l0_v = [v_array[-2], v_array[-1]]
+                            l1_u = [u[0], u[1]]
+                            l1_v = [v[0], v[1]]   
+                            
+                            x_f, y_f = generate_offset_interporate_point(l0_x, l0_y, l1_x, l1_y, xy_offset_dist[-1], xy_offset_dist[-2])
+                            u_f, v_f = generate_offset_interporate_point(l0_u, l0_v, l1_u, l1_v, uv_offset_dist[-1], uv_offset_dist[-2])        
+                            
+                            #オフセット面の作成
+                            x_m_f, y_m_f, u_m_f, v_m_f = make_offset_path(x_f, y_f, u_f, v_f, Z_XY, Z_UV, Z_Mach)
+                            code_line_list.append(gen_g_code_line_str(x_m_f, y_m_f, u_m_f, v_m_f, x0, y0, u0, v0, cs_xy, cs_uv, CncCsdDef))
+                            x0 = x_m_f[-1]
+                            y0 = y_m_f[-1]
+                            u0 = u_m_f[-1]
+                            v0 = v_m_f[-1]
                         
-                        l0_u = [u_array[-2], u_array[-1]]
-                        l0_v = [v_array[-2], v_array[-1]]
-                        l1_u = [u[0], u[1]]
-                        l1_v = [v[0], v[1]]   
-                        
-                        x_f, y_f = generate_offset_interporate_point(l0_x, l0_y, l1_x, l1_y, xy_offset_dist[-1], xy_offset_dist[-2])
-                        u_f, v_f = generate_offset_interporate_point(l0_u, l0_v, l1_u, l1_v, uv_offset_dist[-1], uv_offset_dist[-2])        
-                        
-                        #オフセット面の作成
-                        x_m_f, y_m_f, u_m_f, v_m_f = make_offset_path(x_f, y_f, u_f, v_f, Z_XY, Z_UV, Z_Mach)
-                        code_line_list.append(gen_g_code_line_str(x_m_f, y_m_f, u_m_f, v_m_f, x0, y0, u0, v0, cs_xy, cs_uv, CncCsdDef))
-                        x0 = x_m_f[-1]
-                        y0 = y_m_f[-1]
-                        u0 = u_m_f[-1]
-                        v0 = v_m_f[-1]
-                    
-                        x_array = np.concatenate([x_array, x_f], 0)
-                        y_array = np.concatenate([y_array, y_f], 0)
-                        u_array = np.concatenate([u_array, u_f], 0)
-                        v_array = np.concatenate([v_array, v_f], 0)      
+                            x_array = np.concatenate([x_array, x_f], 0)
+                            y_array = np.concatenate([y_array, y_f], 0)
+                            u_array = np.concatenate([u_array, u_f], 0)
+                            v_array = np.concatenate([v_array, v_f], 0)      
                     
                     #オフセット面の作成
                     x_m, y_m, u_m, v_m = make_offset_path(x, y, u, v, Z_XY, Z_UV, Z_Mach)
@@ -1053,24 +1048,25 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
                 u, v = generate_arc_length_points(line1, N)
                 
                 if (i != 0) and (i != len(all_items0)):
-                    # 始点と終点以外は、フィレット補完する
-                    l0_x = [x_array[-2], x_array[-1]]
-                    l0_y = [y_array[-2], y_array[-1]]
-                    l1_x = [x[0], x[1]]
-                    l1_y = [y[0], y[1]]
-                    
-                    l0_u = [u_array[-2], u_array[-1]]
-                    l0_v = [v_array[-2], v_array[-1]]
-                    l1_u = [u[0], u[1]]
-                    l1_v = [v[0], v[1]]   
-                    
-                    x_f, y_f = generate_offset_interporate_point(l0_x, l0_y, l1_x, l1_y, xy_offset_dist[-1], xy_offset_dist[-2])
-                    u_f, v_f = generate_offset_interporate_point(l0_u, l0_v, l1_u, l1_v, uv_offset_dist[-1], uv_offset_dist[-2])
-
-                    x_array = np.concatenate([x_array, x_f], 0)
-                    y_array = np.concatenate([y_array, y_f], 0)
-                    u_array = np.concatenate([u_array, u_f], 0)
-                    v_array = np.concatenate([v_array, v_f], 0)                    
+                    if FILET_INTERPOLATE == True:
+                        # 始点と終点以外は、フィレット補完する
+                        l0_x = [x_array[-2], x_array[-1]]
+                        l0_y = [y_array[-2], y_array[-1]]
+                        l1_x = [x[0], x[1]]
+                        l1_y = [y[0], y[1]]
+                        
+                        l0_u = [u_array[-2], u_array[-1]]
+                        l0_v = [v_array[-2], v_array[-1]]
+                        l1_u = [u[0], u[1]]
+                        l1_v = [v[0], v[1]]   
+                        
+                        x_f, y_f = generate_offset_interporate_point(l0_x, l0_y, l1_x, l1_y, xy_offset_dist[-1], xy_offset_dist[-2])
+                        u_f, v_f = generate_offset_interporate_point(l0_u, l0_v, l1_u, l1_v, uv_offset_dist[-1], uv_offset_dist[-2])
+    
+                        x_array = np.concatenate([x_array, x_f], 0)
+                        y_array = np.concatenate([y_array, y_f], 0)
+                        u_array = np.concatenate([u_array, u_f], 0)
+                        v_array = np.concatenate([v_array, v_f], 0)                    
                     
                 else:
                     norm_line2line0 = norm(x_array[-1], y_array[-1], x[0], y[0])
@@ -1183,21 +1179,14 @@ def offset_origin(dxf_obj0, dxf_obj1, entry_offset_ox, entry_offset_oy, messeage
         offset_oy = float(offset_oy)
         dxf_obj0.offset_origin(offset_ox, offset_oy)
         dxf_obj1.offset_origin(offset_ox, offset_oy)
+        dxf_obj0.update()
+        dxf_obj1.update()
         messeage_window.set_messeage("XY,UV座標をX:%s, Y:%sオフセットしました。\n"%(offset_ox, offset_oy))
     except:
         traceback.print_exc()
         output_log(traceback.format_exc())
         messeage_window.set_messeage("オフセット中にエラーが発生しました\n")
 
-
-
-def onpick(event):
-    line = event.artist
-    xdata, ydata = line.get_data()
-    ind = event.ind
-    print('on pick line:', np.array([xdata[ind], ydata[ind]]).T)
-    print(line.pickable())
-    plt.gca().plot(xdata[ind], ydata[ind], "ro")
 
 
 #======================================================================================================================================

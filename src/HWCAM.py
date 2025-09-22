@@ -902,22 +902,29 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
                             l1_u = [u[0], u[1]]
                             l1_v = [v[0], v[1]]   
                             
+                            
                             x_f, y_f = generate_offset_interporate_point(l0_x, l0_y, l1_x, l1_y, xy_offset_dist[-1], xy_offset_dist[-2])
                             u_f, v_f = generate_offset_interporate_point(l0_u, l0_v, l1_u, l1_v, uv_offset_dist[-1], uv_offset_dist[-2])        
                             
-                            #オフセット面の作成
-                            x_m_f, y_m_f, u_m_f, v_m_f = make_offset_path(x_f, y_f, u_f, v_f, Z_XY, Z_UV, Z_Mach)
-                            code_line_list.append(gen_g_code_line_str(x_m_f, y_m_f, u_m_f, v_m_f, x0, y0, u0, v0, cs_xy, cs_uv, CncCsdDef))
-                            x0 = x_m_f[-1]
-                            y0 = y_m_f[-1]
-                            u0 = u_m_f[-1]
-                            v0 = v_m_f[-1]
+                            if (not(len(x_f) == 0)) and (not(len(u_f) == 0)):
+                                #オフセット面の作成
+                                x_m_f, y_m_f, u_m_f, v_m_f = make_offset_path(x_f, y_f, u_f, v_f, Z_XY, Z_UV, Z_Mach)
+                                code_line_list.append(gen_g_code_line_str(x_m_f, y_m_f, u_m_f, v_m_f, x0, y0, u0, v0, cs_xy, cs_uv, CncCsdDef))
+                                x0 = x_m_f[-1]
+                                y0 = y_m_f[-1]
+                                u0 = u_m_f[-1]
+                                v0 = v_m_f[-1]
+                            
+                                x_array = np.concatenate([x_array, x_f], 0)
+                                y_array = np.concatenate([y_array, y_f], 0)
+                                u_array = np.concatenate([u_array, u_f], 0)
+                                v_array = np.concatenate([v_array, v_f], 0)      
+                            else:
+                                x[0] = x_array[-1]
+                                y[0] = y_array[-1]
+                                u[0] = u_array[-1]
+                                v[0] = v_array[-1]                                     
                         
-                            x_array = np.concatenate([x_array, x_f], 0)
-                            y_array = np.concatenate([y_array, y_f], 0)
-                            u_array = np.concatenate([u_array, u_f], 0)
-                            v_array = np.concatenate([v_array, v_f], 0)      
-                    
                     #オフセット面の作成
                     x_m, y_m, u_m, v_m = make_offset_path(x, y, u, v, Z_XY, Z_UV, Z_Mach)
                     code_line_list.append(gen_g_code_line_str(x_m, y_m, u_m, v_m, x0, y0, u0, v0, cs_xy, cs_uv, CncCsdDef))
@@ -1062,12 +1069,17 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
                         
                         x_f, y_f = generate_offset_interporate_point(l0_x, l0_y, l1_x, l1_y, xy_offset_dist[-1], xy_offset_dist[-2])
                         u_f, v_f = generate_offset_interporate_point(l0_u, l0_v, l1_u, l1_v, uv_offset_dist[-1], uv_offset_dist[-2])
-    
-                        x_array = np.concatenate([x_array, x_f], 0)
-                        y_array = np.concatenate([y_array, y_f], 0)
-                        u_array = np.concatenate([u_array, u_f], 0)
-                        v_array = np.concatenate([v_array, v_f], 0)                    
-                    
+                        
+                        if (not(len(x_f) == 0)) and (not(len(u_f) == 0)):
+                            x_array = np.concatenate([x_array, x_f], 0)
+                            y_array = np.concatenate([y_array, y_f], 0)
+                            u_array = np.concatenate([u_array, u_f], 0)
+                            v_array = np.concatenate([v_array, v_f], 0)    
+                        else:
+                            x[0] = x_array[-1]
+                            y[0] = y_array[-1]
+                            u[0] = u_array[-1]
+                            v[0] = v_array[-1]                    
                 else:
                     norm_line2line0 = norm(x_array[-1], y_array[-1], x[0], y[0])
                     norm_line2line1 = norm(u_array[-1], v_array[-1], u[0], v[0])

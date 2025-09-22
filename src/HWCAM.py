@@ -577,9 +577,9 @@ def Set_OffsetDist(dxf_obj, entry, x_dxf_obj, x_entry, chkValue, removeSelfColli
                 if len(self_collision_list) > 0:
                     for num in x_self_collision_list:
                         messeage_window.set_messeage("%sの%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(x_name, num))
-            if len(x_collision_line_list) > 0:
-                for nums in x_collision_line_list:
-                    messeage_window.set_messeage("%sの%s本目と%s本目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(x_name, nums[0], nums[1]))        
+                if len(x_collision_line_list) > 0:
+                    for nums in x_collision_line_list:
+                        messeage_window.set_messeage("%sの%s本目と%s本目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(x_name, nums[0], nums[1]))        
                                 
             x_dxf_obj.update()
                 

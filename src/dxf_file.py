@@ -729,14 +729,13 @@ class dxf_file:
             if cut_dir_st == 'F':
                 x0 = line_st.ed[0]
                 y0 = line_st.ed[1]
-                x_array = np.array(line_st.x_raw)
-                y_array = np.array(line_st.y_raw)
             else:
                 x0 = line_st.st[0]
                 y0 = line_st.st[1]   
-                x_array = np.array(line_st.x_raw[::-1])
-                y_array = np.array(line_st.y_raw[::-1])
+
                 
+            x_array = np.array(line_st.x_raw)
+            y_array = np.array(line_st.y_raw)                
             new_lines = [line_st]
             new_line_list = []
             x_array_list = []
@@ -768,28 +767,23 @@ class dxf_file:
                 if cut_dir == 'F':
                     x0 = line_mn.ed[0]
                     y0 = line_mn.ed[1]
-                    x = line_mn.x_raw
-                    y = line_mn.y_raw
-                                             
                 if cut_dir == 'R':
                     x0 = line_mn.st[0]
                     y0 = line_mn.st[1]
-                    x = line_mn.x_raw[::-1]
-                    y = line_mn.y_raw[::-1]
-                          
+                     
                 line_mn.set_cut_dir(cut_dir)
                 
                 if norm_mn <= DIST_NEAR:
                     new_lines.append(line_mn)
-                    x_array = np.concatenate([x_array, x], 0)
-                    y_array = np.concatenate([y_array, y], 0)
+                    x_array = np.concatenate([x_array, line_mn.x_raw], 0)
+                    y_array = np.concatenate([y_array, line_mn.y_raw], 0)
                 else:
                     new_line_list.append(new_lines)
                     x_array_list.append(x_array)
                     y_array_list.append(y_array)
                     new_lines = [line_mn]
-                    x_array = np.array(x)
-                    y_array = np.array(y)
+                    x_array = np.array(line_mn.x_raw)
+                    y_array = np.array(line_mn.y_raw)
                 
                 i += 1
                 

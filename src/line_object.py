@@ -207,6 +207,10 @@ class line_object:
         if cut_dir == 'F' or cut_dir == 'R':
             if not(self.cut_dir == cut_dir):
                 self.cut_dir = cut_dir
+                if self.offset_dir == "I":
+                    self.offset_dir = "O"
+                else:
+                    self.offset_dir = "I"
                 self.x_raw = self.x_raw[::-1]
                 self.y_raw = self.y_raw[::-1]
                 self.x = self.x[::-1]

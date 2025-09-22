@@ -524,7 +524,6 @@ class dxf_file:
             index = self.get_index_from_item(item)
             line = self.line_list[index]
             line.toggle_cut_dir()
-            line.toggle_offset_dir()
             self.table.table.item(item, values=(line.num, format(line.offset_dist, '.4f'), \
                                                          line.line_type, format(line.cutspeed_work,'.2f')))
         self.selected_point.reset()

@@ -427,11 +427,11 @@ class dxf_file:
             X,Y = line.x[0], line.y[0]
             U,V = line.x[1], line.y[1]
             self.ax.quiver(X,Y,U-X,V-Y,color = col, alpha = alpha_vect)
+            
             X,Y = line.x_raw[0], line.y_raw[0]
             U,V = line.x[0], line.y[0]
-            
             if norm(X,Y,U,V) != 0:
-                self.ax.quiver(X,Y,U-X,V-Y,color = "y", alpha = alpha_offset) #ver2.2 バグ修正 Y を y に変更
+                self.ax.quiver(U,V,U-X,V-Y,color = "y", alpha = alpha_offset) #ver2.2 バグ修正 Y を y に変更
   
             i += 1
         

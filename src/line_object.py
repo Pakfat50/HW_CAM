@@ -124,26 +124,22 @@ class line_object:
                     N_refine = N_REFINE_SPLINE_MIN
                 x_points, y_points = refine_spline_curvature(x_points, y_points, N_refine)              
                 
-        self.x_dxf = np.array(x_points)
-        self.y_dxf = np.array(y_points)
         self.x_raw = np.array(x_points)
         self.y_raw = np.array(y_points)
+        self.ox = 0
+        self.oy = 0
         self.st = np.array([x_points[0], y_points[0]])
         self.ed = np.array([x_points[-1], y_points[-1]])
         self.num = num
         self.offset_dist = 0
-        self.offset_dir = "O"
-        self.cut_dir = "F"
+        self.ccw = True
         self.cutspeed_work = CUTSPEED_DEFAULT
         self.cutspeed_mech = CUTSPEED_DEFAULT
-        self.x = x_points
-        self.y = y_points
-        self.offset_ox = 0
-        self.offset_oy = 0
+        self.x = np.array(x_points)
+        self.y = np.array(y_points)
+
         
-        
-    def reset_point(self, x_points, y_points, offset_ox, offset_oy, interp_mode = "cubic"):
-        self.interp_mode = interp_mode #ver.2.2追加 "cubic":3d-spline, "linear":1d-line, ポリラインの指定用
+    def reset_point(self, x_points, y_points):
         if len(x_points)<2:
             self.line_type = "point"
         elif len(x_points)==2:
@@ -151,36 +147,41 @@ class line_object:
         else: # len(x_points)>2
             self.line_type = "spline"
                 
-        self.x_dxf = np.array(x_points)
-        self.y_dxf = np.array(y_points)
-        self.offset_ox = offset_ox
-        self.offset_oy = offset_oy
-        self.x_raw = np.array(x_points) + offset_ox
-        self.y_raw = np.array(y_points) + offset_oy
-        if self.cut_dir == 'R':
-            self.x_raw = self.x_raw[::-1]
-            self.y_raw = self.y_raw[::-1]
-        self.st = np.array([x_points[0], y_points[0]]) + offset_ox
-        self.ed = np.array([x_points[-1], y_points[-1]]) + offset_oy
-        self.x = np.array(x_points) + offset_ox
-        self.y = np.array(y_points) + offset_oy
+        self.x_raw = np.array(x_points)
+        self.y_raw = np.array(y_points)
+        self.st = np.array([x_points[0], y_points[0]])
+        self.ed = np.array([x_points[-1], y_points[-1]])
         self.set_offset_dist(self.offset_dist)
         
     
-    def set_offset_dir(self, offset_dir):
-        if offset_dir == 'O' or offset_dir == 'I':
-            if not(self.offset_dir == offset_dir):
-                self.offset_dir = offset_dir
-                self.set_offset_dist(self.offset_dist)
+    def move_origin(self, dx, dy):
+        self.ox = self.ox + dx
+        self.oy = self.oy + dy
+        self.x_raw = self.x_raw + dx
+        self.y_raw = self.y_raw + dy
+        self.x = self.x + dx
+        self.y = self.y + dy
+        self.st[0] = self.st[0] + dx
+        self.ed[0] = self.ed[0] + dx
+        self.st[1] = self.st[1] + dy
+        self.ed[1] = self.ed[1] + dy
+        
+    
+    def set_ccw(self, ccw):
+        if not(self.ccw == ccw):
+            self.ccw = ccw
+            self.set_offset_dist(self.offset_dist)
         
         
     def set_offset_dist(self, offset_dist):
         try:
             self.offset_dist = float(offset_dist)
-            if self.offset_dir == "I":
-                self.x, self.y = offset_line(self.x_raw, self.y_raw, self.offset_dist, self.interp_mode) 
+            if self.ccw == True:
+                dist = -self.offset_dist
             else:
-                self.x, self.y = offset_line(self.x_raw, self.y_raw, -self.offset_dist, self.interp_mode) 
+                dist = self.offset_dist
+                
+            self.x, self.y = offset_line(self.x_raw, self.y_raw, dist, self.interp_mode) 
             
         except:
             traceback.print_exc()
@@ -203,21 +204,7 @@ class line_object:
         return detection
         
     
-    def set_cut_dir(self, cut_dir):
-        if cut_dir == 'F' or cut_dir == 'R':
-            if not(self.cut_dir == cut_dir):
-                self.cut_dir = cut_dir
-                if self.offset_dir == "I":
-                    self.offset_dir = "O"
-                else:
-                    self.offset_dir = "I"
-                self.x_raw = self.x_raw[::-1]
-                self.y_raw = self.y_raw[::-1]
-                self.x = self.x[::-1]
-                self.y = self.y[::-1]
-                
         
-            
     def set_cutspeed(self, cutspeed_work, cutspeed_mech):
         self.cutspeed_work = cutspeed_work
         self.cutspeed_mech = cutspeed_mech
@@ -230,14 +217,18 @@ class line_object:
             traceback.print_exc()
             output_log(traceback.format_exc())
             pass
-    
-    
-    def toggle_cut_dir(self):
-        if self.cut_dir == "F":
-            cut_dir = "R"
+
+    def toggle_cut_dir(self):         
+        self.x_raw = self.x_raw[::-1]
+        self.y_raw = self.y_raw[::-1]
+        self.x = self.x[::-1]
+        self.y = self.y[::-1]
+        self.st, self.ed = self.ed, self.st
+        if self.ccw == True:
+            ccw = False
         else:
-            cut_dir = "F"
-        self.set_cut_dir(cut_dir)
+            ccw = True
+        self.set_ccw(ccw)
         
         
     def calc_length_array(self, mode = "offset"):

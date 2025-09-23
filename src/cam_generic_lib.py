@@ -791,7 +791,7 @@ def remove_self_collision(x, y):
         new_y.append(y[i])
         i += 1
         
-    return new_x, new_y, detection
+    return np.array(new_x), np.array(new_y), detection
 
 
 def remove_collision(x1, y1, x2, y2):

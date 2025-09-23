@@ -392,16 +392,26 @@ def load_offset_func(config, offset_func_entry, MessageWindow):
     MessageWindow.set_messeage(config.MESSEAGE)
 
 
-def open_dxf_explorer(dxf_obj, entry, isRefineValue, messeage_window):
+def open_dxf_explorer(dxf_obj, entry, isRefineValue, entry_offset_ox, entry_offset_oy, messeage_window):
     open_file_explorer(entry)
-    load_file(dxf_obj, entry, isRefineValue, messeage_window)
+    load_file(dxf_obj, entry, isRefineValue, entry_offset_ox, entry_offset_oy, messeage_window)
 
 
-def load_file(dxf_obj, entry, isRefineValue, messeage_window):
+def load_file(dxf_obj, entry, isRefineValue, entry_offset_ox, entry_offset_oy, messeage_window):
     filename = entry.get()
     is_refine = isRefineValue.get()
+    try:
+        offset_ox = float(entry_offset_ox.get())
+        offset_oy = float(entry_offset_oy.get())
+    except:
+        messeage_window.set_messeage("全体オフセットに数値以外が設定されています。原点を0,0として読み込みます\n")
+        offset_ox = 0
+        offset_oy = 0
+        pass
+    
     if file_chk(filename) == 1:
         dxf_obj.load_file(filename, is_refine)
+        dxf_obj.offset_origin(offset_ox, offset_oy)
         dxf_obj.update(keep_view = False)
         if is_refine == True:
             messeage_window.set_messeage("%sを点列をリファインして読み込みました。\n"%filename)
@@ -412,8 +422,8 @@ def load_file(dxf_obj, entry, isRefineValue, messeage_window):
         
     if file_chk(filename) == -1:        
         messeage_window.set_messeage("%sを読み込めません。ファイルが存在することを確認して下さい。\n"%filename)  
-
-
+   
+    
 def XY_UV_Link(chkValue, table_XY, table_UV, messeage_window):
     if chkValue.get():
         table_XY.set_sync(True)
@@ -1202,13 +1212,13 @@ def offset_origin(dxf_obj0, dxf_obj1, entry_offset_ox, entry_offset_oy, messeage
         offset_oy = float(offset_oy)
         dxf_obj0.offset_origin(offset_ox, offset_oy)
         dxf_obj1.offset_origin(offset_ox, offset_oy)
-        dxf_obj0.update()
-        dxf_obj1.update()
+        dxf_obj0.update(keep_view = False)
+        dxf_obj1.update(keep_view = False)
         messeage_window.set_messeage("XY,UV座標をX:%s, Y:%sオフセットしました。\n"%(offset_ox, offset_oy))
     except:
         traceback.print_exc()
         output_log(traceback.format_exc())
-        messeage_window.set_messeage("オフセット中にエラーが発生しました\n")
+        messeage_window.set_messeage("全体オフセットに数値以外が設定されています。\n")
 
 
 
@@ -1473,19 +1483,19 @@ if __name__ == "__main__":
     #======================================================================================================================================
 
     #【X-Y用 dxfファイル読込用のエクスプローラーを開くボタン】
-    LoadBtn0 = tk.Button(root, text="開く", command = lambda: open_dxf_explorer(dxf0, FileNameEntry0, isRefineSpline, MessageWindow))
+    LoadBtn0 = tk.Button(root, text="開く", command = lambda: open_dxf_explorer(dxf0, FileNameEntry0, isRefineSpline, OriginOffsetEntry_X, OriginOffsetEntry_Y, MessageWindow))
     LoadBtn0.place(x=1160, y=70)  
 
     #【U-V用 dxfファイル読込用のエクスプローラーを開くボタン】   
-    LoadBtn1 = tk.Button(root, text="開く", command = lambda: open_dxf_explorer(dxf1, FileNameEntry1, isRefineSpline, MessageWindow))
+    LoadBtn1 = tk.Button(root, text="開く", command = lambda: open_dxf_explorer(dxf1, FileNameEntry1, isRefineSpline, OriginOffsetEntry_X, OriginOffsetEntry_Y, MessageWindow))
     LoadBtn1.place(x=1560, y=70)    
 
     #【X-Y用 dxfファイル名の読込ボタン】
-    LoadBtn0 = tk.Button(root, text="再読込", command = lambda: load_file(dxf0, FileNameEntry0, isRefineSpline, MessageWindow))
+    LoadBtn0 = tk.Button(root, text="再読込", command = lambda: load_file(dxf0, FileNameEntry0, isRefineSpline, OriginOffsetEntry_X, OriginOffsetEntry_Y, MessageWindow))
     LoadBtn0.place(x=1200, y=70)  
 
     #【U-V用 dxfファイル名の読込ボタン】   
-    LoadBtn1 = tk.Button(root, text="再読込", command = lambda: load_file(dxf1, FileNameEntry1, isRefineSpline, MessageWindow))
+    LoadBtn1 = tk.Button(root, text="再読込", command = lambda: load_file(dxf1, FileNameEntry1, isRefineSpline, OriginOffsetEntry_X, OriginOffsetEntry_Y, MessageWindow))
     LoadBtn1.place(x=1600, y=70)    
 
 

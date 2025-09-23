@@ -393,9 +393,19 @@ class dxf_file:
                                                 line.line_type, format(line.cutspeed_work,'.2f')))
 
     
+    def plot_vector(self, x0, y0, x1, y1, k,  col, alpha):
+        dist = norm(x0, y0, x1, y1)
+        if dist > DIST_NEAR:
+            u = (x1-x0)/dist * k
+            v = (y1-y0)/dist * k
+            self.ax.quiver(x0, y0, u, v ,color = col, alpha = alpha)
+            
+    
+    
     def plot(self, keep_view=True):
         xlim = self.ax.get_xlim()
         ylim = self.ax.get_ylim()
+        
         self.ax.clear()
         self.ax.set_title(self.name)
         self.ax.set_aspect('equal')
@@ -419,17 +429,19 @@ class dxf_file:
                 alpha_vect = 0.1
                 alpha_offset = 0
                 pick = None
-                
+            
             self.ax.plot(line.x, line.y, color = col, alpha = alpha_line, marker='o', markersize=2, picker = pick)
             X,Y = line.x[0], line.y[0]
             U,V = line.x[1], line.y[1]
-            self.ax.quiver(X,Y,U-X,V-Y,color = col, alpha = alpha_vect)
+            self.plot_vector(line.x[0], line.y[0], line.x[1], line.y[1], 1, col, alpha_vect)
             
+            if not(line.line_type == "line"):
+                self.plot_vector(line.x[-1], line.y[-1], line.x[-2], line.y[-2], -1, col, alpha_vect)
             X,Y = line.x_raw[0], line.y_raw[0]
             U,V = line.x[0], line.y[0]
-            if norm(X,Y,U,V) != 0:
-                self.ax.quiver(U,V,U-X,V-Y,color = "y", alpha = alpha_offset) #ver2.2 バグ修正 Y を y に変更
-  
+            
+            self.plot_vector(line.x[0], line.y[0], line.x_raw[0], line.y_raw[0], -1, 'y', alpha_offset)
+
             i += 1
         
         self.ax.plot(self.selected_point.x, self.selected_point.y, "ro")
@@ -559,10 +571,11 @@ class dxf_file:
                 x_c_ed = child_line.ed[0]
                 y_c_ed = child_line.ed[1]
                 
-                x_p = parent_line.x_dxf.tolist()
-                y_p = parent_line.y_dxf.tolist()
-                x_c = child_line.x_dxf.tolist()
-                y_c = child_line.y_dxf.tolist()     
+                x_p = parent_line.x_raw.tolist()
+                y_p = parent_line.y_raw.tolist()
+                x_c = child_line.x_raw.tolist()
+                y_c = child_line.y_raw.tolist()
+            
                 
                 new_x = []
                 new_y = []
@@ -604,7 +617,7 @@ class dxf_file:
                     result = False
                 
                 if result == True:
-                    parent_line.reset_point(new_x, new_y, parent_line.offset_ox, parent_line.offset_oy)
+                    parent_line.reset_point(new_x, new_y)
                     self.delete_line(items[i])
                 
                 results.append(result)
@@ -634,14 +647,11 @@ class dxf_file:
             index_org = self.get_index_from_item(items)[0]
             line_org = self.line_list[index_org]
 
-            x_org = line_org.x_dxf.tolist()
-            y_org = line_org.y_dxf.tolist()
+            x_org = line_org.x_raw.tolist()
+            y_org = line_org.y_raw.tolist()
             
             if (not(point_index == None)) and (not(point_index == 0)) \
                 and (not(point_index == len(x_org)-1)):
-            
-                if not(line_org.cut_dir == 'F'):
-                    point_index = len(x_org) - point_index -1
                 
                 x1 = x_org[:point_index+1]
                 y1 = y_org[:point_index+1]
@@ -654,21 +664,16 @@ class dxf_file:
                 line1 = copy.deepcopy(line_org)
                 line2 = copy.deepcopy(line_org)
                 
-                line1.reset_point(x1, y1, line_org.offset_ox, line_org.offset_oy)
-                line2.reset_point(x2, y2, line_org.offset_ox, line_org.offset_oy)
+                line1.reset_point(x1, y1)
+                line2.reset_point(x2, y2)
                 
                 num_new = self.line_num_max + 1
                 self.line_num_max = num_new  
                 line_nums.append(num_new)
                 
-                if line_org.cut_dir == 'F':
-                    self.line_list[index_org] = line1
-                    line2.num = num_new
-                    self.add_line(items, line2)
-                else:
-                    self.line_list[index_org] = line2
-                    line1.num = num_new
-                    self.add_line(items, line1)
+                self.line_list[index_org] = line1
+                line2.num = num_new
+                self.add_line(items, line2)
                 
                 self.selected_point.reset()
                 result = True
@@ -724,16 +729,11 @@ class dxf_file:
             item_st = items[0]
             index_st = self.get_index_from_item(item_st)
             line_st = self.line_list[index_st]
-            cut_dir_st = line_st.cut_dir
-            norm_mn = np.inf
-            if cut_dir_st == 'F':
-                x0 = line_st.ed[0]
-                y0 = line_st.ed[1]
-            else:
-                x0 = line_st.st[0]
-                y0 = line_st.st[1]   
 
-                
+            norm_mn = np.inf
+            x0 = line_st.ed[0]
+            y0 = line_st.ed[1]
+
             x_array = np.array(line_st.x_raw)
             y_array = np.array(line_st.y_raw)                
             new_lines = [line_st]
@@ -759,19 +759,15 @@ class dxf_file:
                             line_mn = line
                             norm_mn = min(norm_st, norm_ed)                      
                             if norm_st < norm_ed:
-                                cut_dir = 'F'
+                                toggle = False
                             else:
-                                cut_dir = 'R'
+                                toggle = True
                     j += 1
-                    
-                if cut_dir == 'F':
-                    x0 = line_mn.ed[0]
-                    y0 = line_mn.ed[1]
-                if cut_dir == 'R':
-                    x0 = line_mn.st[0]
-                    y0 = line_mn.st[1]
-                     
-                line_mn.set_cut_dir(cut_dir)
+                
+                if toggle == True:
+                    line_mn.toggle_cut_dir()
+                x0 = line_mn.ed[0]
+                y0 = line_mn.ed[1]
                 
                 if norm_mn <= DIST_NEAR:
                     new_lines.append(line_mn)
@@ -812,10 +808,7 @@ class dxf_file:
                 for line in new_lines:
                     if not(ccw == ccw_st):
                         line.toggle_cut_dir()
-                    if ccw_st == True:
-                        line.set_offset_dir('O')
-                    else:
-                        line.set_offset_dir('I')
+                    line.set_ccw(ccw_st)
                 i += 1
             
             self.line_list = sum(new_line_list,[])
@@ -829,7 +822,9 @@ class dxf_file:
         for item in all_items:
             index = self.get_index_from_item(item)
             line = self.line_list[index]
-            line.reset_point(line.x_dxf, line.y_dxf, offset_ox, offset_oy)
+            dx = offset_ox - line.ox
+            dy = offset_oy - line.oy
+            line.move_origin(dx, dy)
         
         self.selected_point.reset()
     

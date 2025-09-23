@@ -435,8 +435,8 @@ def XY_UV_Link(chkValue, table_XY, table_UV, messeage_window):
         messeage_window.set_messeage("U-V画面とX-Y画面の連動を解除\n")
 
 
-def EnableRemoveSelfCollision(removeSelfCollisionValue, messeage_window):
-    if removeSelfCollisionValue.get():
+def EnableRemoveSelfCollision(removeCollisionValue, messeage_window):
+    if removeCollisionValue.get():
         messeage_window.set_messeage("自己交差除去を有効化\n")
     else:
         messeage_window.set_messeage("自己交差除去を無効化\n")
@@ -503,9 +503,8 @@ def Reverse(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):
 
 
 
-def Merge_line(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):
+def Merge_line(dxf_obj, x_dxf_obj, chkValue, removeCollisionValue, name, x_name, messeage_window):
     results, line_nums = dxf_obj.Merge_Selected_line()
-    dxf_obj.update()
     if len(results) >= 2:
         i = 1
         while i < len(results):
@@ -514,12 +513,16 @@ def Merge_line(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):
             else:
                 messeage_window.set_messeage("%sの%s番目のラインを結合できませんでした。ライン端点が接しているかを確認してください。\n"%(name,line_nums[i]))
             i += 1
+        if removeCollisionValue.get():
+            Remove_Collision(dxf_obj, name, messeage_window)
     else:
         messeage_window.set_messeage("%sで２本以上のラインを選択して下さい。%s本のラインが選択されています。\n"%(name,len(line_nums)))
-        
+    dxf_obj.update()
+    
+    
     if chkValue.get():
         x_results, x_line_nums = x_dxf_obj.Merge_Selected_line()
-        x_dxf_obj.update()
+        
         if len(x_results) >= 2:
             i = 1
             while i < len(x_results):
@@ -528,16 +531,21 @@ def Merge_line(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):
                 else:
                     messeage_window.set_messeage("%sの%s番目のラインを結合できませんでした。ライン端点が接しているかを確認してください。\n"%(x_name,x_line_nums[i]))
                 i += 1
+            if removeCollisionValue.get():
+                Remove_Collision(x_dxf_obj, x_name, messeage_window)      
         else:
             messeage_window.set_messeage("%sで２本以上のラインを選択して下さい。%s本のラインが選択されています。\n"%(x_name,len(x_line_nums)))
-        
+        x_dxf_obj.update()
   
-def separate_line(dxf_obj, name, messeage_window):
+def separate_line(dxf_obj, removeCollisionValue, name, messeage_window):
     result, line_nums, point_index = dxf_obj.Separate_line()
     if result == True:
-        dxf_obj.update()
         messeage_window.set_messeage("%sで%s番目のラインを分割し、%s番目のラインを作成しました\n"%(name,line_nums[0], line_nums[1]))
-    
+        
+        if removeCollisionValue.get():
+            Remove_Collision(dxf_obj, name, messeage_window) 
+            
+        dxf_obj.update()
     else:
         if not (len(line_nums) == 1):
             messeage_window.set_messeage("%sで%s本のラインが選択されています。1本のみ選択してださい\n"%(name,len(line_nums)))
@@ -547,33 +555,34 @@ def separate_line(dxf_obj, name, messeage_window):
             messeage_window.set_messeage("%sで端点が選択されています。端点以外を選択してださい\n"%name)
         
         
-def delete_line(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):
+def delete_line(dxf_obj, x_dxf_obj, chkValue, removeCollisionValue, name, x_name, messeage_window):
     dxf_obj.delete_Selected_line()
-    dxf_obj.update()
     messeage_window.set_messeage("%sの選択したラインを削除しました。\n"%name)
+    
+    if removeCollisionValue.get():
+        Remove_Collision(dxf_obj, name, messeage_window) 
+    
+    dxf_obj.update()
+
     if chkValue.get():
         x_dxf_obj.delete_Selected_line()
-        x_dxf_obj.update()
         messeage_window.set_messeage("%sの選択したラインを削除しました。\n"%x_name)
+        
+        if removeCollisionValue.get():
+            Remove_Collision(x_dxf_obj, x_name, messeage_window)       
+        
+        x_dxf_obj.update()
+        
     
-    
-    
-def Set_OffsetDist(dxf_obj, entry, x_dxf_obj, x_entry, chkValue, removeSelfCollisionValue, name, x_name, messeage_window):
+def Set_OffsetDist(dxf_obj, entry, x_dxf_obj, x_entry, chkValue, removeCollisionValue, name, x_name, messeage_window):
     try:
         entry_value = entry.get()
         offset_dist = float(entry_value)
         dxf_obj.set_offset_dist(offset_dist)
         messeage_window.set_messeage("%sのオフセット距離を%sに設定しました。\n"%(name, offset_dist))
         
-        if removeSelfCollisionValue.get():
-            self_collision_list, collision_line_list = dxf_obj.remove_collision()
-            if len(self_collision_list) > 0:
-                for num in self_collision_list:
-                    messeage_window.set_messeage("%sの%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(name, num))
-            if len(collision_line_list) > 0:
-                for nums in collision_line_list:
-                    messeage_window.set_messeage("%sの%s本目と%s本目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(name, nums[0], nums[1]))        
-        
+        if removeCollisionValue.get():
+            Remove_Collision(dxf_obj, name, messeage_window)
         dxf_obj.update()
         
         if chkValue.get():
@@ -582,15 +591,9 @@ def Set_OffsetDist(dxf_obj, entry, x_dxf_obj, x_entry, chkValue, removeSelfColli
             x_dxf_obj.set_offset_dist(x_offset_dist)
             messeage_window.set_messeage("%sのオフセット距離を%sに設定しました。\n"%(x_name, x_offset_dist))
             
-            if removeSelfCollisionValue.get():
-                x_self_collision_list, x_collision_line_list = x_dxf_obj.remove_collision()
-                if len(self_collision_list) > 0:
-                    for num in x_self_collision_list:
-                        messeage_window.set_messeage("%sの%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(x_name, num))
-                if len(x_collision_line_list) > 0:
-                    for nums in x_collision_line_list:
-                        messeage_window.set_messeage("%sの%s本目と%s本目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(x_name, nums[0], nums[1]))        
-                                
+            if removeCollisionValue.get():
+                Remove_Collision(x_dxf_obj, x_name, messeage_window)
+                
             x_dxf_obj.update()
                 
     except:
@@ -598,6 +601,15 @@ def Set_OffsetDist(dxf_obj, entry, x_dxf_obj, x_entry, chkValue, removeSelfColli
         output_log(traceback.format_exc())
         messeage_window.set_messeage("実数値を入力して下さい。\n")
         pass
+
+def Remove_Collision(dxf_obj, name, messeage_window):
+    self_collision_list, collision_line_list = dxf_obj.remove_collision()
+    if len(self_collision_list) > 0:
+        for num in self_collision_list:
+            messeage_window.set_messeage("%sの%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(name, num))
+    if len(collision_line_list) > 0:
+        for nums in collision_line_list:
+            messeage_window.set_messeage("%sの%s本目と%s本目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(name, nums[0], nums[1]))            
 
 
 def Replace_G_code(g_code_str, X_str, Y_str, U_str, V_str):
@@ -756,7 +768,7 @@ def Set_CutSpeed(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, entry_MachDist,
 
 
 
-def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, entry_MachDist, entry_CS, cb_CSDef, offset_function, removeSelfCollisionValue, messeage_window):
+def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, entry_MachDist, entry_CS, cb_CSDef, offset_function, removeCollisionValue, messeage_window):
     entry_XYDist_value = entry_XYDist.get()
     entry_UVDist_value = entry_UVDist.get()
     entry_MachDist_value = entry_MachDist.get()
@@ -795,26 +807,10 @@ def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, e
                 
                 i += 1
             
-            if removeSelfCollisionValue.get():
-                self_collision_list0, collision_line_list0 = dxf_obj0.remove_collision()
-                self_collision_list1, collision_line_list1 = dxf_obj1.remove_collision()
+            if removeCollisionValue.get():
+                Remove_Collision(dxf_obj0, "XY面", messeage_window)
+                Remove_Collision(dxf_obj1, "UV面", messeage_window)   
                 
-                if len(self_collision_list0) > 0:
-                    for num in self_collision_list0:
-                        messeage_window.set_messeage("XY平面の%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%num)
-                
-                if len(collision_line_list0) > 0:
-                    for nums in collision_line_list0:
-                        messeage_window.set_messeage("XY平面の%s本目と%s本目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(nums[0], nums[1]))
-                
-                if len(self_collision_list1) > 0:
-                    for num in self_collision_list1:
-                        messeage_window.set_messeage("UV平面の%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%num)
-
-                if len(collision_line_list1) > 0:
-                    for nums in collision_line_list1:
-                        messeage_window.set_messeage("UV平面の%s本目と%s本目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(nums[0], nums[1]))
-                                
             dxf_obj0.update()
             dxf_obj1.update()
                 
@@ -1502,14 +1498,14 @@ if __name__ == "__main__":
     #【X-Y用 オフセット距離反映ボタン】
     OffsetBtn0 = tk.Button(root, text="オフセット量設定", width = 15, bg='#fffacd', \
                          command = lambda: Set_OffsetDist(dxf0, OffsetDistEntry0, dxf1, OffsetDistEntry1, \
-                                                          chkValue, removeSelfCollisionValue, "XY面", "UV面", MessageWindow))
+                                                          chkValue, removeCollisionValue, "XY面", "UV面", MessageWindow))
     OffsetBtn0.place(x=1125, y=492)  
 
 
     #【U-V用 オフセット距離反映ボタン】
     OffsetBtn1 = tk.Button(root, text="オフセット量設定", width = 15, bg='#fffacd', \
                          command = lambda: Set_OffsetDist(dxf1, OffsetDistEntry1, dxf0, OffsetDistEntry0, \
-                                                          chkValue, removeSelfCollisionValue, "UV面", "XY面", MessageWindow))
+                                                          chkValue, removeCollisionValue, "UV面", "XY面", MessageWindow))
     OffsetBtn1.place(x=1525, y=492)  
 
 
@@ -1527,7 +1523,7 @@ if __name__ == "__main__":
     #【オフセット値更新ボタン】    
     OffsetBtn = tk.Button(root, text = "溶け量ファイルからオフセット量設定", height = 1, width = 34, font=("",10),  bg='#fffacd', \
                           command = lambda: Set_OffsetDistFromFunction(dxf0, dxf1, XYDistEntry, UVDistEntry, MachDistEntry, CutSpeedEntry, CutSpeedDefCB,\
-                                                                       config.offset_function, removeSelfCollisionValue, MessageWindow))
+                                                                       config.offset_function, removeCollisionValue, MessageWindow))
     OffsetBtn.place(x = 1255, y = 532)
 
 
@@ -1549,15 +1545,15 @@ if __name__ == "__main__":
     
     
     #【X-Yラインテーブル用　ライン結合ボタン】
-    SwapBtn0 = tk.Button(root, text="ライン結合", width =15, bg = "#4ba3fb", command = lambda: Merge_line(dxf0, dxf1, chkValue, "XY面", "UV面", MessageWindow))
+    SwapBtn0 = tk.Button(root, text="ライン結合", width =15, bg = "#4ba3fb", command = lambda: Merge_line(dxf0, dxf1, chkValue, removeCollisionValue, "XY面", "UV面", MessageWindow))
     SwapBtn0.place(x=855, y=465) 
     
     #【X-Yラインテーブル用　ライン分割ボタン】    
-    SeparateBtn0 = tk.Button(root, text="ライン分割", width = 15, bg = "#b45c04", command = lambda: separate_line(dxf0, "XY面", MessageWindow))
+    SeparateBtn0 = tk.Button(root, text="ライン分割", width = 15, bg = "#b45c04", command = lambda: separate_line(dxf0, removeCollisionValue, "XY面", MessageWindow))
     SeparateBtn0.place(x=990, y=465)
 
     #【X-Yラインテーブル用　ライン削除ボタン】    
-    DelateBtn0 = tk.Button(root, text="ライン削除", width = 15, bg = "#ff6347", command = lambda: delete_line(dxf0, dxf1, chkValue, "XY面", "UV面", MessageWindow))
+    DelateBtn0 = tk.Button(root, text="ライン削除", width = 15, bg = "#ff6347", command = lambda: delete_line(dxf0, dxf1, chkValue, removeCollisionValue, "XY面", "UV面", MessageWindow))
     DelateBtn0.place(x=1125, y=465)
   
   
@@ -1574,15 +1570,15 @@ if __name__ == "__main__":
     ReverseBtn1.place(x=1525, y=435)   
     
     #【U-Vラインテーブル用　ライン結合ボタン】    
-    DelateBtn1 = tk.Button(root, text="ライン結合", width = 15, bg = "#4ba3fb" , command = lambda: Merge_line(dxf1, dxf0, chkValue, "UV面", "XY面", MessageWindow))
+    DelateBtn1 = tk.Button(root, text="ライン結合", width = 15, bg = "#4ba3fb" , command = lambda: Merge_line(dxf1, dxf0, chkValue, removeCollisionValue, "UV面", "XY面", MessageWindow))
     DelateBtn1.place(x=1255, y=465)   
  
     #【U-Vラインテーブル用　ライン分割ボタン】    
-    SeparateBtn1 = tk.Button(root, text="ライン分割", width = 15, bg = "#b45c04", command = lambda: separate_line(dxf1, "UV面", MessageWindow))
+    SeparateBtn1 = tk.Button(root, text="ライン分割", width = 15, bg = "#b45c04", command = lambda: separate_line(dxf1, removeCollisionValue, "UV面", MessageWindow))
     SeparateBtn1.place(x=1390, y=465) 
     
     #【U-Vラインテーブル用　ライン削除ボタン】    
-    DelateBtn1 = tk.Button(root, text="ライン削除", width = 15, bg = "#ff6347" , command = lambda: delete_line(dxf1, dxf0, chkValue, "UV面", "XY面", MessageWindow))
+    DelateBtn1 = tk.Button(root, text="ライン削除", width = 15, bg = "#ff6347" , command = lambda: delete_line(dxf1, dxf0, chkValue, removeCollisionValue, "UV面", "XY面", MessageWindow))
     DelateBtn1.place(x=1525, y=465)
     
 
@@ -1614,8 +1610,8 @@ if __name__ == "__main__":
     chk0.place(x=1490, y=5)
 
     #【自己交差除去チェックボックス】
-    removeSelfCollisionValue = tk.BooleanVar()
-    chk1 = tk.Checkbutton(root, text="自己交差除去有効化", var=removeSelfCollisionValue, command =  lambda: EnableRemoveSelfCollision(removeSelfCollisionValue, MessageWindow))
+    removeCollisionValue = tk.BooleanVar()
+    chk1 = tk.Checkbutton(root, text="自己交差除去有効化", var=removeCollisionValue, command =  lambda: EnableRemoveSelfCollision(removeCollisionValue, MessageWindow))
     chk1.place(x=1350, y=5)
     
     #【スプラインをリファインするかどうかのチェックボックス】

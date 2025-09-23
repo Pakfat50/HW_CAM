@@ -228,7 +228,7 @@ class line_object:
             ccw = False
         else:
             ccw = True
-        self.set_ccw(ccw)
+        self.ccw = ccw
         
         
     def calc_length_array(self, mode = "offset"):

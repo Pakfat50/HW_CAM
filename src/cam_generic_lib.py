@@ -833,4 +833,17 @@ def remove_collision(x1, y1, x2, y2):
         return new_x1, new_y1, new_x2, new_y2, detection
     else:
         return x1, y1, x2, y2, detection
+
+def rotate(x, y, sita, rx, ry):
+    A = np.array([[np.cos(sita), -np.sin(sita)],
+                  [np.sin(sita), np.cos(sita)]])
+    x = np.array(x) - rx
+    y = np.array(y) - ry
+    p = np.array([x, y])
+
+    rot_p = np.dot(A, p)
+    rot_x = rot_p[0] + rx
+    rot_y = rot_p[1] + ry
+
+    return rot_x, rot_y
     

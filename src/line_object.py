@@ -128,6 +128,7 @@ class line_object:
         self.y_raw = np.array(y_points)
         self.ox = 0
         self.oy = 0
+        self.sita = 0
         self.st = np.array([x_points[0], y_points[0]])
         self.ed = np.array([x_points[-1], y_points[-1]])
         self.num = num
@@ -166,6 +167,14 @@ class line_object:
         self.st[1] = self.st[1] + dy
         self.ed[1] = self.ed[1] + dy
         
+        
+    def rotate(self, d_sita, rx, ry):
+        self.sita = self.sita + d_sita
+        self.x_raw, self.y_raw = rotate(self.x_raw, self.y_raw, d_sita, rx, ry)
+        self.x, self.y = rotate(self.x, self.y, d_sita, rx, ry)
+        self.st[0], self.st[1] = rotate(self.st[0], self.st[1], d_sita, rx, ry)
+        self.ed[0], self.ed[1] = rotate(self.ed[0], self.ed[1], d_sita, rx, ry)
+    
     
     def set_ccw(self, ccw):
         if not(self.ccw == ccw):

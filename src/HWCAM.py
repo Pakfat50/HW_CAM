@@ -392,26 +392,19 @@ def load_offset_func(config, offset_func_entry, MessageWindow):
     MessageWindow.set_messeage(config.MESSEAGE)
 
 
-def open_dxf_explorer(dxf_obj, entry, isRefineValue, entry_offset_ox, entry_offset_oy, messeage_window):
+def open_dxf_explorer(dxf_obj, entry, isRefineValue, messeage_window):
     open_file_explorer(entry)
-    load_file(dxf_obj, entry, isRefineValue, entry_offset_ox, entry_offset_oy, messeage_window)
+    load_file(dxf_obj, entry, isRefineValue, messeage_window)
 
 
-def load_file(dxf_obj, entry, isRefineValue, entry_offset_ox, entry_offset_oy, messeage_window):
+def load_file(dxf_obj, entry, isRefineValue, messeage_window):
     filename = entry.get()
     is_refine = isRefineValue.get()
-    try:
-        offset_ox = float(entry_offset_ox.get())
-        offset_oy = float(entry_offset_oy.get())
-    except:
-        messeage_window.set_messeage("全体オフセットに数値以外が設定されています。原点を0,0として読み込みます\n")
-        offset_ox = 0
-        offset_oy = 0
-        pass
     
     if file_chk(filename) == 1:
         dxf_obj.load_file(filename, is_refine)
-        dxf_obj.offset_origin(offset_ox, offset_oy)
+        dxf_obj.offset_origin(dxf_obj.ox, dxf_obj.oy)
+        dxf_obj.rotate(dxf_obj.sita, dxf_obj.rx, dxf_obj.ry)
         dxf_obj.update(keep_view = False)
         if is_refine == True:
             messeage_window.set_messeage("%sを点列をリファインして読み込みました。\n"%filename)
@@ -1206,15 +1199,44 @@ def offset_origin(dxf_obj0, dxf_obj1, entry_offset_ox, entry_offset_oy, messeage
     try :
         offset_ox = float(offset_ox)
         offset_oy = float(offset_oy)
-        dxf_obj0.offset_origin(offset_ox, offset_oy)
-        dxf_obj1.offset_origin(offset_ox, offset_oy)
-        dxf_obj0.update(keep_view = False)
-        dxf_obj1.update(keep_view = False)
-        messeage_window.set_messeage("XY,UV座標をX:%s, Y:%sオフセットしました。\n"%(offset_ox, offset_oy))
+        if (len(dxf_obj0.line_list) == 0) or (len(dxf_obj1.line_list) == 0):
+            messeage_window.set_messeage("XY, UV面の両方に図形を読み込んでください。\n")  
+        else:
+            dxf_obj0.offset_origin(offset_ox, offset_oy)
+            dxf_obj1.offset_origin(offset_ox, offset_oy)
+            dxf_obj0.update(keep_view = False)
+            dxf_obj1.update(keep_view = False)
+            messeage_window.set_messeage("XY,UV座標をX:%s, Y:%sオフセットしました。\n"%(offset_ox, offset_oy))
     except:
         traceback.print_exc()
         output_log(traceback.format_exc())
         messeage_window.set_messeage("全体オフセットに数値以外が設定されています。\n")
+
+
+def Rotate(dxf_obj0, dxf_obj1, RotateEntry, messeage_window):
+    sita = RotateEntry.get()
+    
+    try:
+        sita = np.radians(float(sita))
+        
+        if (len(dxf_obj0.line_list) == 0) or (len(dxf_obj1.line_list) == 0):
+            messeage_window.set_messeage("XY, UV面の両方に図形を読み込んでください。\n")  
+        else:
+            cg_x0, cg_y0 = dxf_obj0.get_cg()
+            cg_x1, cg_y1 = dxf_obj1.get_cg()
+            rx = (cg_x0 + cg_x1)/2
+            ry = (cg_y0 + cg_y1)/2
+            dxf_obj0.rotate(sita, rx, ry)
+            dxf_obj1.rotate(sita, rx, ry)
+            dxf_obj0.update(keep_view = False)
+            dxf_obj1.update(keep_view = False)
+            messeage_window.set_messeage("重心(%s, %s)を回転中心として、元の図形を%s deg回転しました。\n"\
+                                         %(format(rx,'.1f'), format(ry,'.1f'), format(np.degrees(sita),'.1f'))) 
+        
+    except:
+        traceback.print_exc()
+        output_log(traceback.format_exc())
+        messeage_window.set_messeage("回転値に数値以外が設定されています。\n")    
 
 
 
@@ -1365,7 +1387,7 @@ if __name__ == "__main__":
     
     
     #【原点オフセット入力コンソール】
-    OriginOffsetLabel0 = tk.Label(root, text="全体オフセット",font=("",12))
+    OriginOffsetLabel0 = tk.Label(root, text="オフセット",font=("",12))
     OriginOffsetLabel0.place(x = 850, y = 610)
     OriginOffsetLabel1 = tk.Label(root, text="X：",font=("",12))
     OriginOffsetLabel1.place(x = 970, y = 610)
@@ -1377,6 +1399,15 @@ if __name__ == "__main__":
     OriginOffsetEntry_Y = tk.Entry(root, width=8,font=("",12))     
     OriginOffsetEntry_Y.insert(tk.END, 0)
     OriginOffsetEntry_Y.place(x = 1100, y = 610)    
+
+
+
+    #【全体回転入力コンソール】
+    RotateLabel0 = tk.Label(root, text="回転：",font=("",12))
+    RotateLabel0.place(x = 1300, y = 610)
+    RotateEntry = tk.Entry(root, width=8,font=("",12)) 
+    RotateEntry.insert(tk.END, 0)       
+    RotateEntry.place(x = 1350, y = 610)
 
 
     #【切り出し原点入力コンソール】
@@ -1479,19 +1510,19 @@ if __name__ == "__main__":
     #======================================================================================================================================
 
     #【X-Y用 dxfファイル読込用のエクスプローラーを開くボタン】
-    LoadBtn0 = tk.Button(root, text="開く", command = lambda: open_dxf_explorer(dxf0, FileNameEntry0, isRefineSpline, OriginOffsetEntry_X, OriginOffsetEntry_Y, MessageWindow))
+    LoadBtn0 = tk.Button(root, text="開く", command = lambda: open_dxf_explorer(dxf0, FileNameEntry0, isRefineSpline, MessageWindow))
     LoadBtn0.place(x=1160, y=70)  
 
     #【U-V用 dxfファイル読込用のエクスプローラーを開くボタン】   
-    LoadBtn1 = tk.Button(root, text="開く", command = lambda: open_dxf_explorer(dxf1, FileNameEntry1, isRefineSpline, OriginOffsetEntry_X, OriginOffsetEntry_Y, MessageWindow))
+    LoadBtn1 = tk.Button(root, text="開く", command = lambda: open_dxf_explorer(dxf1, FileNameEntry1, isRefineSpline, MessageWindow))
     LoadBtn1.place(x=1560, y=70)    
 
     #【X-Y用 dxfファイル名の読込ボタン】
-    LoadBtn0 = tk.Button(root, text="再読込", command = lambda: load_file(dxf0, FileNameEntry0, isRefineSpline, OriginOffsetEntry_X, OriginOffsetEntry_Y, MessageWindow))
+    LoadBtn0 = tk.Button(root, text="再読込", command = lambda: load_file(dxf0, FileNameEntry0, isRefineSpline, MessageWindow))
     LoadBtn0.place(x=1200, y=70)  
 
     #【U-V用 dxfファイル名の読込ボタン】   
-    LoadBtn1 = tk.Button(root, text="再読込", command = lambda: load_file(dxf1, FileNameEntry1, isRefineSpline, OriginOffsetEntry_X, OriginOffsetEntry_Y, MessageWindow))
+    LoadBtn1 = tk.Button(root, text="再読込", command = lambda: load_file(dxf1, FileNameEntry1, isRefineSpline, MessageWindow))
     LoadBtn1.place(x=1600, y=70)    
 
 
@@ -1527,9 +1558,14 @@ if __name__ == "__main__":
     OffsetBtn.place(x = 1255, y = 532)
 
 
-    #【原点オフセットボタン】
-    OriginOffsetBtn0 = tk.Button(root, text="全体オフセット更新", width =15, command = lambda: offset_origin(dxf0, dxf1, OriginOffsetEntry_X, OriginOffsetEntry_Y, MessageWindow))
+    #【オフセットボタン】
+    OriginOffsetBtn0 = tk.Button(root, text="更新", command = lambda: offset_origin(dxf0, dxf1, OriginOffsetEntry_X, OriginOffsetEntry_Y, MessageWindow))
     OriginOffsetBtn0.place(x=1205, y=607)   
+
+    #【回転ボタン】
+    RotateBtn0 = tk.Button(root, text="更新", command = lambda: Rotate(dxf0, dxf1, RotateEntry, MessageWindow))
+    RotateBtn0.place(x=1450, y=607)   
+
 
     #【X-Yラインテーブル用　カット方向入れ替えボタン】
     ChangeCutDirBtn0 = tk.Button(root, text="カット方向入替え", width =15, bg = "#3cb371", command = lambda: Change_CutDir(dxf0, dxf1, chkValue, "XY面", "UV面", MessageWindow))

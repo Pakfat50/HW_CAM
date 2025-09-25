@@ -253,6 +253,11 @@ class dxf_file:
         self.line_list = []
         self.selected_point = selected_point(np.nan, np.nan, None)
         self.line_num_max = 0
+        self.ox = 0
+        self.oy = 0
+        self.rx = 0
+        self.ry = 0
+        self.sita = 0
     
     
     def load_file(self, filename, is_refine):
@@ -818,6 +823,8 @@ class dxf_file:
 
     def offset_origin(self, offset_ox, offset_oy):
         all_items = self.get_item(all=True)
+        self.ox = offset_ox
+        self.oy = offset_oy
         
         for item in all_items:
             index = self.get_index_from_item(item)
@@ -827,6 +834,42 @@ class dxf_file:
             line.move_origin(dx, dy)
         
         self.selected_point.reset()
+    
+    
+    def rotate(self, sita, rx, ry):
+        all_items = self.get_item(all=True)
+        self.rx = rx
+        self.ry = ry
+        self.sita = sita
+        
+        for item in all_items:
+            index = self.get_index_from_item(item)
+            line = self.line_list[index]
+            d_sita = sita - line.sita
+            line.rotate(d_sita, rx, ry)
+        
+        self.selected_point.reset()        
+    
+    
+    def get_cg(self):
+        all_items = self.get_item(all=True)
+        x = np.array([])
+        y = np.array([])
+        
+        for item in all_items:
+            index = self.get_index_from_item(item)
+            line = self.line_list[index]
+            x = np.concatenate([x, line.x_raw], 0)
+            y = np.concatenate([y, line.y_raw], 0)
+        
+        if not(len(x) == 0):
+            cg_x = np.mean(x)
+            cg_y = np.mean(y)
+        else:
+            cg_x = None
+            cg_y = None
+            
+        return cg_x, cg_y
     
     
     def remove_collision(self):

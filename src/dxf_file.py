@@ -268,6 +268,11 @@ class dxf_file:
         self.table.table.bind("<<TreeviewSelect>>", self.selected)
         self.table.table.loaded_item_num = len(self.table.table.get_children())
         self.selected_point.reset()
+        self.ox = 0
+        self.oy = 0
+        self.rx = 0
+        self.ry = 0
+        self.sita = 0
         
         items = self.table.table.get_children()
         self.table.table.selection_set(items[0])
@@ -823,14 +828,16 @@ class dxf_file:
 
     def offset_origin(self, offset_ox, offset_oy):
         all_items = self.get_item(all=True)
+        dx = offset_ox - self.ox
+        dy = offset_oy - self.oy
         self.ox = offset_ox
         self.oy = offset_oy
+        self.rx = self.rx + dx
+        self.ry = self.ry + dy
         
         for item in all_items:
             index = self.get_index_from_item(item)
             line = self.line_list[index]
-            dx = offset_ox - line.ox
-            dy = offset_oy - line.oy
             line.move_origin(dx, dy)
         
         self.selected_point.reset()
@@ -840,12 +847,12 @@ class dxf_file:
         all_items = self.get_item(all=True)
         self.rx = rx
         self.ry = ry
+        d_sita = sita - self.sita
         self.sita = sita
         
         for item in all_items:
             index = self.get_index_from_item(item)
             line = self.line_list[index]
-            d_sita = sita - line.sita
             line.rotate(d_sita, rx, ry)
         
         self.selected_point.reset()        

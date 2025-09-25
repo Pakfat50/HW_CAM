@@ -126,9 +126,6 @@ class line_object:
                 
         self.x_raw = np.array(x_points)
         self.y_raw = np.array(y_points)
-        self.ox = 0
-        self.oy = 0
-        self.sita = 0
         self.st = np.array([x_points[0], y_points[0]])
         self.ed = np.array([x_points[-1], y_points[-1]])
         self.num = num
@@ -156,8 +153,6 @@ class line_object:
         
     
     def move_origin(self, dx, dy):
-        self.ox = self.ox + dx
-        self.oy = self.oy + dy
         self.x_raw = self.x_raw + dx
         self.y_raw = self.y_raw + dy
         self.x = self.x + dx
@@ -169,7 +164,6 @@ class line_object:
         
         
     def rotate(self, d_sita, rx, ry):
-        self.sita = self.sita + d_sita
         self.x_raw, self.y_raw = rotate(self.x_raw, self.y_raw, d_sita, rx, ry)
         self.x, self.y = rotate(self.x, self.y, d_sita, rx, ry)
         self.st[0], self.st[1] = rotate(self.st[0], self.st[1], d_sita, rx, ry)

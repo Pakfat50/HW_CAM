@@ -402,9 +402,15 @@ def load_file(dxf_obj, entry, isRefineValue, messeage_window):
     is_refine = isRefineValue.get()
     
     if file_chk(filename) == 1:
+        ox = dxf_obj.ox
+        oy = dxf_obj.oy
+        rx = dxf_obj.rx
+        ry = dxf_obj.ry
+        sita = dxf_obj.sita
+        
         dxf_obj.load_file(filename, is_refine)
-        dxf_obj.offset_origin(dxf_obj.ox, dxf_obj.oy)
-        dxf_obj.rotate(dxf_obj.sita, dxf_obj.rx, dxf_obj.ry)
+        dxf_obj.offset_origin(ox, oy)
+        dxf_obj.rotate(sita, rx, ry)
         dxf_obj.update(keep_view = False)
         if is_refine == True:
             messeage_window.set_messeage("%sを点列をリファインして読み込みました。\n"%filename)

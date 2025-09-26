@@ -80,7 +80,7 @@ Gコード生成前に、2Dおよび3Dにて、加工パスを確認できます
 ## 使用方法
 以下を参照ください。
 
-[ユーザマニュアル](https://github.com/Pakfat50/HW_CAM/blob/main/documents/README.md "ユーザマニュアル")
+[ユーザマニュアル](https://github.com/Pakfat50/HW_CAM/blob/main/documents/README.adoc "ユーザマニュアル")
 
 
 

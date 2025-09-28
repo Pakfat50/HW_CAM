@@ -1,6 +1,6 @@
 €–Ú–¼,’PˆÊ,value,à–¾,”õl
-XYƒtƒ@ƒCƒ‹–¼,none,”FŽ¯•s‰ÂŽ–—á.dxf,XY–Ê‚Å“Ç‚Ýž‚Þdxfƒtƒ@ƒCƒ‹–¼,.dxf‚Ü‚ÅŠÜ‚ß‚é‚±‚Æ.ƒJƒ“ƒ}‚ðŠÜ‚Ü‚È‚¢‚±‚Æ
-UVƒtƒ@ƒCƒ‹–¼,none,”FŽ¯•s‰ÂŽ–—á.dxf,UV–Ê‚Å“Ç‚Ýž‚Þdxfƒtƒ@ƒCƒ‹–¼,.dxf‚Ü‚ÅŠÜ‚ß‚é‚±‚Æ.ƒJƒ“ƒ}‚ðŠÜ‚Ü‚È‚¢‚±‚Æ
+XYƒtƒ@ƒCƒ‹–¼,none,../release/DAE51_LE.dxf,XY–Ê‚Å“Ç‚Ýž‚Þdxfƒtƒ@ƒCƒ‹–¼,.dxf‚Ü‚ÅŠÜ‚ß‚é‚±‚Æ.ƒJƒ“ƒ}‚ðŠÜ‚Ü‚È‚¢‚±‚Æ
+UVƒtƒ@ƒCƒ‹–¼,none,../release/DAE51_LE.dxf,UV–Ê‚Å“Ç‚Ýž‚Þdxfƒtƒ@ƒCƒ‹–¼,.dxf‚Ü‚ÅŠÜ‚ß‚é‚±‚Æ.ƒJƒ“ƒ}‚ðŠÜ‚Ü‚È‚¢‚±‚Æ
 Ø‚èo‚µŒ´“_X,mm,120,GƒR[ƒh‚ÌŽn“_‚ÌXÀ•W,ŽÀ”’l
 Ø‚èo‚µŒ´“_Y,mm,0,GƒR[ƒh‚ÌŽn“_‚ÌYÀ•W,ŽÀ”’l
 Ø‚èI‚í‚èX,mm,120,GƒR[ƒh‚ÌI“_‚ÌXÀ•W,ŽÀ”’l
@@ -14,8 +14,13 @@ CNC‘¬“x’è‹`,[,XY,CNC‘¤‚Å‚Ì‘¬“x’è‹`,XY^ UV^ XYU^ XYV^ Faster^ InvertTime@‚
 XY–Ê‹——£,mm,50,XY‹ì“®–Ê‚©‚çXY–Ê‚Ü‚Å‚Ì‹——£,ŽÀ”’l
 UV–Ê‹——£,mm,50,UV‹ì“®–Ê‚©‚çUV–Ê‚Ü‚Å‚Ì‹——£,ŽÀ”’l
 ‹ì“®–Ê‹——£,mm,500,‹ì“®–Ê‚Ì‹——£,ŽÀ”’l
+X•ûŒüƒIƒtƒZƒbƒg,mm,0,X•ûŒü‚Ì‘S‘ÌƒIƒtƒZƒbƒg—Ê,ŽÀ”’l
+Y•ûŒüƒIƒtƒZƒbƒg,mm,0,Y•ûŒü‚Ì‘S‘ÌƒIƒtƒZƒbƒg—Ê,ŽÀ”’l
+‰ñ“],deg,0,‘S‘Ì‰ñ“]Šp,ŽÀ”’l
 GƒR[ƒh‘‚«o‚µ,none,T1\nG17 G49 G54 G80 G90 G94 G21 G40\n,GƒR[ƒh‚Ì‰‚ß‚É‘}“ü‚·‚é•¶Žš—ñ,\n‚Í‰üs•¶Žš
 XŽ²–¼Ì,none,X,UIã‚ÌXŽ²‚É‘Î‰ž‚·‚é‹ì“®Ž²,GƒR[ƒh‚Éo—Í‚³‚ê‚é
 YŽ²–¼Ì,none,Y,UIã‚ÌYŽ²‚É‘Î‰ž‚·‚é‹ì“®Ž²,GƒR[ƒh‚Éo—Í‚³‚ê‚é
 UŽ²–¼Ì,none,A,UIã‚ÌUŽ²‚É‘Î‰ž‚·‚é‹ì“®Ž²,GƒR[ƒh‚Éo—Í‚³‚ê‚é
 VŽ²–¼Ì,none,Z,UIã‚ÌVŽ²‚É‘Î‰ž‚·‚é‹ì“®Ž²,GƒR[ƒh‚Éo—Í‚³‚ê‚é
+ƒŠƒtƒ@ƒCƒ“,none,ON,ƒXƒvƒ‰ƒCƒ““_—ñ‚ðƒŠƒtƒ@ƒCƒ“‚·‚éƒ`ƒFƒbƒNƒ{ƒbƒNƒX‚Ì’l,ON/OFF
+Ž©ŒÈŒð·œ‹Ž,none,ON,Ž©ŒÈŒð·œ‹Ž—LŒø‰»ƒ`ƒFƒbƒNƒ{ƒbƒNƒX‚Ì’l,ON/OFF

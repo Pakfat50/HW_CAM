@@ -116,11 +116,16 @@ class config:
         self.CS_DEF = "Center"
         self.CNC_CS_DEF = "XY"
         self.MACH_DIST = 500
+        self.OFFSET_X = 0
+        self.OFFSET_Y = 0
+        self.ROTATE = 0
         self.HEADER = "T1\nG17 G49 G54 G80 G90 G94 G21 G40 G64\n"
         self.X_str = 'X'
         self.Y_str = 'Y'
         self.U_str = 'Z'
         self.V_str = 'A'
+        self.REFINE = False
+        self.REMOVE_COLLISION = False
         x_data = [1,1000]
         y_data = [0,0]
         self.offset_function = generate_offset_function(x_data, y_data)
@@ -144,11 +149,24 @@ class config:
             self.XY_DIST = float(config_data[12])
             self.UV_DIST = float(config_data[13])
             self.MACH_DIST = float(config_data[14])
-            self.HEADER = config_data[15].replace("\\n", "\n")
-            self.X_str = str(config_data[16])
-            self.Y_str = str(config_data[17])
-            self.U_str = str(config_data[18])
-            self.V_str = str(config_data[19])
+            self.OFFSET_X = float(config_data[15])
+            self.OFFSET_Y = float(config_data[16])
+            self.ROTATE = float(config_data[17])           
+            self.HEADER = config_data[18].replace("\\n", "\n")
+            self.X_str = str(config_data[19])
+            self.Y_str = str(config_data[20])
+            self.U_str = str(config_data[21])
+            self.V_str = str(config_data[22])
+            if str(config_data[23]) == "ON":
+                self.REMOVE_COLLISION = True
+            else:
+                self.REMOVE_COLLISION = False
+                
+            if str(config_data[24]) == "ON":
+                self.REFINE = True
+            else:
+                self.REFINE = False            
+            
             self.MESSEAGE = "設定ファイルの読み込み成功\n"
             
         except:
@@ -169,11 +187,16 @@ class config:
             self.XY_DIST = 25.0
             self.UV_DIST = 50.0
             self.MACH_DIST = 500
+            self.OFFSET_X = 0
+            self.OFFSET_Y = 0
+            self.ROTATE = 0
             self.HEADER = "T1\nG17 G49 G54 G80 G90 G94 G21 G40 G64\n"
             self.X_str = 'X'
             self.Y_str = 'Y'
             self.U_str = 'Z'
             self.V_str = 'A'
+            self.REFINE = False
+            self.REMOVE_COLLISION = False
             self.MESSEAGE = "設定ファイルの読み込み失敗\n"
             pass          
 
@@ -335,8 +358,9 @@ def open_file_explorer(entry):
     fTyp = [("","*")]
     iDir = get_curdir()
     data = tk.filedialog.askopenfilename(filetypes = fTyp,initialdir = iDir)
-    entry.delete(0,tk.END)
-    entry.insert(tk.END, data)
+    if not(len(data)==0):
+        entry.delete(0,tk.END)
+        entry.insert(tk.END, data)
 
 
 def load_config(config, config_entry, dlEntry, XYOffsetEntry, UVOffsetEntry,\
@@ -1182,7 +1206,7 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
                 
                 anim = FuncAnimation(fig, update, frames=num_plot, interval=100, repeat=False)
                 canvas.draw()
-                anim.save('anim.gif', writer="imagemagick")
+                #anim.save('anim.gif', writer="imagemagick")
             else:
                 point_dist_array = calc_point_dist(x_m_array, y_m_array, u_m_array, v_m_array, 0, Z_Mach)
                 ax.plot(x_m_array, y_m_array, "b", label = "XY Mech Path")
@@ -1281,8 +1305,10 @@ if __name__ == "__main__":
     curdir =  get_curdir()
     config = config()
     config.load_config("%s\\config.csv"%curdir)
+    config_read_messeage = config.MESSEAGE
     config.load_offset_func("%s\\offset_function.csv"%curdir)
-       
+    offset_function_read_messeage = config.MESSEAGE
+    
     #======================================================================================================================================
     #            rootインスタンスの生成
     #======================================================================================================================================
@@ -1361,7 +1387,9 @@ if __name__ == "__main__":
     MessageWindow.place(x = 852, y = 805)
     MessageWindowLabel = tk.Label(root, text="メッセージウィンドウ",font=("",12))
     MessageWindowLabel.place(x = 860, y = 780)
-
+    MessageWindow.set_messeage(config_read_messeage)
+    MessageWindow.set_messeage(offset_function_read_messeage)
+    MessageWindow.set_messeage("Gコードの書き出しは「%s」です。\n"%config.HEADER)
 
     #======================================================================================================================================
     #           entryインスタンスの生成
@@ -1383,7 +1411,7 @@ if __name__ == "__main__":
     OffsetDistLabel0 = tk.Label(root, text="オフセット量[mm]",font=("",10))
     OffsetDistLabel0.place(x = 875, y = 498)
     OffsetDistEntry0 = tk.Entry(root, width=14, justify=tk.RIGHT,font=("",12)) 
-    OffsetDistEntry0.insert(tk.END, "0.0")   
+    OffsetDistEntry0.insert(tk.END, config.XY_OFFSET_DIST)   
     OffsetDistEntry0.place(x = 990, y = 495) 
 
 
@@ -1391,7 +1419,7 @@ if __name__ == "__main__":
     OffsetDistLabel1 = tk.Label(root, text="オフセット量[mm]",font=("",10))
     OffsetDistLabel1.place(x = 1275, y = 498)
     OffsetDistEntry1 = tk.Entry(root, width=14, justify=tk.RIGHT,font=("",12)) 
-    OffsetDistEntry1.insert(tk.END, "0.0")   
+    OffsetDistEntry1.insert(tk.END, config.UV_OFFSET_DIST)   
     OffsetDistEntry1.place(x = 1390, y = 495) 
 
 
@@ -1420,10 +1448,10 @@ if __name__ == "__main__":
     OriginOffsetLabel2 = tk.Label(root, text="Y：",font=("",12))
     OriginOffsetLabel2.place(x = 1070, y = 610)
     OriginOffsetEntry_X = tk.Entry(root, width=8,font=("",12)) 
-    OriginOffsetEntry_X.insert(tk.END, 0)       
+    OriginOffsetEntry_X.insert(tk.END, config.OFFSET_X)       
     OriginOffsetEntry_X.place(x = 1000, y = 610)   
     OriginOffsetEntry_Y = tk.Entry(root, width=8,font=("",12))     
-    OriginOffsetEntry_Y.insert(tk.END, 0)
+    OriginOffsetEntry_Y.insert(tk.END, config.OFFSET_Y)
     OriginOffsetEntry_Y.place(x = 1100, y = 610)    
 
 
@@ -1432,7 +1460,7 @@ if __name__ == "__main__":
     RotateLabel0 = tk.Label(root, text="回転：",font=("",12))
     RotateLabel0.place(x = 1300, y = 610)
     RotateEntry = tk.Entry(root, width=8,font=("",12)) 
-    RotateEntry.insert(tk.END, 0)       
+    RotateEntry.insert(tk.END, config.ROTATE)       
     RotateEntry.place(x = 1350, y = 610)
 
 
@@ -1459,7 +1487,7 @@ if __name__ == "__main__":
     CutEndLabel2 = tk.Label(root, text="Y：",font=("",12))
     CutEndLabel2.place(x = 1420, y = 645)
     CutEndEntry_X = tk.Entry(root, width=8,font=("",12)) 
-    CutEndEntry_X.insert(tk.END, config.EX)       
+    CutEndEntry_X.insert(tk.END, config.EX)
     CutEndEntry_X.place(x = 1350, y = 645)   
     CutEndEntry_Y = tk.Entry(root, width=8,font=("",12))     
     CutEndEntry_Y.insert(tk.END, config.EY)
@@ -1488,7 +1516,11 @@ if __name__ == "__main__":
     CutSpeedDefList = ("XY(Mech)", "XY(Work)", "Center", "UV(Work)", "UV(Mech)")
     CutSpeedDefCB = ttk.Combobox(root, textvariable= tk.StringVar(), width = 15,\
                                  values=CutSpeedDefList, style="office.TCombobox")
-    CutSpeedDefCB.set("Center")
+    
+    if config.CS_DEF in CutSpeedDefList:
+        CutSpeedDefCB.set(config.CS_DEF)
+    else:
+        CutSpeedDefCB.set("Center")
     CutSpeedDefCB.bind(
         '<<ComboboxSelected>>', 
         lambda e: Set_CutSpeed(dxf0, dxf1, XYDistEntry, UVDistEntry, MachDistEntry,\
@@ -1502,7 +1534,10 @@ if __name__ == "__main__":
     CNCSpeedDefList = ("XY", "UV", "XYU", "XYV", "Faster" ,"InvertTime")
     CNCSpeedDefCB = ttk.Combobox(root, textvariable= tk.StringVar(), width = 15,\
                                  values=CNCSpeedDefList, style="office.TCombobox")
-    CNCSpeedDefCB.set("XY")
+    if config.CNC_CS_DEF in CNCSpeedDefList:
+        CNCSpeedDefCB.set(config.CNC_CS_DEF)
+    else:
+        CNCSpeedDefCB.set("XY")
     CNCSpeedDefCB.place(x = 1300, y = 705) 
 
 
@@ -1673,11 +1708,13 @@ if __name__ == "__main__":
 
     #【自己交差除去チェックボックス】
     removeCollisionValue = tk.BooleanVar()
+    removeCollisionValue.set(config.REMOVE_COLLISION)
     chk1 = tk.Checkbutton(root, text="自己交差除去有効化", var=removeCollisionValue, command =  lambda: EnableRemoveSelfCollision(removeCollisionValue, MessageWindow))
     chk1.place(x=1350, y=5)
     
     #【スプラインをリファインするかどうかのチェックボックス】
     isRefineSpline = tk.BooleanVar()
+    isRefineSpline.set(config.REFINE)
     chk2 = tk.Checkbutton(root, text="スプライン点列をリファインする", var=isRefineSpline, command =  lambda: EnableSplineRefine(isRefineSpline, MessageWindow))
     chk2.place(x=1180, y=5)  
 

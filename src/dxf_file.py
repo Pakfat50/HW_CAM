@@ -433,14 +433,15 @@ class dxf_file:
                 alpha_line = 1
                 alpha_vect = 1
                 alpha_offset = 1
-                pick = True
+                pick = 5 #選択有効
             else:
                 alpha_line = 0.1
                 alpha_vect = 0.1
                 alpha_offset = 0
-                pick = None
+                pick = 0 #選択無効
             
             self.ax.plot(line.x, line.y, color = col, alpha = alpha_line, marker='o', markersize=2, picker = pick)
+            
             X,Y = line.x[0], line.y[0]
             U,V = line.x[1], line.y[1]
             self.plot_vector(line.x[0], line.y[0], line.x[1], line.y[1], 1, col, alpha_vect)

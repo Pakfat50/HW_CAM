@@ -127,7 +127,7 @@ class config:
         
     def load_config(self, file_path):
         try:
-            config_file = np.genfromtxt(file_path, delimiter = ",", skip_header = 1, dtype = str)
+            config_file = np.genfromtxt(file_path, delimiter = ",", skip_header = 1, dtype = str, encoding="shift-jis")
             config_data = config_file[:,2]
             self.FILENAME_XY = config_data[0]
             self.FILENAME_UV = config_data[1]
@@ -179,7 +179,7 @@ class config:
 
     def load_offset_func(self, file_path):
         try:
-            offset_function_file = np.genfromtxt(file_path, delimiter = ",", skip_header = 1, dtype = str)
+            offset_function_file = np.genfromtxt(file_path, delimiter = ",", skip_header = 1, dtype = str, encoding="shift-jis")
             x_data = offset_function_file[0,3:]
             y_data = offset_function_file[1,3:]
             x_data = x_data.astype(float)
@@ -1170,7 +1170,7 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
                 z_max = Z_Mach
                 z_min = 0.0
                 
-                max_range = max(np.array([x_max - x_min, y_max - y_min, z_max - z_min])) * 0.5
+                max_range = max(np.array([x_max - x_min, y_max - y_min]))*0.5
                 mid_x = (x_max + x_min) * 0.5
                 mid_y = (y_max + y_min) * 0.5
                 mid_z = (z_max + z_min) * 0.5
@@ -1178,10 +1178,11 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
                 ax.set_ylim(mid_y - max_range, mid_y + max_range)
                 ax.set_zlim(mid_z - max_range, mid_z + max_range)
                 
-                ax.view_init(elev=84, azim=-92) 
+                ax.view_init(elev=87, azim=66, roll = 154) 
                 
                 anim = FuncAnimation(fig, update, frames=num_plot, interval=100, repeat=False)
                 canvas.draw()
+                anim.save('anim.gif', writer="imagemagick")
             else:
                 point_dist_array = calc_point_dist(x_m_array, y_m_array, u_m_array, v_m_array, 0, Z_Mach)
                 ax.plot(x_m_array, y_m_array, "b", label = "XY Mech Path")

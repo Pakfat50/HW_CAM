@@ -389,50 +389,21 @@ def calc_point_dist(x, y, u, v, z1, z2):
         return np.array([])
 
 # Ver2.1変更 　引数追加
-def plot_3d_cut_path(ax, x, y, u, v, xm, ym, um, vm, z_xy, z_uv, z_m, n_plot):
-    
-    point_dist_list = []
+def plot_3d_cut_path(ax, x, y, u, v, xm, ym, um, vm, z_xy, z_uv, z_m, num_per_plot, frame):
     
     try:
         if len(x) == len(y) == len(u) == len(v) == len(xm) == len(ym) == len(um) == len(vm):
-            zm = np.ones(len(x)) * 0.0
-            z = np.ones(len(x)) * z_xy
-            w = np.ones(len(x)) * z_m - z_uv
-            wm = np.ones(len(x)) * z_m
-            
-            ax.plot(x, y, z, 'k')
-            ax.plot(u, v, w, 'k')
-            
-            ax.plot(xm, ym, zm, 'k')
-            ax.plot(um, vm, wm, 'k')
-            
-            
-            if n_plot < 1:
-                n_plot = 1
-            
-            num_per_plot = int(len(x)/n_plot)
-            if num_per_plot < 1:
-                num_per_plot = 1
+            i = frame * num_per_plot
+            if i > len(x):
+                i = len(x)-1
+            elif i < 0:
+                i = 0
                 
-            i = 0
-            j = 0
-            while i < len(x):
-                if j > num_per_plot:
-                    ax.plot([x[i],u[i]], [y[i],v[i]],  [z_xy, z_m - z_uv], color = 'r', alpha = 0.5)
-                    ax.plot([x[i],xm[i]],[y[i],ym[i]], [z_xy, 0] , color = 'b', alpha = 0.5)
-                    ax.plot([u[i],um[i]],[v[i],vm[i]], [z_m - z_uv, z_m], color = 'b', alpha = 0.5)
-                    
-                    j = 0
-                temp_norm = norm_3d(xm[i], ym[i], 0, um[i], vm[i], z_m)
-                point_dist_list.append(temp_norm)
-                j += 1
-                i += 1
+            ax.plot([x[i],u[i]], [y[i],v[i]],  [z_xy, z_m - z_uv], color = 'r', alpha = 0.5)
+            ax.plot([x[i],xm[i]],[y[i],ym[i]], [z_xy, 0] , color = 'b', alpha = 0.5)
+            ax.plot([u[i],um[i]],[v[i],vm[i]], [z_m - z_uv, z_m], color = 'b', alpha = 0.5)
             
-            return np.array(point_dist_list)                  
             
-        
-        else:
-            return np.array([])
     except:
         traceback.print_exc()
         output_log(traceback.format_exc())

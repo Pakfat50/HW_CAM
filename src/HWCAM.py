@@ -33,6 +33,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.animation import FuncAnimation
 from matplotlib.figure import Figure
 import datetime
 import os
@@ -1100,8 +1101,8 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
                     norm_line2line0 = norm(x_array[-1], y_array[-1], x[0], y[0])
                     norm_line2line1 = norm(u_array[-1], v_array[-1], u[0], v[0])
                     
-                    if norm_line2line0 > DIST_CUTPATH_PLOT  or  norm_line2line1 > DIST_CUTPATH_PLOT:
-                        N_interp_line2line = int(max(norm_line2line0, norm_line2line1) / DIST_CUTPATH_PLOT)
+                    if norm_line2line0 > dl  or  norm_line2line1 > dl:
+                        N_interp_line2line = int(max(norm_line2line0, norm_line2line1) / dl)
                         
                         if N_interp_line2line < 2:
                             N_interp_line2line = 2
@@ -1124,8 +1125,8 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
             norm_line2line0 = norm(x_array[-1], y_array[-1], ex, ey)
             norm_line2line1 = norm(u_array[-1], v_array[-1], ex, ey)
             
-            if norm_line2line0 > DIST_CUTPATH_PLOT  or  norm_line2line1 > DIST_CUTPATH_PLOT:
-                N_interp_line2line = int(max(norm_line2line0, norm_line2line1) / DIST_CUTPATH_PLOT)
+            if norm_line2line0 > dl  or  norm_line2line1 > dl:
+                N_interp_line2line = int(max(norm_line2line0, norm_line2line1) / dl)
                 
                 if N_interp_line2line < 2:
                     N_interp_line2line = 2
@@ -1142,9 +1143,24 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
             
             
             if is_plot_3d == True:
-                point_dist_array = plot_3d_cut_path(ax, x_array, y_array, u_array, v_array, x_m_array, y_m_array, u_m_array, v_m_array, Z_XY, Z_UV, Z_Mach, int(length_sum/DIST_CUTPATH_PLOT))
+                point_dist_array = calc_point_dist(x_m_array, y_m_array, u_m_array, v_m_array, 0, Z_Mach)
                 
-                ax.view_init(elev=90, azim=-90) 
+                
+                ax.plot(x_array, y_array, np.ones(len(x_array))*Z_XY, 'k')
+                ax.plot(u_array, v_array, np.ones(len(x_array))*(Z_Mach-Z_UV), 'k')
+                ax.plot(x_m_array, y_m_array, np.ones(len(x_array))*0, 'k')
+                ax.plot(u_m_array, v_m_array, np.ones(len(x_array))*Z_Mach, 'k')
+                
+                
+                num_per_plot = int(len(x_array) / length_sum * DIST_CUTPATH_PLOT)
+                num_plot = int(len(x_array)/num_per_plot) + 1
+                
+                if num_per_plot < 1:
+                    num_per_plot = 1
+                
+                def update(frame):
+                    plot_3d_cut_path(ax, x_array, y_array, u_array, v_array, x_m_array, y_m_array, u_m_array, v_m_array, Z_XY, Z_UV, Z_Mach, num_per_plot, frame)
+                
                 
                 x_max = max(max(x_array), max(u_array))
                 x_min = min(min(x_array), min(u_array))
@@ -1161,8 +1177,11 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
                 ax.set_xlim(mid_x - max_range, mid_x + max_range)
                 ax.set_ylim(mid_y - max_range, mid_y + max_range)
                 ax.set_zlim(mid_z - max_range, mid_z + max_range)
+                
+                ax.view_init(elev=84, azim=-92) 
+                
+                anim = FuncAnimation(fig, update, frames=num_plot, interval=100, repeat=False)
                 canvas.draw()
-            
             else:
                 point_dist_array = calc_point_dist(x_m_array, y_m_array, u_m_array, v_m_array, 0, Z_Mach)
                 ax.plot(x_m_array, y_m_array, "b", label = "XY Mech Path")

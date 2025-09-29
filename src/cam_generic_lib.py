@@ -40,15 +40,10 @@ from error_log import *
 #   【戻り値】 float 距離
 #   【機能】 (x0,y0,z0) と(x,y,z)の距離を計算する
 #
-#   item2num(str item_num)
-#   【引数】 item_num
-#   【戻り値】 int num
-#   【機能】 tk.treeのItem番号（I***，***がアイテム番号）から***を抽出し，int型に変換して出力する．***は16進法である．
-#
-#   generate_arc_length_points(line_object line_object, int N)
-#   【引数】 line_object, N
+#   generate_arc_length_points(line line, int N)
+#   【引数】 line, N
 #   【戻り値】　list x_p, y_p
-#   【機能】 line_objectのx, y点列をスプライン補完し，これをN等分した点列を作成する．
+#   【機能】 lineのx, y点列をスプライン補完し，これをN等分した点列を作成する．
 #        
 #   generate_arc_length_points4line(float x_st, float  y_st, float x_ed, float y_ed, int N)
 #   【引数】　x_st, y_st, x_ed, y_ed, N
@@ -165,13 +160,7 @@ def norm_3d(x0, y0, z0, x, y, z):
     return np.sqrt((x-x0)**2 + (y-y0)**2 + (z-z0)**2)
 
 
-def item2num(item_num):
-    temp = item_num.replace("I","")
-    temp = '0x0%s'%temp
-    num = int(temp,0) - 1    
-    return num
-
-def removeSamePoint(x, y):
+def remove_same_point(x, y):
     i = 1
     new_x = [x[0]]
     new_y = [y[0]]
@@ -217,7 +206,7 @@ def get_spline_length(x, y):
 
 
 def refine_spline_curvature(x, y, N):
-    x, y = removeSamePoint(x,y)
+    x, y = remove_same_point(x,y)
     
     N = int(N)
     if N < 4:
@@ -309,29 +298,29 @@ def refine_line(x, y, N):
 
     return xp, yp
 
-def generate_arc_length_points(line_object, N):
+def generate_arc_length_points(line, N):
     
     N = int(N)
     if N < 4:
         N = 4
     
-    x = line_object.x
-    y = line_object.y
+    x = line.x
+    y = line.y
 
     
-    if line_object.line_type == "point":  
+    if line.line_type == "point":  
         x_p = [x]*N
         y_p = [y]*N
         
-    if line_object.line_type == "line":  
+    if line.line_type == "line":  
         x_p, y_p = refine_line(x, y, N)
 
-    if line_object.line_type == "spline":
-        length_array = line_object.calc_length_array()
+    if line.line_type == "spline":
+        length_array = line.calc_length_array()
         sum_length = length_array[-1]
         t_p = length_array/sum_length
         
-        if line_object.interp_mode == "linear":
+        if line.interp_mode == "linear":
             fx_t = intp.interp1d(t_p, x, kind = "linear")
             fy_t = intp.interp1d(t_p, y, kind = "linear")
                 
@@ -579,7 +568,7 @@ def get_cross_point(p1_x, p1_y, p2_x, p2_y, p3_x, p3_y, p4_x, p4_y):
     return c1_x, c1_y
 
 
-def getCrossPointFromPoint(p1_x, p1_y, p2_x, p2_y, p3_x, p3_y, p4_x, p4_y):
+def get_cross_point_from_point(p1_x, p1_y, p2_x, p2_y, p3_x, p3_y, p4_x, p4_y):
     # https://imagingsolution.blog.fc2.com/blog-entry-137.html
     s1 = ((p4_x - p2_x) * (p1_y - p2_y) - (p4_y - p2_y) * (p1_x - p2_x)) / 2.0
     s2 = ((p4_x - p2_x) * (p2_y - p3_y) - (p4_y - p2_y) * (p2_x - p3_x)) / 2.0
@@ -590,7 +579,7 @@ def getCrossPointFromPoint(p1_x, p1_y, p2_x, p2_y, p3_x, p3_y, p4_x, p4_y):
     return c1_x, c1_y
 
 
-def getCrossPointFromLines(a, b, c, d):
+def get_cross_point_from_lines(a, b, c, d):
     # https://mathwords.net/nityokusenkoten
     c1_x = (d-b)/(a-c)
     c1_y = (a*d - b*c)/(a-c)
@@ -598,14 +587,14 @@ def getCrossPointFromLines(a, b, c, d):
 
 
 
-def getFlatten(array):
+def get_flatten(array):
     ret = []
     for val in array:
         ret.append(float(val))
     return np.array(ret)
 
 
-def detectRotation(x, y):
+def detect_rotation(x, y):
     i = 0
     temp_s = 0
 
@@ -622,7 +611,7 @@ def detectRotation(x, y):
     return ccw
 
 
-def getFiletSita(sita_st, sita_ed):
+def get_filet_sita(sita_st, sita_ed):
     
     # 開始角から終了角までの変化量（sita_stとsita_edの傾きをもつ線のなす角）を計算
     delta_sita = sita_ed - sita_st
@@ -668,7 +657,7 @@ def generate_offset_interporate_point(l0_x, l0_y, l1_x, l1_y, l0_offset, l1_offs
             beta = np.arctan2(b2, b1)
             
             # l0とl1の交点を求める
-            cx, cy = getCrossPointFromPoint(l0_x[0], l0_y[0], l1_x[0], l1_y[0], l0_x[1], l0_y[1], l1_x[1], l1_y[1])
+            cx, cy = get_cross_point_from_point(l0_x[0], l0_y[0], l1_x[0], l1_y[0], l0_x[1], l0_y[1], l1_x[1], l1_y[1])
             
             # 幾何より、l0延長線上のフィレット開始点（p1）および、フィレットの中心座標（p0）を求める
             p1_x = cx - r * (1/np.tan(sita)) * np.cos(-alpha)
@@ -682,12 +671,12 @@ def generate_offset_interporate_point(l0_x, l0_y, l1_x, l1_y, l0_offset, l1_offs
             b0 = -m2_0*p1_x + p1_y
             b1 = -m2_1*p2_x + p2_y
             
-            f_x, f_y = getCrossPointFromLines(m2_0, b0, m2_1, b1)
+            f_x, f_y = get_cross_point_from_lines(m2_0, b0, m2_1, b1)
     
             # 円弧の始点角と終点角を計算する。
             sita_st = float(np.arctan2(p1_y-f_y, p1_x-f_x))
             sita_ed = float(np.arctan2(p2_y-f_y, p2_x-f_x))
-            sita_st, sita_ed = getFiletSita(sita_st, sita_ed)
+            sita_st, sita_ed = get_filet_sita(sita_st, sita_ed)
             
             if r <= DIST_NEAR*10:
                 r = DIST_NEAR*10
@@ -737,7 +726,7 @@ def cross_judge(a, b, c, d):
 
 def remove_self_collision(x, y):
     # 同一点があると正しく自己交差を検出できないため、削除する
-    x, y = removeSamePoint(x, y)
+    x, y = remove_same_point(x, y)
     
     new_x = [x[0]]
     new_y = [y[0]]
@@ -753,7 +742,7 @@ def remove_self_collision(x, y):
             p4 = [x[j+1], y[j+1]]
             if cross_judge(p1, p2, p3, p4) == True:
                 detection = True
-                #cx, cy = getCrossPointFromPoint(p1[0], p1[1], p3[0], p3[1], p2[0], p2[1], p4[0], p4[1])
+                #cx, cy = get_cross_point_from_point(p1[0], p1[1], p3[0], p3[1], p2[0], p2[1], p4[0], p4[1])
                 #new_x.append(cx)
                 #new_y.append(cy)             
                 i = j+1
@@ -767,8 +756,8 @@ def remove_self_collision(x, y):
 
 def remove_collision(x1, y1, x2, y2):
     # 前提：x1[-1] -> x2[0] と繋がる
-    x1, y1 = removeSamePoint(x1, y1)
-    x2, y2 = removeSamePoint(x2, y2)
+    x1, y1 = remove_same_point(x1, y1)
+    x2, y2 = remove_same_point(x2, y2)
     
     detection = False 
     num1 = 0
@@ -788,7 +777,7 @@ def remove_collision(x1, y1, x2, y2):
                 detection = True
                 num1 = i
                 num2 = j 
-                cx, cy = getCrossPointFromPoint(p1[0], p1[1], p3[0], p3[1], p2[0], p2[1], p4[0], p4[1])         
+                cx, cy = get_cross_point_from_point(p1[0], p1[1], p3[0], p3[1], p2[0], p2[1], p4[0], p4[1])         
             j += 1
         i += 1
         

@@ -21,7 +21,7 @@ from cam_global import *
 from error_log import *
 
 #######################################################################################################################################
-###############    super_tableクラス   ここから　　　#########################################################################################
+###############    SuperTableクラス   ここから　　　#########################################################################################
         
 #【説明】
 #　ラインのテーブルを作成するクラスである．tk.treeのインスタンスを格納する．tk.treeを初期化する方法がtreeの再生成しかないため，生成に必要な情報をメンバ変数として保存し，
@@ -56,7 +56,7 @@ from error_log import *
 #   【機能】　既存のtableインスタンスを破棄する．その後再生成する．テーブルのヘッダなどを設定する．
 
     
-class super_table:
+class SuperTable:
     def __init__(self, root, y_height, x, y):
         self.x_pos = x
         self.y_pos = y
@@ -96,16 +96,16 @@ class super_table:
         self.scrollbar.place(x = self.x_pos+375, y = self.y_pos+2, height = (self.y_height+1) * 20 + 7)
         
     
-###############    super_tableクラス   ここまで　　　#########################################################################################
+###############    SuperTableクラス   ここまで　　　#########################################################################################
 #######################################################################################################################################
 
 
 
 #######################################################################################################################################
-###############   dxf_fileクラス   ここから　　    　#########################################################################################
+###############   DxfFileクラス   ここから　　    　#########################################################################################
 
 #【説明】
-#　dxfファイルに関連する，line_object，super_tableなどを格納する．main関数以外ではトップレベルモジュールである．
+#　dxfファイルに関連する，LineObject，SuperTableなどを格納する．main関数以外ではトップレベルモジュールである．
 #
 #【親クラス】
 #　なし
@@ -114,16 +114,16 @@ class super_table:
 #   変数名          型                   説明
 #   ax              Axes                グラフのプロットエリアのインスタンス
 #   canvas          FigureCanvasTkAgg   グラフを配置しているフレームのインスタンス
-#   table           super_table         x_raw, y_rawの 始点 
-#   x_table         super_table         x_raw, y_rawの 終点 
+#   table           SuperTable         x_raw, y_rawの 始点 
+#   x_table         SuperTable         x_raw, y_rawの 終点 
 #   name            str                 グラフに表示する名前"X-Y", "U-V"など
-#   line_list       list                line_objectをすべて格納するリスト
-#   line_num_list   list                テーブル番号とline_objectを対応付けるリスト
+#   line_list       list                LineObjectをすべて格納するリスト
+#   line_num_list   list                テーブル番号とLineObjectを対応付けるリスト
 #   selected_line   int                 テーブルにて選択されたラインの番号
 #   filename        str                 dxfファイルの名称
 #
 #【実装メソッド】
-#   __init__(Axes ax, FigureCanvasTkAgg canvas, super_table table, super_table x_table, str name)
+#   __init__(Axes ax, FigureCanvasTkAgg canvas, SuperTable table, SuperTable x_table, str name)
 #   【引数】 x_points, y_points, num
 #   【戻り値】　なし
 #   【機能】 初期化処理を実行する．ax，canvas，table，x_table，nameを自身のメンバ変数に格納する，またline_list，line_num_listを空のリストとして作成する．
@@ -138,13 +138,13 @@ class super_table:
 #   reload()
 #   【引数】 なし
 #   【戻り値】　なし
-#   【機能】　filemameのdxfファイルを読み込み，lineとsplineの座標点列を取得する．座標点列からline_objectを生成し，line_listに追加する．
-#　　　　　　　　line_num_listに自身の番号を追加する．（初期値はline_object.numと同じ）　tabelにline_objectの情報を追加する．
+#   【機能】　filemameのdxfファイルを読み込み，lineとsplineの座標点列を取得する．座標点列からLineObjectを生成し，line_listに追加する．
+#　　　　　　　　line_num_listに自身の番号を追加する．（初期値はLineObject.numと同じ）　tabelにLineObjectの情報を追加する．
 #
 #   table_reload()
 #   【引数】 なし
 #   【戻り値】 なし
-#   【機能】 tableに表示する情報を，line_objectのメンバ変数が持つ情報に更新する，
+#   【機能】 tableに表示する情報を，LineObjectのメンバ変数が持つ情報に更新する，
 #
 #   plot()
 #   【引数】 なし 
@@ -168,7 +168,7 @@ class super_table:
 #   【戻り値】　なし
 #   【機能】　tableに表示されているライン全てのoffset_distを入力値に更新する．plot()，table_reload()をコールし，グラフ，表を更新する．
 #
-#   Change_CutDir()
+#   change_cut_dir()
 #   【引数】 なし
 #   【戻り値】　なし
 #   【機能】　tableで選択されているラインの向きをすべて逆転させる．plot()，table_reload()をコールし，グラフ，表を更新する．
@@ -189,12 +189,12 @@ class super_table:
 #   【戻り値】　なし
 #   【機能】 入力された2本のラインについて，line_num_listの値を入れ替える．set_selected_lineをコールし，line_num1をselected_lineに設定する．
 #
-#   Merge_Selected_line()
+#   merge_selected_line()
 #   【引数】 なし
 #   【戻り値】　error, selected_items
 #   【機能】　tableで選択されているラインが２本のみの場合、この２本を結合する。error（0: 成功, 1: 選択数が誤り, 2: 隣接していない）と、その時選択されているラインを取得する
 #
-#   Merge_line(char parent_item_num, char child_item_num)
+#   merge_line(char parent_item_num, char child_item_num)
 #   【引数】 なし
 #   【戻り値】　結合可否（boolean)
 #   【機能】　parent_item_numで指定された線（parent_line）に、child_item_numで指定された線（child_line）を結合する
@@ -216,7 +216,7 @@ class super_table:
 #   【戻り値】　なし
 #   【機能】　テーブルで表示しているラインの順番を逆転させ，カット方向を逆転させる．
 #
-#   SortLine(float ox0, float oy0)
+#   sort_line(float ox0, float oy0)
 #   【引数】 
 #   【戻り値】 なし
 #   【機能】 テーブルで表示しているラインを下記のルールに基づき並び替え，要すればカット方向，オフセット方向を変更する．
@@ -232,7 +232,7 @@ class super_table:
 #   【戻り値】　なし
 #   【機能】　テーブルで表示しているラインの座標点を、offset_ox, offset_oyで指定される分だけオフセットする．　　　　　　　
 
-class selected_point:
+class SelectedPoint:
     def __init__(self, x, y, index):
         self.x = x
         self.y = y
@@ -243,7 +243,7 @@ class selected_point:
         self.y = np.nan
         self.index = None
 
-class dxf_file:
+class DxfFile:
     def __init__(self, ax, canvas, table, x_table, name):
         self.ax = ax
         self.canvas = canvas
@@ -251,7 +251,7 @@ class dxf_file:
         self.x_table = x_table
         self.name = name
         self.line_list = []
-        self.selected_point = selected_point(np.nan, np.nan, None)
+        self.selected_point = SelectedPoint(np.nan, np.nan, None)
         self.line_num_max = 0
         self.ox = 0
         self.oy = 0
@@ -279,7 +279,7 @@ class dxf_file:
         self.table.table.see(items[0])
         
         if AUTOSORT_WHEN_LOADFILE == True:
-            self.SortLine()
+            self.sort_line()
             self.reset_line_num()
 
     
@@ -345,7 +345,7 @@ class dxf_file:
         while i < len(spline_obj):
             spline = spline_obj[i]
             spline_data = np.array(spline.control_points)[:]
-            line = line_object(spline_data[:,0], spline_data[:,1], i, is_refine) 
+            line = LineObject(spline_data[:,0], spline_data[:,1], i, is_refine) 
             self.line_list.append(line)
             self.table.table.insert("", "end", values=(line.num, format(line.offset_dist, '.4f'),\
                                                        line.line_type, format(line.cutspeed_work,'.2f')))
@@ -356,7 +356,7 @@ class dxf_file:
         while i_arc < len(arc_obj):
             arc = arc_obj[i_arc]
             arc_data = arc_to_spline(arc)
-            line = line_object(arc_data[:,0], arc_data[:,1], i + i_arc, is_refine) 
+            line = LineObject(arc_data[:,0], arc_data[:,1], i + i_arc, is_refine) 
             self.line_list.append(line)
             self.table.table.insert("", "end", values=(line.num, format(line.offset_dist, '.4f'), \
                                                        line.line_type, format(line.cutspeed_work,'.2f')))
@@ -367,7 +367,7 @@ class dxf_file:
         while i_poly < len(poly_obj):
             poly = poly_obj[i_poly]
             poly_data = poly_to_spline(poly)
-            line = line_object(poly_data[:,0], poly_data[:,1], i + i_poly, is_refine) 
+            line = LineObject(poly_data[:,0], poly_data[:,1], i + i_poly, is_refine) 
             line.interp_mode = "linear" #poly_lineであることを設定する
             self.line_list.append(line)
             self.table.table.insert("", "end", values=(line.num, format(line.offset_dist, '.4f'), \
@@ -384,7 +384,7 @@ class dxf_file:
             line_segment_data = np.array(line_segment_data)[:,0:2]
             
             if norm(line_segment_data[0,0],line_segment_data[0,1],line_segment_data[1,0],line_segment_data[1,1]) > DIST_NEAR:
-                line = line_object(line_segment_data[:,0], line_segment_data[:,1], i+k, is_refine) 
+                line = LineObject(line_segment_data[:,0], line_segment_data[:,1], i+k, is_refine) 
                 self.line_list.append(line)
                 self.table.table.insert("", "end", values=(line.num, format(line.offset_dist, '.4f'), \
                                                            line.line_type, format(line.cutspeed_work,'.2f')))
@@ -467,7 +467,7 @@ class dxf_file:
         line = event.artist
         x, y = line.get_data()
         index = event.ind[0]
-        self.selected_point = selected_point(x[index], y[index], index)
+        self.selected_point = SelectedPoint(x[index], y[index], index)
         self.plot()
       
     
@@ -540,7 +540,7 @@ class dxf_file:
         self.selected_point.reset()
         return line_nums
 
-    def Change_CutDir(self):
+    def change_cut_dir(self):
         items = self.get_item()
 
         for item in items:
@@ -552,7 +552,7 @@ class dxf_file:
         self.selected_point.reset()
 
 
-    def Merge_Selected_line(self):
+    def merge_selected_line(self):
         items = self.get_item()
         line_nums = []
         results = []
@@ -644,7 +644,7 @@ class dxf_file:
         return results, line_nums
     
     
-    def Separate_line(self):
+    def separate_line(self):
         result = False
         items = self.get_item()
         line_nums = []
@@ -669,8 +669,8 @@ class dxf_file:
                 x2 = x_org[point_index:]
                 y2 = y_org[point_index:]
                 
-                x1, y1 = removeSamePoint(x1, y1)
-                x2, y2 = removeSamePoint(x2, y2)
+                x1, y1 = remove_same_point(x1, y1)
+                x2, y2 = remove_same_point(x2, y2)
                 
                 line1 = copy.deepcopy(line_org)
                 line2 = copy.deepcopy(line_org)
@@ -730,7 +730,7 @@ class dxf_file:
         self.table.table.see(item)      
     
     
-    def SortLine(self):
+    def sort_line(self):
         items = self.get_item()
         all_items = self.get_item(all = True)
         
@@ -804,7 +804,7 @@ class dxf_file:
             while i < len(x_array_list):
                 x_array = x_array_list[i]
                 y_array = y_array_list[i]
-                ccw = detectRotation(x_array, y_array)
+                ccw = detect_rotation(x_array, y_array)
                 ccw_list.append(ccw)
                 i += 1
             
@@ -896,6 +896,6 @@ class dxf_file:
         return self_collision_line_nums, line_collision_nums
     
 
-###############   dxf_fileクラス   ここまで　　    　#########################################################################################
+###############   DxfFileクラス   ここまで　　    　#########################################################################################
 #######################################################################################################################################     
 

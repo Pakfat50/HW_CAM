@@ -41,7 +41,6 @@ import traceback
 
 # 内部ライブラリ
 from cam_generic_lib import *
-from line_object import *
 from dxf_file import *
 from messeage_window import *
 from cam_global import *
@@ -76,10 +75,10 @@ from error_log import *
 #   WORK_LENGTH     float           ワークの長さ（XY-UV断面距離）
 #   MACH_DIST       float           マシン駆動面の距離
 #   HEADER          string          Gコードの書き出し文字列
-#   X_str           string          G01でのX軸名称
-#   Y_str           string          G01でのY軸名称
-#   U_str           string          G01でのU軸名称
-#   V_str           string          G01でのV軸名称
+#   x_str           string          G01でのX軸名称
+#   y_str           string          G01でのY軸名称
+#   u_str           string          G01でのU軸名称
+#   v_str           string          G01でのV軸名称
 #   offset_function object          オフセット距離の算出に使用する関数オブジェクト
 #
 #【実装メソッド】
@@ -99,7 +98,7 @@ from error_log import *
 #   【機能】 file_pathで与えられるcsvファイルを開き、csvファイルから読み込んだ値からoffset_functionを更新する。問題があればデフォルト値を設定する
 
 
-class config:
+class Config:
     def __init__(self):
         self.FILENAME_XY = "ファイル名を入力して下さい。"
         self.FILENAME_UV = "ファイル名を入力して下さい。"
@@ -120,10 +119,10 @@ class config:
         self.OFFSET_Y = 0
         self.ROTATE = 0
         self.HEADER = "T1\nG17 G49 G54 G80 G90 G94 G21 G40 G64\n"
-        self.X_str = 'X'
-        self.Y_str = 'Y'
-        self.U_str = 'Z'
-        self.V_str = 'A'
+        self.X_STR = 'X'
+        self.Y_STR = 'Y'
+        self.U_STR = 'Z'
+        self.V_STR = 'A'
         self.REFINE = False
         self.REMOVE_COLLISION = False
         x_data = [1,1000]
@@ -153,10 +152,10 @@ class config:
             self.OFFSET_Y = float(config_data[16])
             self.ROTATE = float(config_data[17])           
             self.HEADER = config_data[18].replace("\\n", "\n")
-            self.X_str = str(config_data[19])
-            self.Y_str = str(config_data[20])
-            self.U_str = str(config_data[21])
-            self.V_str = str(config_data[22])
+            self.X_STR = str(config_data[19])
+            self.Y_STR = str(config_data[20])
+            self.U_STR = str(config_data[21])
+            self.V_STR = str(config_data[22])
             if str(config_data[23]) == "ON":
                 self.REMOVE_COLLISION = True
             else:
@@ -191,10 +190,10 @@ class config:
             self.OFFSET_Y = 0
             self.ROTATE = 0
             self.HEADER = "T1\nG17 G49 G54 G80 G90 G94 G21 G40 G64\n"
-            self.X_str = 'X'
-            self.Y_str = 'Y'
-            self.U_str = 'Z'
-            self.V_str = 'A'
+            self.X_STR = 'X'
+            self.Y_STR = 'Y'
+            self.U_STR = 'Z'
+            self.V_STR = 'A'
             self.REFINE = False
             self.REMOVE_COLLISION = False
             self.MESSEAGE = "設定ファイルの読み込み失敗\n"
@@ -227,16 +226,16 @@ class config:
 #   【戻り値】　なし
 #   【機能】 エクスプローラーを使ってファイルパスを指定し、パスをEntryにセットする。
 #
-#   load_config(config, config_entry, dlEntry, CutSpeedEntry, XYDistEntry, UVDistEntry, WorkLengthEntry, MachDistEntry, MessageWindow)
-#   【引数】　config, config_entry, dlEntry, CutSpeedEntry, XYDistEntry, UVDistEntry, WorkLengthEntry, MachDistEntry, MessageWindow
+#   load_config(config, config_entry, dl_entry, cut_speed_entry, xy_dist_entry, uv_dist_entry, WorkLengthEntry, mech_dist_entry, message_window)
+#   【引数】　config, config_entry, dl_entry, cut_speed_entry, xy_dist_entry, uv_dist_entry, WorkLengthEntry, mech_dist_entry, message_window
 #   【戻り値】　なし
 #   【機能】 open_file_explorerを用いて、config_entryにconfigファイルのパスを設定する
 #           configクラスのload_configメソッドを使用して、configファイルのパスを読みこみ、configオブジェクトの値を更新する
-#           dlEntry, CutSpeedEntry, XYDistEntry, UVDistEntry, WorkLengthEntry, MachDistEntryの値を、configオブジェクトの値に更新する
+#           dl_entry, cut_speed_entry, xy_dist_entry, uv_dist_entry, WorkLengthEntry, MachDistEntryの値を、configオブジェクトの値に更新する
 #           MessageWindowにconfig.load_configの結果およびGコードの書き出しを出力する
 #
-#   load_offset_func(config, offset_func_entry, MessageWindow)
-#   【引数】　config, offset_func_entry, MessageWindow
+#   load_offset_func(config, offset_func_entry, message_window)
+#   【引数】　config, offset_func_entry, message_window
 #   【戻り値】　なし
 #   【機能】 open_file_explorerを用いて、offset_func_entryに溶け量ファイルのパスを設定する
 #           configクラスのload_offset_funcメソッドを使用して、溶け量ファイルのパスを読みこみ、configオブジェクトのoffset_functionのメンバーを更新する
@@ -247,83 +246,83 @@ class config:
 #   【戻り値】　なし
 #   【機能】 エクスプローラーを使ってファイルパスを読みこむ。パスをEntryにセットしたうえで、load_fileによりファイルを読み込む。
 #
-#   load_file(dxf_file　dxf_obj, tk.Entry entry, messeage_window messeage_window)
+#   load_file(DxfFile　dxf_obj, tk.Entry entry, messeage_window messeage_window)
 #   【引数】　dxf_obj, entry, messeage_window
 #   【戻り値】　なし
 #   【機能】 Entryに入力されたファイル名称をdxf_obj.load_fileにより読み込む．file_chkをコールし，読み取り可否をmesseage_windowに通知する．
 #　　　　　　　　
-#   XY_UV_Link(tk.BooleanVar chkValue, super_table table_XY, super_table table_UV, messeage_window  messeage_window)
-#   【引数】 chkValue, table_XY, table_UV, messeage_window
+#   xy_uv_link(tk.BooleanVar is_xy_uv_link, SuperTable xy_table, SuperTable uv_table, messeage_window  messeage_window)
+#   【引数】 is_xy_uv_link, xy_table, uv_table, messeage_window
 #   【戻り値】　なし
-#   【機能】　chkValue=trueの場合，table_XY.parent=1, table_UV.parent=0に設定する．
+#   【機能】　chkValue=trueの場合，table_XY.parent=1, uv_table.parent=0に設定する．
 #
-#   swap_line(dxf_file　dxf_obj, messeage_window messeage_window)
+#   swap_line(DxfFile　dxf_obj, messeage_window messeage_window)
 #   【引数】 dxf_obj, messeage_window
 #   【戻り値】 なし
 #   【機能】 dxf_obj.Swap_Selected_lineをコールし，選択された2本のラインを入れ替える．入れ替え結果をmesseage_windowに表示する．
 #
-#   Change_CutDir(dxf_file　dxf_obj, messeage_window messeage_window)
+#   change_cut_dir(DxfFile　dxf_obj, messeage_window messeage_window)
 #   【引数】 dxf_obj, messeage_window
 #   【戻り値】 なし
-#   【機能】 dxf_obj.Change_CutDirをコールし，選択したラインのカット方向を入れ替える．入れ替え結果をmesseage_windowに表示する．
+#   【機能】 dxf_obj.change_cut_dirをコールし，選択したラインのカット方向を入れ替える．入れ替え結果をmesseage_windowに表示する．
 #
-#   Change_OffsetDir(dxf_file　dxf_obj, messeage_window messeage_window)
+#   Change_OffsetDir(DxfFile　dxf_obj, messeage_window messeage_window)
 #   【引数】 dxf_obj, messeage_window
 #   【戻り値】　なし
 #   【機能】 dxf_obj.Change_OffsetDirをコールし，選択したラインのオフセット方向を入れ替える．入れ替え結果をmesseage_windowに表示する．
 #   
-#   Merge_line(dxf_obj,  messeage_window)
+#   merge_line(dxf_obj,  messeage_window)
 #   【引数】　dxf_obj,  messeage_window
 #   【戻り値】　なし
 #   【機能】 テーブルで選択された２本のラインを結合する。後に選択した方のラインは削除する
 #     
-#   Set_OffsetDist(dxf_file　dxf_obj0, dxf_file　dxf_obj1, tk.Entry entry, messeage_window messeage_window)
+#   set_offset_dist(DxfFile　dxf_obj0, DxfFile　dxf_obj1, tk.Entry entry, messeage_window messeage_window)
 #   【引数】　dxf_obj0, dxf_obj1, entry, messeage_window
 #   【戻り値】　なし
 #   【機能】 entryに入力されたオフセット距離を読み取り，dxf_obj0.set_offset_dist，dxf_obj1.set_offset_distをコールする．変更結果をmesseage_windowに表示する．
 #
-#   delete_line(dxf_file　dxf_obj, messeage_window messeage_window)
+#   delete_line(DxfFile　dxf_obj, messeage_window messeage_window)
 #   【引数】 dxf_obj, messeage_window
 #   【戻り値】　なし
 #   【機能】 delete_Selected_lineをコールし，選択したラインを削除する．削除した結果をmesseage_windowに表示する．
 #
-#   AutoLineSort(dxf_file　dxf_obj0, dxf_file　dxf_obj1, tk.Entry entry_x, tk.Entry entry_y, messeage_window messeage_window)
+#   auto_sort_line(DxfFile　dxf_obj0, DxfFile　dxf_obj1, tk.Entry entry_x, tk.Entry entry_y, messeage_window messeage_window)
 #   【引数】 dxf_obj0, dxf_obj1, entry_x, entry_y, messeage_window
 #   【戻り値】 なし
-#   【機能】 entry_x, entry_yからox, oyを読み取り．dxf_obj0.SortLine, dxf_obj1.SortLineをコールする．結果をmesseage_windowに表示する．
+#   【機能】 entry_x, entry_yからox, oyを読み取り．dxf_obj0.sort_line, dxf_obj1.sort_lineをコールする．結果をmesseage_windowに表示する．
 #        
-#   Reverse(dxf_file　dxf_obj, messeage_window messeage_window)
+#   reverse_line(DxfFile　dxf_obj, messeage_window messeage_window)
 #   【引数】　dxf_obj, messeage_window
 #   【戻り値】　なし
 #   【機能】 dxf_obj.reverse_allをコールし，カット順を逆転させる．結果をmesseage_windowに表示する．
 #
-#   Replace_G01_code(g_code_str, X_str, Y_str, U_str, V_str)
-#   【引数】g_code_str, X_str, Y_str, U_str, V_str
+#   Replace_G01_code(g_code_str, x_str, y_str, u_str, v_str)
+#   【引数】g_code_str, x_str, y_str, u_str, v_str
 #   【戻り値】g_code_str
-#   【機能】g_code_strのX,Y,U,Vの座標文字をX_str, Y_str, U_str, V_strで指定されるものに置換する
+#   【機能】g_code_strのX,Y,U,Vの座標文字をX_str, y_str, u_str, V_strで指定されるものに置換する
 #
-#   make_offset_path(x_array, y_array, u_array, v_array, Z_XY, Z_UV, Z_Mach)
-#   【引数】x_array, y_array, u_array, v_array, Z_XY, Z_UV, Z_Mach
+#   make_offset_path(x_array, y_array, u_array, v_array, z_xy, z_uv, z_mach)
+#   【引数】x_array, y_array, u_array, v_array, z_xy, z_uv, z_mach
 #   【戻り値】new_x, new_y, new_u, new_v
 #   【機能】ワーク上のXY, UV座標点列（x_array, y_array, u_array, v_array）から、マシン駆動面上の座標点列を作成し、出力する
 #
-#   get_offset_and_cut_speed(length_XY, length_UV, Z_XY, Z_UV, Z_Mach, CutSpeed, offset_function)
-#   【引数】length_XY, length_UV, Z_XY, Z_UV, Z_Mach, CutSpeed, offset_function
+#   get_offset_and_cut_speed(length_xy, length_uv, z_xy, z_uv, z_mach, cut_speed, offset_function)
+#   【引数】length_XY, length_uv, z_xy, z_uv, z_mach, cut_speed, offset_function
 #   【戻り値】offset_XY_Work, offset_UV_Work, cutspeed_XY_Work, cutspeed_UV_Work, cutspeed_XY_Mech, cutspeed_UV_Mech
 #   【機能】(1) XY断面の線長とUV断面の線長から、ワークの中間点での線長を算出する
 #          (2) ワークの中間点でのカット速度が、CutSpeedとするとして、(1)の線長比から、XY、UV断面でのカット速度(cutspeed_XY_Work, cutspeed_UV_Work)を算出する
 #          (3) offset_functionを用いて、XY、UV断面のカット速度における溶け量を推定し、これをキャンセルするようにオフセット量（offset_XY_Work, offset_UV_Work）を設定する。
 #              ※マシン駆動面上での座標点列作成は、その他の線郡と同様に、gen_g_code側にて行う
-#          (4) ワーク端面（XY面, UV面）とマシン駆動面との距離（Z_XY, Z_UV, Z_Mach）から、cutspeed_XY_Work, cutspeed_UV_Workを実現するマシン駆動面速度（cutspeed_XY_Mech, cutspeed_UV_Mech）を算出する
+#          (4) ワーク端面（XY面, UV面）とマシン駆動面との距離（Z_XY, z_uv, Z_Mach）から、cutspeed_XY_Work, cutspeed_UV_Workを実現するマシン駆動面速度（cutspeed_XY_Mech, cutspeed_UV_Mech）を算出する
 #
-#   Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, entry_MachDist, entry_CS, offset_function, messeage_window)
-#   【引数】dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, entry_MachDist, entry_CS, offset_function, messeage_window
+#   set_offset_dist_from_function(dxf_obj0, dxf_obj1, xy_dist_entry, uv_dist_entry, mach_dist_entry, cut_speed_entry, offset_function, messeage_window)
+#   【引数】dxf_obj0, dxf_obj1, xy_dist_entry, uv_dist_entry, mach_dist_entry, cut_speed_entry, offset_function, messeage_window
 #   【戻り値】なし
 #   【機能】dxf_obj0, dxf_obj1の対応する線から、XY断面の線長、UV断面の線長を取得し、get_offset_and_cut_speedにより線ごとにオフセット距離、カット速度を取得する
 #          取得したオフセット距離、カット速度を線（line Object）に設定し、オフセット距離を更新する
 #
-#   gen_g_code(dxf_file　dxf_obj0, dxf_file　dxf_obj1, tk.Entry entry_ox, tk.Entry entry_oy, tk.Entry entry_ex, tk.Entry entry_ey, tk.Entry entry_CS, tk.Entry entry_dl, str header, messeage_window messeage_window)
-#   【引数】 dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry_CS, entry_dl, header, messeage_window
+#   gen_g_code(DxfFile　dxf_obj0, DxfFile　dxf_obj1, tk.Entry entry_ox, tk.Entry entry_oy, tk.Entry entry_ex, tk.Entry entry_ey, tk.Entry cut_speed_entry, tk.Entry entry_dl, str header, messeage_window messeage_window)
+#   【引数】 dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, cut_speed_entry, entry_dl, header, messeage_window
 #   【戻り値】　なし
 #   【機能】　gコードを生成する．始点をentry_ox, entry_oyから，終点をentry_ex, entry_eyから読み取る．カット速度をentry_CSから読み取る．分割距離をentry_dlから読み取る．gコードの書き出しをheaderとする．
 #　　　　　　　　1. dxf_obj0, dxf_obj1のline_num_listにて0以上の値を取得し，a_line_num_list0,a_line_num_list1に格納する．
@@ -333,8 +332,8 @@ class config:
 #　　　　　　　　5. gen_g_code_line_str(x, y, u, v)をコールし，x, y, u, vからgコードを生成する．
 #　　　　　　　　6. 各ラインのgコードを結合し，保存する．保存名は 「dxf_obj0.filename,dxf_obj1.filename,日付.nc」とする．　
 #
-#   path_chk(tk.Frame Root, dxf_file　dxf_obj0, dxf_file　dxf_obj1, tk.Entry entry_ox, tk.Entry entry_oy, tk.Entry entry_ex, tk.Entry entry_ey, tk.Entry entry_MachDist, tk.Entry entry_dl, messeage_window messeage_window)
-#   【引数】 Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry_MachDist, entry_dl, messeage_window
+#   path_chk(tk.Frame Root, DxfFile　dxf_obj0, DxfFile　dxf_obj1, tk.Entry entry_ox, tk.Entry entry_oy, tk.Entry entry_ex, tk.Entry entry_ey, tk.Entry mach_dist_entry, tk.Entry entry_dl, messeage_window messeage_window)
+#   【引数】 Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, mach_dist_entry, entry_dl, messeage_window
 #   【戻り値】 なし
 #   【機能】 gコードを生成する．始点をentry_ox, entry_oyから，終点をentry_ex, entry_eyから読み取る．XY，UV平面距離をentry_MachDistから読み取る．分割距離をentry_dlから読み取る．
 #　　　　　　　　1. カットパスをプロットするウィンドウをRootをベースとして生成する．
@@ -363,68 +362,68 @@ def open_file_explorer(entry):
         entry.insert(tk.END, data)
 
 
-def load_config(config, config_entry, dlEntry, XYOffsetEntry, UVOffsetEntry,\
-                CutSpeedEntry, CsDefCB, CncCsDefCB,\
-                XYDistEntry, UVDistEntry, MachDistEntry, MessageWindow):
+def load_config(config, config_entry, dl_entry, xy_offset_entry, uv_offset_entry,\
+                cut_speed_entry, cut_speed_def_cb, cnc_speed_def_cb,\
+                xy_dist_entry, uv_dist_entry, mech_dist_entry, message_window):
     open_file_explorer(config_entry)
     
     config_path = config_entry.get()
     config.load_config(config_path)
     
     #【XYオフセット距離入力コンソール】 
-    XYOffsetEntry.delete(0,tk.END)
-    XYOffsetEntry.insert(tk.END, config.XY_OFFSET_DIST) 
+    xy_offset_entry.delete(0,tk.END)
+    xy_offset_entry.insert(tk.END, config.XY_OFFSET_DIST) 
     
     #【UVオフセット距離入力コンソール】
-    UVOffsetEntry.delete(0,tk.END)
-    UVOffsetEntry.insert(tk.END, config.UV_OFFSET_DIST)    
+    uv_offset_entry.delete(0,tk.END)
+    uv_offset_entry.insert(tk.END, config.UV_OFFSET_DIST)    
     
     #【分割距離入力コンソール】 
-    dlEntry.delete(0,tk.END)
-    dlEntry.insert(tk.END, config.DELTA_LENGTH) 
+    dl_entry.delete(0,tk.END)
+    dl_entry.insert(tk.END, config.DELTA_LENGTH) 
 
     #【カット速度入力コンソール】   
-    CutSpeedEntry.delete(0,tk.END)
-    CutSpeedEntry.insert(tk.END, config.CUTSPEED) 
+    cut_speed_entry.delete(0,tk.END)
+    cut_speed_entry.insert(tk.END, config.CUTSPEED) 
 
     #【カット速度定義コンボボックス】   
-    CsDefCB.set(config.CS_DEF) 
+    cut_speed_def_cb.set(config.CS_DEF) 
 
     #【CNCカット速度定義コンボボックス】   
-    CncCsDefCB.set(config.CNC_CS_DEF) 
+    cnc_speed_def_cb.set(config.CNC_CS_DEF) 
 
     #【カット面距離入力コンソール1】   
-    XYDistEntry.delete(0,tk.END)
-    XYDistEntry.insert(tk.END, config.XY_DIST)
+    xy_dist_entry.delete(0,tk.END)
+    xy_dist_entry.insert(tk.END, config.XY_DIST)
 
     #【カット面距離入力コンソール2】   
-    UVDistEntry.delete(0,tk.END)
-    UVDistEntry.insert(tk.END, config.UV_DIST)
+    uv_dist_entry.delete(0,tk.END)
+    uv_dist_entry.insert(tk.END, config.UV_DIST)
 
     #【マシン距離入力コンソール】   
-    MachDistEntry.delete(0,tk.END)
-    MachDistEntry.insert(tk.END, config.MACH_DIST)  
+    mech_dist_entry.delete(0,tk.END)
+    mech_dist_entry.insert(tk.END, config.MACH_DIST)  
         
-    MessageWindow.set_messeage(config.MESSEAGE)
-    MessageWindow.set_messeage("Gコードの書き出しは「%s」です。\n"%config.HEADER)
+    message_window.set_messeage(config.MESSEAGE)
+    message_window.set_messeage("Gコードの書き出しは「%s」です。\n"%config.HEADER)
 
 
-def load_offset_func(config, offset_func_entry, MessageWindow):
+def load_offset_func(config, offset_func_entry, message_window):
     open_file_explorer(offset_func_entry)
     offset_file_path = offset_func_entry.get()
     config.load_offset_func(offset_file_path)
     
-    MessageWindow.set_messeage(config.MESSEAGE)
+    message_window.set_messeage(config.MESSEAGE)
 
 
-def open_dxf_explorer(dxf_obj, entry, isRefineValue, messeage_window):
+def open_dxf_explorer(dxf_obj, entry, is_spline_refine, messeage_window):
     open_file_explorer(entry)
-    load_file(dxf_obj, entry, isRefineValue, messeage_window)
+    load_file(dxf_obj, entry, is_spline_refine, messeage_window)
 
 
-def load_file(dxf_obj, entry, isRefineValue, messeage_window):
+def load_file(dxf_obj, entry, is_spline_refine, messeage_window):
     filename = entry.get()
-    is_refine = isRefineValue.get()
+    is_refine = is_spline_refine.get()
     
     if file_chk(filename) == 1:
         ox = dxf_obj.ox
@@ -448,52 +447,52 @@ def load_file(dxf_obj, entry, isRefineValue, messeage_window):
         messeage_window.set_messeage("%sを読み込めません。ファイルが存在することを確認して下さい。\n"%filename)  
    
     
-def XY_UV_Link(chkValue, table_XY, table_UV, messeage_window):
-    if chkValue.get():
-        table_XY.set_sync(True)
-        table_UV.set_sync(True)
+def xy_uv_link(is_xy_uv_link, xy_table, uv_table, messeage_window):
+    if is_xy_uv_link.get():
+        xy_table.set_sync(True)
+        uv_table.set_sync(True)
         messeage_window.set_messeage("U-V画面をX-Y画面と連動\n")
     else:
-        table_XY.set_sync(False)
-        table_UV.set_sync(False)   
+        xy_table.set_sync(False)
+        uv_table.set_sync(False)   
         messeage_window.set_messeage("U-V画面とX-Y画面の連動を解除\n")
 
 
-def EnableRemoveSelfCollision(removeCollisionValue, messeage_window):
-    if removeCollisionValue.get():
+def enable_remove_self_collision(is_remove_collision, messeage_window):
+    if is_remove_collision.get():
         messeage_window.set_messeage("自己交差除去を有効化\n")
     else:
         messeage_window.set_messeage("自己交差除去を無効化\n")
 
 
-def EnableSplineRefine(isRefineValue, messeage_window):
-    if isRefineValue.get():
+def enable_spline_refine(is_spline_refine, messeage_window):
+    if is_spline_refine.get():
         messeage_window.set_messeage("スプライン点列のリファインを有効化\n")
     else:
         messeage_window.set_messeage("スプライン点列のリファインを無効化\n")
 
 
-def Enable3dPathCheck(is3dPathCheck, messeage_window):
-    if is3dPathCheck.get():
+def enable_3d_path_check(is_3d_path_check, messeage_window):
+    if is_3d_path_check.get():
         messeage_window.set_messeage("パスチェックを3Dで実施\n")
     else:
         messeage_window.set_messeage("パスチェックを2Dで実施\n")
 
 
 
-def Change_CutDir(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):
-    dxf_obj.Change_CutDir()
+def change_cut_dir(dxf_obj, x_dxf_obj, is_xy_uv_link, name, x_name, messeage_window):
+    dxf_obj.change_cut_dir()
     dxf_obj.update()
     messeage_window.set_messeage("%sのカット方向を逆転\n"%name)
-    if chkValue.get():
-        x_dxf_obj.Change_CutDir()
+    if is_xy_uv_link.get():
+        x_dxf_obj.change_cut_dir()
         x_dxf_obj.update()
         messeage_window.set_messeage("%sのカット方向を逆転\n"%x_name)
     
     
-def AutoLineSort(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window): 
+def auto_sort_line(dxf_obj, x_dxf_obj, is_xy_uv_link, name, x_name, messeage_window): 
     try:
-        ret = dxf_obj.SortLine()    
+        ret = dxf_obj.sort_line()    
         if ret == 1:
             dxf_obj.select_index(0)
             dxf_obj.update()
@@ -501,8 +500,8 @@ def AutoLineSort(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):
         else:
             messeage_window.set_messeage("%sで%s本の線が選択されています。起点とする１本の線のみを選択してください。\n"%(name,ret))
         
-        if chkValue.get():
-            x_ret = x_dxf_obj.SortLine()
+        if is_xy_uv_link.get():
+            x_ret = x_dxf_obj.sort_line()
             if x_ret == 1:
                 x_dxf_obj.select_index(0)
                 x_dxf_obj.update()
@@ -516,19 +515,19 @@ def AutoLineSort(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):
         pass
 
 
-def Reverse(dxf_obj, x_dxf_obj, chkValue, name, x_name, messeage_window):
+def reverse_line(dxf_obj, x_dxf_obj, is_xy_uv_link, name, x_name, messeage_window):
     dxf_obj.reverse_all()
     dxf_obj.update()
     messeage_window.set_messeage("%sのカット順を逆転しました。\n"%name)
-    if chkValue.get():
+    if is_xy_uv_link.get():
         x_dxf_obj.reverse_all()
         x_dxf_obj.update()
         messeage_window.set_messeage("%sのカット順を逆転しました。\n"%x_name)
 
 
 
-def Merge_line(dxf_obj, x_dxf_obj, chkValue, removeCollisionValue, name, x_name, messeage_window):
-    results, line_nums = dxf_obj.Merge_Selected_line()
+def merge_line(dxf_obj, x_dxf_obj, is_xy_uv_link, is_remove_collision, name, x_name, messeage_window):
+    results, line_nums = dxf_obj.merge_selected_line()
     if len(results) >= 2:
         i = 1
         while i < len(results):
@@ -537,15 +536,15 @@ def Merge_line(dxf_obj, x_dxf_obj, chkValue, removeCollisionValue, name, x_name,
             else:
                 messeage_window.set_messeage("%sの%s番目のラインを結合できませんでした。ライン端点が接しているかを確認してください。\n"%(name,line_nums[i]))
             i += 1
-        if removeCollisionValue.get():
-            Remove_Collision(dxf_obj, name, messeage_window)
+        if is_remove_collision.get():
+            remove_collision(dxf_obj, name, messeage_window)
     else:
         messeage_window.set_messeage("%sで２本以上のラインを選択して下さい。%s本のラインが選択されています。\n"%(name,len(line_nums)))
     dxf_obj.update()
     
     
-    if chkValue.get():
-        x_results, x_line_nums = x_dxf_obj.Merge_Selected_line()
+    if is_xy_uv_link.get():
+        x_results, x_line_nums = x_dxf_obj.merge_selected_line()
         
         if len(x_results) >= 2:
             i = 1
@@ -555,19 +554,19 @@ def Merge_line(dxf_obj, x_dxf_obj, chkValue, removeCollisionValue, name, x_name,
                 else:
                     messeage_window.set_messeage("%sの%s番目のラインを結合できませんでした。ライン端点が接しているかを確認してください。\n"%(x_name,x_line_nums[i]))
                 i += 1
-            if removeCollisionValue.get():
-                Remove_Collision(x_dxf_obj, x_name, messeage_window)      
+            if is_remove_collision.get():
+                remove_collision(x_dxf_obj, x_name, messeage_window)      
         else:
             messeage_window.set_messeage("%sで２本以上のラインを選択して下さい。%s本のラインが選択されています。\n"%(x_name,len(x_line_nums)))
         x_dxf_obj.update()
   
-def separate_line(dxf_obj, removeCollisionValue, name, messeage_window):
-    result, line_nums, point_index = dxf_obj.Separate_line()
+def separate_line(dxf_obj, is_remove_collision, name, messeage_window):
+    result, line_nums, point_index = dxf_obj.separate_line()
     if result == True:
         messeage_window.set_messeage("%sで%s番目のラインを分割し、%s番目のラインを作成しました\n"%(name,line_nums[0], line_nums[1]))
         
-        if removeCollisionValue.get():
-            Remove_Collision(dxf_obj, name, messeage_window) 
+        if is_remove_collision.get():
+            remove_collision(dxf_obj, name, messeage_window) 
             
         dxf_obj.update()
     else:
@@ -579,44 +578,44 @@ def separate_line(dxf_obj, removeCollisionValue, name, messeage_window):
             messeage_window.set_messeage("%sで端点が選択されています。端点以外を選択してださい\n"%name)
         
         
-def delete_line(dxf_obj, x_dxf_obj, chkValue, removeCollisionValue, name, x_name, messeage_window):
+def delete_line(dxf_obj, x_dxf_obj, is_xy_uv_link, is_remove_collision, name, x_name, messeage_window):
     dxf_obj.delete_Selected_line()
     messeage_window.set_messeage("%sの選択したラインを削除しました。\n"%name)
     
-    if removeCollisionValue.get():
-        Remove_Collision(dxf_obj, name, messeage_window) 
+    if is_remove_collision.get():
+        remove_collision(dxf_obj, name, messeage_window) 
     
     dxf_obj.update()
 
-    if chkValue.get():
+    if is_xy_uv_link.get():
         x_dxf_obj.delete_Selected_line()
         messeage_window.set_messeage("%sの選択したラインを削除しました。\n"%x_name)
         
-        if removeCollisionValue.get():
-            Remove_Collision(x_dxf_obj, x_name, messeage_window)       
+        if is_remove_collision.get():
+            remove_collision(x_dxf_obj, x_name, messeage_window)       
         
         x_dxf_obj.update()
         
     
-def Set_OffsetDist(dxf_obj, entry, x_dxf_obj, x_entry, chkValue, removeCollisionValue, name, x_name, messeage_window):
+def set_offset_dist(dxf_obj, entry, x_dxf_obj, x_entry, is_xy_uv_link, is_remove_collision, name, x_name, messeage_window):
     try:
         entry_value = entry.get()
         offset_dist = float(entry_value)
         dxf_obj.set_offset_dist(offset_dist)
         messeage_window.set_messeage("%sのオフセット距離を%sに設定しました。\n"%(name, offset_dist))
         
-        if removeCollisionValue.get():
-            Remove_Collision(dxf_obj, name, messeage_window)
+        if is_remove_collision.get():
+            remove_collision(dxf_obj, name, messeage_window)
         dxf_obj.update()
         
-        if chkValue.get():
+        if is_xy_uv_link.get():
             x_entry_value = x_entry.get()
             x_offset_dist = float(x_entry_value)
             x_dxf_obj.set_offset_dist(x_offset_dist)
             messeage_window.set_messeage("%sのオフセット距離を%sに設定しました。\n"%(x_name, x_offset_dist))
             
-            if removeCollisionValue.get():
-                Remove_Collision(x_dxf_obj, x_name, messeage_window)
+            if is_remove_collision.get():
+                remove_collision(x_dxf_obj, x_name, messeage_window)
                 
             x_dxf_obj.update()
                 
@@ -626,7 +625,7 @@ def Set_OffsetDist(dxf_obj, entry, x_dxf_obj, x_entry, chkValue, removeCollision
         messeage_window.set_messeage("実数値を入力して下さい。\n")
         pass
 
-def Remove_Collision(dxf_obj, name, messeage_window):
+def remove_collision(dxf_obj, name, messeage_window):
     self_collision_list, collision_line_list = dxf_obj.remove_collision()
     if len(self_collision_list) > 0:
         for num in self_collision_list:
@@ -636,39 +635,38 @@ def Remove_Collision(dxf_obj, name, messeage_window):
             messeage_window.set_messeage("%sの%s本目と%s本目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(name, nums[0], nums[1]))            
 
 
-def Replace_G_code(g_code_str, X_str, Y_str, U_str, V_str):
+def replace_g_code(g_code_str, x_str, y_str, u_str, v_str):
     
     if ('G' in g_code_str) and ('X' in g_code_str) and ('Y' in g_code_str) and ('U' in g_code_str) and ('V' in g_code_str):
         new_g_code_str = g_code_str
-        new_g_code_str = new_g_code_str.replace('X', X_str)
-        new_g_code_str = new_g_code_str.replace('Y', Y_str)
-        new_g_code_str = new_g_code_str.replace('U', U_str)
-        new_g_code_str = new_g_code_str.replace('V', V_str)
+        new_g_code_str = new_g_code_str.replace('X', x_str)
+        new_g_code_str = new_g_code_str.replace('Y', y_str)
+        new_g_code_str = new_g_code_str.replace('U', u_str)
+        new_g_code_str = new_g_code_str.replace('V', v_str)
         return new_g_code_str
 
     else:
         return g_code_str
 
-#Ver2.1 追加　引数変更
-def make_offset_path(x_array, y_array, u_array, v_array, Z_XY, Z_UV, Z_Mach):
+def make_offset_path(x_array, y_array, u_array, v_array, z_xy, z_uv, z_mach):
     
     new_x = []
     new_y = []
     new_u = []
     new_v = []
     
-    Z_work_mid = (Z_Mach - Z_XY - Z_UV)/2.0 + Z_XY
-    L_XY_work = np.abs(Z_work_mid - Z_XY)
-    L_UV_work = np.abs((Z_Mach - Z_UV) - Z_work_mid)
-    L_XY_Mach = np.abs(Z_work_mid)
-    L_UV_Mach = np.abs(Z_Mach - Z_work_mid)
+    z_work_mid = (z_mach - z_xy - z_uv)/2.0 + z_xy
+    l_xy_work = np.abs(z_work_mid - z_xy)
+    l_uv_work = np.abs((z_mach - z_uv) - z_work_mid)
+    l_xy_mach = np.abs(z_work_mid)
+    l_uv_mach = np.abs(z_mach - z_work_mid)
     
-    if L_XY_work == 0 or L_UV_work == 0:
+    if l_xy_work == 0 or l_uv_work == 0:
         k_xy = 1.0
         k_uv = 1.0        
     else:
-        k_xy = L_XY_Mach/ L_XY_work
-        k_uv = L_UV_Mach/ L_UV_work
+        k_xy = l_xy_mach/ l_xy_work
+        k_uv = l_uv_mach/ l_uv_work
     
     i = 0
     while i < len(x_array):
@@ -694,69 +692,69 @@ def make_offset_path(x_array, y_array, u_array, v_array, Z_XY, Z_UV, Z_Mach):
     return new_x, new_y, new_u, new_v
 
 
-def get_cutspeed(length_XY, length_UV, Z_XY, Z_UV, Z_Mach, CutSpeed, CutSpeedDef):
-    Z_work_mid = (Z_Mach - Z_XY - Z_UV)/2.0 + Z_XY
-    L_XY_work = np.abs(Z_work_mid - Z_XY)
-    L_UV_work = np.abs((Z_Mach - Z_UV) - Z_work_mid)
-    L_XY_Mach = np.abs(Z_work_mid)
-    L_UV_Mach = np.abs(Z_Mach - Z_work_mid)
+def get_cutspeed(length_xy, length_uv, z_xy, z_uv, z_mach, cut_speed, cut_speed_def_value):
+    z_work_mid = (z_mach - z_xy - z_uv)/2.0 + z_xy
+    l_xy_work = np.abs(z_work_mid - z_xy)
+    l_uv_work = np.abs((z_mach - z_uv) - z_work_mid)
+    l_xy_mach = np.abs(z_work_mid)
+    l_uv_mach = np.abs(z_mach - z_work_mid)
     
-    if L_XY_work == 0 or L_UV_work == 0:
+    if l_xy_work == 0 or l_uv_work == 0:
         k_xy = 1.0
         k_uv = 1.0        
     else:
-        k_xy = L_XY_Mach/ L_XY_work
-        k_uv = L_UV_Mach/ L_UV_work
+        k_xy = l_xy_mach/ l_xy_work
+        k_uv = l_uv_mach/ l_uv_work
            
-    length_mid = (length_XY + length_UV)/ 2.0
-    dl_XY = length_XY - length_mid
-    dl_UV = length_UV - length_mid
+    length_mid = (length_xy + length_uv)/ 2.0
+    dl_XY = length_xy - length_mid
+    dl_UV = length_uv - length_mid
     
     length_XY_Mech = k_xy*dl_XY + length_mid
     length_UV_Mech = k_uv*dl_UV + length_mid
 
-    if CutSpeedDef == "XY(Mech)":
+    if cut_speed_def_value == "XY(Mech)":
         length_def = length_XY_Mech
-    elif CutSpeedDef == "XY(Work)":
-        length_def = length_XY
-    elif CutSpeedDef == "Center":
+    elif cut_speed_def_value == "XY(Work)":
+        length_def = length_xy
+    elif cut_speed_def_value == "Center":
         length_def = length_mid
-    elif CutSpeedDef == "UV(Work)":
-        length_def = length_UV
-    else: # CutSpeedDef == "UV(Mech)"
+    elif cut_speed_def_value == "UV(Work)":
+        length_def = length_uv
+    else: # cut_speed_def_value == "UV(Mech)"
         length_def = length_UV_Mech
     
     ratio_XY_Mech = length_XY_Mech/length_def
-    ratio_XY_Work = length_XY/length_def
-    ratio_mid = length_UV/length_def
-    ratio_UV_Work = length_UV/length_def
+    ratio_XY_Work = length_xy/length_def
+    ratio_mid = length_uv/length_def
+    ratio_UV_Work = length_uv/length_def
     ratio_UV_Mech = length_UV_Mech/length_def
   
-    cs_xy_mech = CutSpeed*ratio_XY_Mech
-    cs_xy_work = CutSpeed*ratio_XY_Work
-    cs_mid = CutSpeed*ratio_mid
-    cs_uv_work = CutSpeed*ratio_UV_Work
-    cs_uv_mech = CutSpeed*ratio_UV_Mech
+    cs_xy_mech = cut_speed*ratio_XY_Mech
+    cs_xy_work = cut_speed*ratio_XY_Work
+    cs_mid = cut_speed*ratio_mid
+    cs_uv_work = cut_speed*ratio_UV_Work
+    cs_uv_mech = cut_speed*ratio_UV_Mech
     
     return cs_xy_mech, cs_xy_work, cs_mid, cs_uv_work, cs_uv_mech
 
 
 
-def Set_CutSpeed(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, entry_MachDist, entry_CS, cb_CSDef):
-    entry_XYDist_value = entry_XYDist.get()
-    entry_UVDist_value = entry_UVDist.get()
-    entry_MachDist_value = entry_MachDist.get()
-    entry_CS_value = entry_CS.get()   
-    CutSpeedDef = cb_CSDef.get()    
+def set_cut_speed(dxf_obj0, dxf_obj1, xy_dist_entry, uv_dist_entry, mach_dist_entry, cut_speed_entry, cut_speed_def_cb):
+    xy_dist_value = xy_dist_entry.get()
+    uv_dist_value = uv_dist_entry.get()
+    mach_dist_value = mach_dist_entry.get()
+    cut_speed_value = cut_speed_entry.get()   
+    cut_speed_def_value = cut_speed_def_cb.get()    
 
     all_items0 = dxf_obj0.get_item(all=True)
     all_items1 = dxf_obj1.get_item(all=True)
     
     try:
-        Z_XY = float(entry_XYDist_value)
-        Z_UV = float(entry_UVDist_value)
-        Z_Mach = float(entry_MachDist_value)
-        CutSpeed = float(entry_CS_value)
+        z_xy = float(xy_dist_value)
+        z_uv = float(uv_dist_value)
+        z_mach = float(mach_dist_value)
+        cut_speed = float(cut_speed_value)
                     
         if len(all_items0) == len(all_items1):
             i = 0
@@ -768,8 +766,8 @@ def Set_CutSpeed(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, entry_MachDist,
                 line1_length = line1.get_length()
                 
                 cs_xy_mech, cs_xy_work, cs_mid, cs_uv_work, cs_uv_mech = \
-                    get_cutspeed(line0_length, line1_length, Z_XY, Z_UV, Z_Mach, \
-                                             CutSpeed, CutSpeedDef)
+                    get_cutspeed(line0_length, line1_length, z_xy, z_uv, z_mach, \
+                                             cut_speed, cut_speed_def_value)
                 
                 line0.set_cutspeed(cs_xy_work, cs_xy_mech)
                 line1.set_cutspeed(cs_uv_work, cs_uv_mech)
@@ -777,10 +775,10 @@ def Set_CutSpeed(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, entry_MachDist,
 
         else:
             for line0 in dxf_obj0.line_list:
-                line0.set_cutspeed(CutSpeed, CutSpeed)
+                line0.set_cutspeed(cut_speed, cut_speed)
                 
             for line1 in dxf_obj1.line_list:
-                line1.set_cutspeed(CutSpeed, CutSpeed)
+                line1.set_cutspeed(cut_speed, cut_speed)
                 
         dxf_obj0.update()
         dxf_obj1.update()
@@ -792,21 +790,21 @@ def Set_CutSpeed(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, entry_MachDist,
 
 
 
-def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, entry_MachDist, entry_CS, cb_CSDef, offset_function, removeCollisionValue, messeage_window):
-    entry_XYDist_value = entry_XYDist.get()
-    entry_UVDist_value = entry_UVDist.get()
-    entry_MachDist_value = entry_MachDist.get()
-    entry_CS_value = entry_CS.get()   
-    CutSpeedDef = cb_CSDef.get()
+def set_offset_dist_from_function(dxf_obj0, dxf_obj1, xy_dist_entry, uv_dist_entry, mach_dist_entry, cut_speed_entry, cut_speed_def_cb, offset_function, is_remove_collision, messeage_window):
+    xy_dist_value = xy_dist_entry.get()
+    uv_dist_value = uv_dist_entry.get()
+    mach_dist_value = mach_dist_entry.get()
+    cut_speed_value = cut_speed_entry.get()   
+    cut_speed_def_value = cut_speed_def_cb.get()
         
     all_items0 = dxf_obj0.get_item(all=True)
     all_items1 = dxf_obj1.get_item(all=True)
 
     try:
-        Z_XY = float(entry_XYDist_value)
-        Z_UV = float(entry_UVDist_value)
-        Z_Mach = float(entry_MachDist_value)
-        CutSpeed = float(entry_CS_value)
+        z_xy = float(xy_dist_value)
+        z_uv = float(uv_dist_value)
+        z_mach = float(mach_dist_value)
+        cut_speed = float(cut_speed_value)
                     
         if len(all_items0) == len(all_items1):
             i = 0
@@ -819,8 +817,8 @@ def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, e
                 line1_length = line1.get_length()
                 
                 cs_xy_mech, cs_xy_work, cs_mid, cs_uv_work, cs_uv_mech = \
-                    get_cutspeed(line0_length, line1_length, Z_XY, Z_UV, Z_Mach, \
-                                             CutSpeed, CutSpeedDef)
+                    get_cutspeed(line0_length, line1_length, z_xy, z_uv, z_mach, \
+                                             cut_speed, cut_speed_def_value)
                 offset_XY_Work = offset_function(cs_xy_work)
                 offset_UV_Work = offset_function(cs_uv_work)
                 line0.set_offset_dist(offset_XY_Work)
@@ -831,9 +829,9 @@ def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, e
                 
                 i += 1
             
-            if removeCollisionValue.get():
-                Remove_Collision(dxf_obj0, "XY面", messeage_window)
-                Remove_Collision(dxf_obj1, "UV面", messeage_window)   
+            if is_remove_collision.get():
+                remove_collision(dxf_obj0, "XY面", messeage_window)
+                remove_collision(dxf_obj1, "UV面", messeage_window)   
                 
             dxf_obj0.update()
             dxf_obj1.update()
@@ -848,19 +846,19 @@ def Set_OffsetDistFromFunction(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, e
         messeage_window.set_messeage("入力値に誤りがあります。オフセット値更新を中止しました。\n")
 
 # Ver2.1変更　引数追加，距離別指定可能
-def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry_XYDist, entry_UVDist, entry_MachDist, entry_CS, \
-               cb_CSDef, cb_CncCSDef, entry_dl, messeage_window, config):
-    Set_CutSpeed(dxf_obj0, dxf_obj1, entry_XYDist, entry_UVDist, entry_MachDist, entry_CS, cb_CSDef)
+def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, xy_dist_entry, uv_dist_entry, mach_dist_entry, cut_speed_entry, \
+               cut_speed_def_cb, cb_CncCSDef, entry_dl, messeage_window, config):
+    set_cut_speed(dxf_obj0, dxf_obj1, xy_dist_entry, uv_dist_entry, mach_dist_entry, cut_speed_entry, cut_speed_def_cb)
     
     entry_ox_value = entry_ox.get()
     entry_oy_value = entry_oy.get()
     entry_ex_value = entry_ex.get()
     entry_ey_value = entry_ey.get()
-    entry_XYDist_value = entry_XYDist.get()
-    entry_UVDist_value = entry_UVDist.get()
-    entry_MachDist_value = entry_MachDist.get()
+    xy_dist_value = xy_dist_entry.get()
+    uv_dist_value = uv_dist_entry.get()
+    mach_dist_value = mach_dist_entry.get()
     entry_dl_value = entry_dl.get()
-    entry_CS_value = entry_CS.get()
+    cut_speed_value = cut_speed_entry.get()
     CncCsdDef = cb_CncCSDef.get()
     
     code_line_list = []
@@ -873,17 +871,17 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
         oy = float(entry_oy_value)
         ex = float(entry_ex_value)
         ey = float(entry_ey_value)
-        Z_XY = float(entry_XYDist_value)
-        Z_UV = float(entry_UVDist_value)
-        Z_Mach = float(entry_MachDist_value)
+        z_xy = float(xy_dist_value)
+        z_uv = float(uv_dist_value)
+        z_mach = float(mach_dist_value)
         dl = float(entry_dl_value)
-        CS = float(entry_CS_value)
+        CS = float(cut_speed_value)
 
-        if Z_XY > Z_Mach:
-            messeage_window.set_messeage("【警告】\nXY面距離が駆動面距離に対して%s mm 長いです。\n入力値を確認してください。\n\n"%(Z_XY - Z_Mach))
+        if z_xy > z_mach:
+            messeage_window.set_messeage("【警告】\nXY面距離が駆動面距離に対して%s mm 長いです。\n入力値を確認してください。\n\n"%(z_xy - z_mach))
             temp_error_flg = True
-        if Z_UV > Z_Mach:
-            messeage_window.set_messeage("【警告】\nUV面距離が駆動面距離に対して%s mm 長いです。\n入力値を確認してください。\n\n"%(Z_UV - Z_Mach))
+        if z_uv > z_mach:
+            messeage_window.set_messeage("【警告】\nUV面距離が駆動面距離に対して%s mm 長いです。\n入力値を確認してください。\n\n"%(z_uv - z_mach))
             temp_error_flg = True
        
         if dl < 0.1:
@@ -921,12 +919,12 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
                     xy_offset_dist.append(line0.offset_dist)
                     uv_offset_dist.append(line1.offset_dist)
                     
-                    N = int(max(line0_length, line1_length)/ dl)
-                    if N < 2:
-                        N = 2
+                    n = int(max(line0_length, line1_length)/ dl)
+                    if n < 2:
+                        n = 2
                     
-                    x, y = generate_arc_length_points(line0, N)
-                    u, v = generate_arc_length_points(line1, N)
+                    x, y = generate_arc_length_points(line0, n)
+                    u, v = generate_arc_length_points(line1, n)
                     cs_xy = line0.cutspeed_mech
                     cs_uv = line1.cutspeed_mech
                     
@@ -949,7 +947,7 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
                             
                             if (not(len(x_f) == 0)) and (not(len(u_f) == 0)):
                                 #オフセット面の作成
-                                x_m_f, y_m_f, u_m_f, v_m_f = make_offset_path(x_f, y_f, u_f, v_f, Z_XY, Z_UV, Z_Mach)
+                                x_m_f, y_m_f, u_m_f, v_m_f = make_offset_path(x_f, y_f, u_f, v_f, z_xy, z_uv, z_mach)
                                 code_line_list.append(gen_g_code_line_str(x_m_f, y_m_f, u_m_f, v_m_f, x0, y0, u0, v0, cs_xy, cs_uv, CncCsdDef))
                                 x0 = x_m_f[-1]
                                 y0 = y_m_f[-1]
@@ -967,7 +965,7 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
                                 v[0] = v_array[-1]                                     
                         
                     #オフセット面の作成
-                    x_m, y_m, u_m, v_m = make_offset_path(x, y, u, v, Z_XY, Z_UV, Z_Mach)
+                    x_m, y_m, u_m, v_m = make_offset_path(x, y, u, v, z_xy, z_uv, z_mach)
                     code_line_list.append(gen_g_code_line_str(x_m, y_m, u_m, v_m, x0, y0, u0, v0, cs_xy, cs_uv, CncCsdDef))
                     x0 = x_m[-1]
                     y0 = y_m[-1]
@@ -985,7 +983,7 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
                 
                 replaced_code_line_list = []
                 for g_code_str in code_line_list:
-                    replaced_code_line_list.append(Replace_G_code(g_code_str, config.X_str, config.Y_str, config.U_str, config.V_str))
+                    replaced_code_line_list.append(replace_g_code(g_code_str, config.X_STR, config.Y_STR, config.U_STR, config.V_STR))
                 
                 line = ""
                 for elem in replaced_code_line_list:
@@ -1018,19 +1016,18 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, entry
         messeage_window.set_messeage("Gコード生成途中でエラーが発生しました。\n\n")
         pass
 
-    
-#Ver2.1変更　引数追加，距離別指定可能
+
 def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
-             entry_XYDist, entry_UVDist, entry_MachDist, entry_dl, use3dValue, messeage_window):
+             xy_dist_entry, uv_dist_entry, mach_dist_entry, entry_dl, use3dValue, messeage_window):
     is_plot_3d = use3dValue.get()
     
     
     fig = Figure(figsize=(15, 8), dpi=70)
-    Window_plot = tk.Toplevel(Root)
-    Window_plot.wm_title("Cut Path")
-    Window_plot.geometry("1500x800")
-    canvas = FigureCanvasTkAgg(fig, master = Window_plot)
-    toolbar = NavigationToolbar2Tk(canvas, Window_plot)
+    plot_window = tk.Toplevel(Root)
+    plot_window.wm_title("Cut Path")
+    plot_window.geometry("1500x800")
+    canvas = FigureCanvasTkAgg(fig, master = plot_window)
+    toolbar = NavigationToolbar2Tk(canvas, plot_window)
     toolbar.update()
     canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)    
 
@@ -1044,9 +1041,9 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
     entry_ex_value = entry_ex.get()
     entry_ey_value = entry_ey.get()    
     entry_dl_value = entry_dl.get()
-    entry_XYDist_value = entry_XYDist.get()
-    entry_UVDist_value = entry_UVDist.get()
-    entry_MachDist_value = entry_MachDist.get()
+    xy_dist_value = xy_dist_entry.get()
+    uv_dist_value = uv_dist_entry.get()
+    mach_dist_value = mach_dist_entry.get()
     
     try:
         ox = float(entry_ox_value)
@@ -1054,9 +1051,9 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
         ex = float(entry_ex_value)
         ey = float(entry_ey_value)
         dl = float(entry_dl_value)
-        Z_XY = float(entry_XYDist_value)
-        Z_UV = float(entry_UVDist_value)
-        Z_Mach = float(entry_MachDist_value)
+        z_xy = float(xy_dist_value)
+        z_uv = float(uv_dist_value)
+        z_mach = float(mach_dist_value)
         
         x_array = np.array([ox])
         y_array = np.array([oy])
@@ -1088,12 +1085,12 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
                 xy_offset_dist.append(line0.offset_dist)
                 uv_offset_dist.append(line1.offset_dist)
                 
-                N = int(max(line0_length, line1_length)/ dl)
-                if N < 2:
-                    N = 2
+                n = int(max(line0_length, line1_length)/ dl)
+                if n < 2:
+                    n = 2
                 
-                x, y = generate_arc_length_points(line0, N)
-                u, v = generate_arc_length_points(line1, N)
+                x, y = generate_arc_length_points(line0, n)
+                u, v = generate_arc_length_points(line1, n)
                 
                 if (i != 0) and (i != len(all_items0)):
                     if FILET_INTERPOLATE == True:
@@ -1126,13 +1123,13 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
                     norm_line2line1 = norm(u_array[-1], v_array[-1], u[0], v[0])
                     
                     if norm_line2line0 > dl  or  norm_line2line1 > dl:
-                        N_interp_line2line = int(max(norm_line2line0, norm_line2line1) / dl)
+                        n_interp_line2line = int(max(norm_line2line0, norm_line2line1) / dl)
                         
-                        if N_interp_line2line < 2:
-                            N_interp_line2line = 2
+                        if n_interp_line2line < 2:
+                            n_interp_line2line = 2
                         
-                        xp, yp = generate_arc_length_points4line(x_array[-1], y_array[-1], x[0], y[0], N_interp_line2line)
-                        up, vp = generate_arc_length_points4line(u_array[-1], v_array[-1], u[0], v[0], N_interp_line2line)
+                        xp, yp = generate_arc_length_points4line(x_array[-1], y_array[-1], x[0], y[0], n_interp_line2line)
+                        up, vp = generate_arc_length_points4line(u_array[-1], v_array[-1], u[0], v[0], n_interp_line2line)
                         x_array = np.concatenate([x_array, xp], 0)
                         y_array = np.concatenate([y_array, yp], 0)
                         u_array = np.concatenate([u_array, up], 0)
@@ -1150,30 +1147,30 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
             norm_line2line1 = norm(u_array[-1], v_array[-1], ex, ey)
             
             if norm_line2line0 > dl  or  norm_line2line1 > dl:
-                N_interp_line2line = int(max(norm_line2line0, norm_line2line1) / dl)
+                n_interp_line2line = int(max(norm_line2line0, norm_line2line1) / dl)
                 
-                if N_interp_line2line < 2:
-                    N_interp_line2line = 2
+                if n_interp_line2line < 2:
+                    n_interp_line2line = 2
                 
-                xp, yp = generate_arc_length_points4line(x_array[-1], y_array[-1], ex, ey, N_interp_line2line)
-                up, vp = generate_arc_length_points4line(u_array[-1], v_array[-1], ex, ey, N_interp_line2line)
+                xp, yp = generate_arc_length_points4line(x_array[-1], y_array[-1], ex, ey, n_interp_line2line)
+                up, vp = generate_arc_length_points4line(u_array[-1], v_array[-1], ex, ey, n_interp_line2line)
                 x_array = np.concatenate([x_array, xp], 0)
                 y_array = np.concatenate([y_array, yp], 0)
                 u_array = np.concatenate([u_array, up], 0)
                 v_array = np.concatenate([v_array, vp], 0)
             
             #オフセット面の作成
-            x_m_array, y_m_array, u_m_array, v_m_array = make_offset_path(x_array, y_array, u_array, v_array, Z_XY, Z_UV, Z_Mach)
+            x_m_array, y_m_array, u_m_array, v_m_array = make_offset_path(x_array, y_array, u_array, v_array, z_xy, z_uv, z_mach)
             
             
             if is_plot_3d == True:
-                point_dist_array = calc_point_dist(x_m_array, y_m_array, u_m_array, v_m_array, 0, Z_Mach)
+                point_dist_array = calc_point_dist(x_m_array, y_m_array, u_m_array, v_m_array, 0, z_mach)
                 
                 
-                ax.plot(x_array, y_array, np.ones(len(x_array))*Z_XY, 'k')
-                ax.plot(u_array, v_array, np.ones(len(x_array))*(Z_Mach-Z_UV), 'k')
+                ax.plot(x_array, y_array, np.ones(len(x_array))*z_xy, 'k')
+                ax.plot(u_array, v_array, np.ones(len(x_array))*(z_mach-z_uv), 'k')
                 ax.plot(x_m_array, y_m_array, np.ones(len(x_array))*0, 'k')
-                ax.plot(u_m_array, v_m_array, np.ones(len(x_array))*Z_Mach, 'k')
+                ax.plot(u_m_array, v_m_array, np.ones(len(x_array))*z_mach, 'k')
                 
                 
                 num_per_plot = int(len(x_array) / length_sum * DIST_CUTPATH_PLOT)
@@ -1183,7 +1180,7 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
                     num_per_plot = 1
                 
                 def update(frame):
-                    plot_3d_cut_path(ax, x_array, y_array, u_array, v_array, x_m_array, y_m_array, u_m_array, v_m_array, Z_XY, Z_UV, Z_Mach, num_per_plot, frame)
+                    plot_3d_cut_path(ax, x_array, y_array, u_array, v_array, x_m_array, y_m_array, u_m_array, v_m_array, z_xy, z_uv, z_mach, num_per_plot, frame)
                 
                 
                 x_max = max(max(x_array), max(u_array))
@@ -1191,7 +1188,7 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
                 y_max = max(max(y_array), max(v_array))
                 y_min = min(min(y_array), min(v_array))
                 
-                z_max = Z_Mach
+                z_max = z_mach
                 z_min = 0.0
                 
                 max_range = max(np.array([x_max - x_min, y_max - y_min]))*0.5
@@ -1208,7 +1205,7 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
                 canvas.draw()
                 #anim.save('anim.gif', writer="imagemagick")
             else:
-                point_dist_array = calc_point_dist(x_m_array, y_m_array, u_m_array, v_m_array, 0, Z_Mach)
+                point_dist_array = calc_point_dist(x_m_array, y_m_array, u_m_array, v_m_array, 0, z_mach)
                 ax.plot(x_m_array, y_m_array, "b", label = "XY Mech Path")
                 ax.plot(u_m_array, v_m_array, "r", label = "UV Mech Path")
                 ax.plot(x_array, y_array, "b--", label = "XY Work Path")
@@ -1218,14 +1215,14 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
             
             
             
-            messeage_window.set_messeage("パスを描画しました。ワイヤーの最大長は%s mmです。（初期長%s mm）\n"%(int(max(point_dist_array)), int(Z_Mach)))
+            messeage_window.set_messeage("パスを描画しました。ワイヤーの最大長は%s mmです。（初期長%s mm）\n"%(int(max(point_dist_array)), int(z_mach)))
             messeage_window.set_messeage("\n【加工範囲】 \nX: %smm～%smm\nY: %smm～%smm\nU: %smm～%smm\nV: %smm～%smm\n\n"
                                          %(int(min(x_array)), int(max(x_array)), int(min(y_array)), int(max(y_array)), int(min(u_array)), int(max(u_array)), int(min(v_array)), int(max(v_array))))
 
-            if Z_XY > Z_Mach:
-                messeage_window.set_messeage("【警告】\nXY面距離が駆動面距離に対して%s mm 長いです。\n入力値を確認してください。\n\n"%(Z_XY - Z_Mach))
-            if Z_UV > Z_Mach:
-                messeage_window.set_messeage("【警告】\nUV面距離が駆動面距離に対して%s mm 長いです。\n入力値を確認してください。\n\n"%(Z_UV - Z_Mach))
+            if z_xy > z_mach:
+                messeage_window.set_messeage("【警告】\nXY面距離が駆動面距離に対して%s mm 長いです。\n入力値を確認してください。\n\n"%(z_xy - z_mach))
+            if z_uv > z_mach:
+                messeage_window.set_messeage("【警告】\nUV面距離が駆動面距離に対して%s mm 長いです。\n入力値を確認してください。\n\n"%(z_uv - z_mach))
             
         else:
             messeage_window.set_messeage("XY座標とUV座標でライン数が一致しません。XY：%s本，UV：%s本\n"%(len(all_items0), len(all_items1)))
@@ -1263,8 +1260,8 @@ def offset_origin(dxf_obj0, dxf_obj1, entry_offset_ox, entry_offset_oy, messeage
         messeage_window.set_messeage("全体オフセットに数値以外が設定されています。\n")
 
 
-def Rotate(dxf_obj0, dxf_obj1, RotateEntry, messeage_window):
-    sita = RotateEntry.get()
+def rotate_origin(dxf_obj0, dxf_obj1, rotate_entry, messeage_window):
+    sita = rotate_entry.get()
     
     try:
         sita = np.radians(float(sita))
@@ -1303,7 +1300,7 @@ if __name__ == "__main__":
     #======================================================================================================================================
 
     curdir =  get_curdir()
-    config = config()
+    config = Config()
     config.load_config("%s\\config.csv"%curdir)
     config_read_messeage = config.MESSEAGE
     config.load_offset_func("%s\\offset_function.csv"%curdir)
@@ -1351,28 +1348,28 @@ if __name__ == "__main__":
     
 
     #======================================================================================================================================
-    #          super_tableインスタンスの生成
+    #          SuperTableインスタンスの生成
     #======================================================================================================================================
    
     #【X-Y ラインテーブル】
-    table0 = super_table(root, y_height = 15, x = 850,y = 100)       #XYテーブルの枠となるインスタンスを生成
-    table0Label = tk.Label(root, text="X-Y",font=("",20))            #XYテーブル用のテキスト
-    table0Label.place(x = 860, y = 40)                               #XYテーブル用のテキストを配置
+    table0 = SuperTable(root, y_height = 15, x = 850,y = 100)       #XYテーブルの枠となるインスタンスを生成
+    table0_label = tk.Label(root, text="X-Y",font=("",20))            #XYテーブル用のテキスト
+    table0_label.place(x = 860, y = 40)                               #XYテーブル用のテキストを配置
 
     
     #【U-V ラインテーブル】
-    table1 = super_table(root, y_height = 15, x = 1250,y = 100)      #UVテーブルの枠となるインスタンスを生成
-    table1Label = tk.Label(root, text="U-V",font=("",20))            #UVテーブル用のテキスト
-    table1Label.place(x = 1260, y = 40)                              #UVテーブル用のテキストを配置  
+    table1 = SuperTable(root, y_height = 15, x = 1250,y = 100)      #UVテーブルの枠となるインスタンスを生成
+    table1_label = tk.Label(root, text="U-V",font=("",20))            #UVテーブル用のテキスト
+    table1_label.place(x = 1260, y = 40)                              #UVテーブル用のテキストを配置  
 
 
     #======================================================================================================================================
-    #          dxf_fileインスタンスの生成
+    #          DxfFileインスタンスの生成
     #======================================================================================================================================
 
-    #【dxfファイルを格納するクラス（dxf_file) のインスタンスを生成】
-    dxf0 = dxf_file(ax0, canvas0, table0, table1, "X-Y")
-    dxf1 = dxf_file(ax1, canvas1, table1, table0, "U-V")
+    #【dxfファイルを格納するクラス（DxfFile) のインスタンスを生成】
+    dxf0 = DxfFile(ax0, canvas0, table0, table1, "X-Y")
+    dxf1 = DxfFile(ax1, canvas1, table1, table0, "U-V")
 
     canvas0.mpl_connect('pick_event', dxf0.get_selected_point)
     canvas1.mpl_connect('pick_event', dxf1.get_selected_point)
@@ -1383,187 +1380,187 @@ if __name__ == "__main__":
     
     #Ver2.0 位置変更(下に40pix)
     #【メッセージウィンドウ】
-    MessageWindow = messeage_window(root, width=110, height = 9)
-    MessageWindow.place(x = 852, y = 805)
-    MessageWindowLabel = tk.Label(root, text="メッセージウィンドウ",font=("",12))
-    MessageWindowLabel.place(x = 860, y = 780)
-    MessageWindow.set_messeage(config_read_messeage)
-    MessageWindow.set_messeage(offset_function_read_messeage)
-    MessageWindow.set_messeage("Gコードの書き出しは「%s」です。\n"%config.HEADER)
+    message_window = messeage_window(root, width=110, height = 9)
+    message_window.place(x = 852, y = 805)
+    message_window_label = tk.Label(root, text="メッセージウィンドウ",font=("",12))
+    message_window_label.place(x = 860, y = 780)
+    message_window.set_messeage(config_read_messeage)
+    message_window.set_messeage(offset_function_read_messeage)
+    message_window.set_messeage("Gコードの書き出しは「%s」です。\n"%config.HEADER)
 
     #======================================================================================================================================
     #           entryインスタンスの生成
     #======================================================================================================================================
 
     #【X-Y用 dxfファイル名の入力コンソール】
-    FileNameEntry0 = tk.Entry(root, width=50) 
-    FileNameEntry0.insert(tk.END, config.FILENAME_XY) 
-    FileNameEntry0.place(x = 852, y = 75)
+    filename_entry0 = tk.Entry(root, width=50) 
+    filename_entry0.insert(tk.END, config.FILENAME_XY) 
+    filename_entry0.place(x = 852, y = 75)
     
     
     #【U-V用 dxfファイル名の入力コンソール】
-    FileNameEntry1 = tk.Entry(root, width=50) 
-    FileNameEntry1.insert(tk.END, config.FILENAME_UV)   
-    FileNameEntry1.place(x = 1252, y = 75) 
+    filename_entry1 = tk.Entry(root, width=50) 
+    filename_entry1.insert(tk.END, config.FILENAME_UV)   
+    filename_entry1.place(x = 1252, y = 75) 
 
 
     #【X-Y用オフセット距離の入力コンソール】
-    OffsetDistLabel0 = tk.Label(root, text="オフセット量[mm]",font=("",10))
-    OffsetDistLabel0.place(x = 875, y = 498)
-    OffsetDistEntry0 = tk.Entry(root, width=14, justify=tk.RIGHT,font=("",12)) 
-    OffsetDistEntry0.insert(tk.END, config.XY_OFFSET_DIST)   
-    OffsetDistEntry0.place(x = 990, y = 495) 
+    offset_dist_label0 = tk.Label(root, text="オフセット量[mm]",font=("",10))
+    offset_dist_label0.place(x = 875, y = 498)
+    offset_dist_entry0 = tk.Entry(root, width=14, justify=tk.RIGHT,font=("",12)) 
+    offset_dist_entry0.insert(tk.END, config.XY_OFFSET_DIST)   
+    offset_dist_entry0.place(x = 990, y = 495) 
 
 
     #【U-V用オフセット距離の入力コンソール】
-    OffsetDistLabel1 = tk.Label(root, text="オフセット量[mm]",font=("",10))
-    OffsetDistLabel1.place(x = 1275, y = 498)
-    OffsetDistEntry1 = tk.Entry(root, width=14, justify=tk.RIGHT,font=("",12)) 
-    OffsetDistEntry1.insert(tk.END, config.UV_OFFSET_DIST)   
-    OffsetDistEntry1.place(x = 1390, y = 495) 
+    offset_dist_label1 = tk.Label(root, text="オフセット量[mm]",font=("",10))
+    offset_dist_label1.place(x = 1275, y = 498)
+    offset_dist_entry1 = tk.Entry(root, width=14, justify=tk.RIGHT,font=("",12)) 
+    offset_dist_entry1.insert(tk.END, config.UV_OFFSET_DIST)   
+    offset_dist_entry1.place(x = 1390, y = 495) 
 
 
     #【オフセット関数ファイル名の入力コンソール】
-    OffsetFuncLabel0 = tk.Label(root, text="溶け量ファイル",font=("",12))
-    OffsetFuncLabel0.place(x = 850, y = 535)
-    OffsetFuncEntry = tk.Entry(root, width=36) 
-    OffsetFuncEntry.insert(tk.END, "offset_function.csv")   
-    OffsetFuncEntry.place(x = 970, y = 535) 
+    offset_func_label = tk.Label(root, text="溶け量ファイル",font=("",12))
+    offset_func_label.place(x = 850, y = 535)
+    offset_func_entry = tk.Entry(root, width=36) 
+    offset_func_entry.insert(tk.END, "offset_function.csv")   
+    offset_func_entry.place(x = 970, y = 535) 
     
 
     #【configファイル名の入力コンソール】
-    ConfigFileLabel0 = tk.Label(root, text="設定ファイル",font=("",12))
-    ConfigFileLabel0.place(x = 850, y = 575)
-    ConfigFileEntry = tk.Entry(root, width=36) 
-    ConfigFileEntry.insert(tk.END, "config.csv") 
-    ConfigFileEntry.place(x = 970, y = 575)
+    config_file_label = tk.Label(root, text="設定ファイル",font=("",12))
+    config_file_label.place(x = 850, y = 575)
+    config_file_entry = tk.Entry(root, width=36) 
+    config_file_entry.insert(tk.END, "config.csv") 
+    config_file_entry.place(x = 970, y = 575)
     
     
     
     #【原点オフセット入力コンソール】
-    OriginOffsetLabel0 = tk.Label(root, text="オフセット",font=("",12))
-    OriginOffsetLabel0.place(x = 850, y = 610)
-    OriginOffsetLabel1 = tk.Label(root, text="X：",font=("",12))
-    OriginOffsetLabel1.place(x = 970, y = 610)
-    OriginOffsetLabel2 = tk.Label(root, text="Y：",font=("",12))
-    OriginOffsetLabel2.place(x = 1070, y = 610)
-    OriginOffsetEntry_X = tk.Entry(root, width=8,font=("",12)) 
-    OriginOffsetEntry_X.insert(tk.END, config.OFFSET_X)       
-    OriginOffsetEntry_X.place(x = 1000, y = 610)   
-    OriginOffsetEntry_Y = tk.Entry(root, width=8,font=("",12))     
-    OriginOffsetEntry_Y.insert(tk.END, config.OFFSET_Y)
-    OriginOffsetEntry_Y.place(x = 1100, y = 610)    
+    origin_offset_label0 = tk.Label(root, text="オフセット",font=("",12))
+    origin_offset_label0.place(x = 850, y = 610)
+    origin_offset_label1 = tk.Label(root, text="X：",font=("",12))
+    origin_offset_label1.place(x = 970, y = 610)
+    origin_offset_label2 = tk.Label(root, text="Y：",font=("",12))
+    origin_offset_label2.place(x = 1070, y = 610)
+    origin_offset_entry_x = tk.Entry(root, width=8,font=("",12)) 
+    origin_offset_entry_x.insert(tk.END, config.OFFSET_X)       
+    origin_offset_entry_x.place(x = 1000, y = 610)   
+    origin_offset_entry_y = tk.Entry(root, width=8,font=("",12))     
+    origin_offset_entry_y.insert(tk.END, config.OFFSET_Y)
+    origin_offset_entry_y.place(x = 1100, y = 610)    
 
 
 
     #【全体回転入力コンソール】
-    RotateLabel0 = tk.Label(root, text="回転：",font=("",12))
-    RotateLabel0.place(x = 1300, y = 610)
-    RotateEntry = tk.Entry(root, width=8,font=("",12)) 
-    RotateEntry.insert(tk.END, config.ROTATE)       
-    RotateEntry.place(x = 1350, y = 610)
+    rotate_label = tk.Label(root, text="回転：",font=("",12))
+    rotate_label.place(x = 1300, y = 610)
+    rotate_entry = tk.Entry(root, width=8,font=("",12)) 
+    rotate_entry.insert(tk.END, config.ROTATE)       
+    rotate_entry.place(x = 1350, y = 610)
 
 
     #【切り出し原点入力コンソール】
-    AutoAlignmentLabel0 = tk.Label(root, text="切り出し始点",font=("",12))
-    AutoAlignmentLabel0.place(x = 850, y = 645)
-    AutoAlignmentLabel1 = tk.Label(root, text="X：",font=("",12))
-    AutoAlignmentLabel1.place(x = 970, y = 645)
-    AutoAlignmentLabel2 = tk.Label(root, text="Y：",font=("",12))
-    AutoAlignmentLabel2.place(x = 1070, y = 645)
-    AutoAlignmentEntry_X = tk.Entry(root, width=8,font=("",12)) 
-    AutoAlignmentEntry_X.insert(tk.END, config.OX)       
-    AutoAlignmentEntry_X.place(x = 1000, y = 645)   
-    AutoAlignmentEntry_Y = tk.Entry(root, width=8,font=("",12))     
-    AutoAlignmentEntry_Y.insert(tk.END, config.OY)
-    AutoAlignmentEntry_Y.place(x = 1100, y = 645)
+    cut_start_label0 = tk.Label(root, text="切り出し始点",font=("",12))
+    cut_start_label0.place(x = 850, y = 645)
+    cut_start_label1 = tk.Label(root, text="X：",font=("",12))
+    cut_start_label1.place(x = 970, y = 645)
+    cut_start_label2 = tk.Label(root, text="Y：",font=("",12))
+    cut_start_label2.place(x = 1070, y = 645)
+    cut_start_entry_x = tk.Entry(root, width=8,font=("",12)) 
+    cut_start_entry_x.insert(tk.END, config.OX)       
+    cut_start_entry_x.place(x = 1000, y = 645)   
+    cut_start_entry_y = tk.Entry(root, width=8,font=("",12))     
+    cut_start_entry_y.insert(tk.END, config.OY)
+    cut_start_entry_y.place(x = 1100, y = 645)
 
 
     #【切り出し終点入力コンソール】
-    CutEndLabel0 = tk.Label(root, text="切り出し終点",font=("",12))
-    CutEndLabel0.place(x = 1200, y = 645)
-    CutEndLabel1 = tk.Label(root, text="X：",font=("",12))
-    CutEndLabel1.place(x = 1320, y = 645)
-    CutEndLabel2 = tk.Label(root, text="Y：",font=("",12))
-    CutEndLabel2.place(x = 1420, y = 645)
-    CutEndEntry_X = tk.Entry(root, width=8,font=("",12)) 
-    CutEndEntry_X.insert(tk.END, config.EX)
-    CutEndEntry_X.place(x = 1350, y = 645)   
-    CutEndEntry_Y = tk.Entry(root, width=8,font=("",12))     
-    CutEndEntry_Y.insert(tk.END, config.EY)
-    CutEndEntry_Y.place(x = 1450, y = 645) 
+    cut_end_label0 = tk.Label(root, text="切り出し終点",font=("",12))
+    cut_end_label0.place(x = 1200, y = 645)
+    cut_end_label1 = tk.Label(root, text="X：",font=("",12))
+    cut_end_label1.place(x = 1320, y = 645)
+    cut_end_label2 = tk.Label(root, text="Y：",font=("",12))
+    cut_end_label2.place(x = 1420, y = 645)
+    cut_end_entry_x = tk.Entry(root, width=8,font=("",12)) 
+    cut_end_entry_x.insert(tk.END, config.EX)
+    cut_end_entry_x.place(x = 1350, y = 645)   
+    cut_end_entry_y = tk.Entry(root, width=8,font=("",12))     
+    cut_end_entry_y.insert(tk.END, config.EY)
+    cut_end_entry_y.place(x = 1450, y = 645) 
 
 
     #【分割距離入力コンソール】
-    dlLabel = tk.Label(root, text="分割距離[mm]",font=("",12))
-    dlLabel.place(x = 1150, y = 680)
-    dlEntry = tk.Entry(root, width=8,font=("",12))     
-    dlEntry.insert(tk.END, config.DELTA_LENGTH)
-    dlEntry.place(x = 1300, y = 680)       
+    dl_label = tk.Label(root, text="分割距離[mm]",font=("",12))
+    dl_label.place(x = 1150, y = 680)
+    dl_entry = tk.Entry(root, width=8,font=("",12))     
+    dl_entry.insert(tk.END, config.DELTA_LENGTH)
+    dl_entry.place(x = 1300, y = 680)       
 
 
     #【カット速度入力コンソール】   
-    CutSpeedLabel = tk.Label(root, text="カット速度[mm/分]",font=("",12))
-    CutSpeedLabel.place(x = 850, y = 680)
-    CutSpeedEntry = tk.Entry(root, width=8,font=("",12))     
-    CutSpeedEntry.insert(tk.END, config.CUTSPEED)
-    CutSpeedEntry.place(x = 1000, y = 680)    
+    cut_speed_label = tk.Label(root, text="カット速度[mm/分]",font=("",12))
+    cut_speed_label.place(x = 850, y = 680)
+    cut_speed_entry = tk.Entry(root, width=8,font=("",12))     
+    cut_speed_entry.insert(tk.END, config.CUTSPEED)
+    cut_speed_entry.place(x = 1000, y = 680)    
 
 
     #【カット速度定義面入力コンボボックス】   
-    CutSpeedDefLabel = tk.Label(root, text="カット速度定義面",font=("",12))
-    CutSpeedDefLabel.place(x = 850, y = 705) 
-    CutSpeedDefList = ("XY(Mech)", "XY(Work)", "Center", "UV(Work)", "UV(Mech)")
-    CutSpeedDefCB = ttk.Combobox(root, textvariable= tk.StringVar(), width = 15,\
-                                 values=CutSpeedDefList, style="office.TCombobox")
+    cut_speed_def_label = tk.Label(root, text="カット速度定義面",font=("",12))
+    cut_speed_def_label.place(x = 850, y = 705) 
+    cut_speed_def_list = ("XY(Mech)", "XY(Work)", "Center", "UV(Work)", "UV(Mech)")
+    cut_speed_def_cb = ttk.Combobox(root, textvariable= tk.StringVar(), width = 15,\
+                                 values=cut_speed_def_list, style="office.TCombobox")
     
-    if config.CS_DEF in CutSpeedDefList:
-        CutSpeedDefCB.set(config.CS_DEF)
+    if config.CS_DEF in cut_speed_def_list:
+        cut_speed_def_cb.set(config.CS_DEF)
     else:
-        CutSpeedDefCB.set("Center")
-    CutSpeedDefCB.bind(
+        cut_speed_def_cb.set("Center")
+    cut_speed_def_cb.bind(
         '<<ComboboxSelected>>', 
-        lambda e: Set_CutSpeed(dxf0, dxf1, XYDistEntry, UVDistEntry, MachDistEntry,\
-                       CutSpeedEntry, CutSpeedDefCB))
-    CutSpeedDefCB.place(x = 1000, y = 705) 
+        lambda e: set_cut_speed(dxf0, dxf1, xy_dist_entry, uv_dist_entry, mech_dist_entry,\
+                       cut_speed_entry, cut_speed_def_cb))
+    cut_speed_def_cb.place(x = 1000, y = 705) 
     
 
     #【CNC速度定義入力コンボボックス】
-    CNCSpeedDefLabel = tk.Label(root, text="CNC速度定義",font=("",12))
-    CNCSpeedDefLabel.place(x = 1150, y = 705)
-    CNCSpeedDefList = ("XY", "UV", "XYU", "XYV", "Faster" ,"InvertTime")
-    CNCSpeedDefCB = ttk.Combobox(root, textvariable= tk.StringVar(), width = 15,\
-                                 values=CNCSpeedDefList, style="office.TCombobox")
-    if config.CNC_CS_DEF in CNCSpeedDefList:
-        CNCSpeedDefCB.set(config.CNC_CS_DEF)
+    cnc_speed_def_label = tk.Label(root, text="CNC速度定義",font=("",12))
+    cnc_speed_def_label.place(x = 1150, y = 705)
+    cnc_speed_def_list = ("XY", "UV", "XYU", "XYV", "Faster" ,"InvertTime")
+    cnc_speed_def_cb = ttk.Combobox(root, textvariable= tk.StringVar(), width = 15,\
+                                 values=cnc_speed_def_list, style="office.TCombobox")
+    if config.CNC_CS_DEF in cnc_speed_def_list:
+        cnc_speed_def_cb.set(config.CNC_CS_DEF)
     else:
-        CNCSpeedDefCB.set("XY")
-    CNCSpeedDefCB.place(x = 1300, y = 705) 
+        cnc_speed_def_cb.set("XY")
+    cnc_speed_def_cb.place(x = 1300, y = 705) 
 
 
     # Ver2.1 変更
     #【カット面距離入力コンソール1】   
-    XYDistLabel = tk.Label(root, text="XY面距離[mm]",font=("",12))
-    XYDistLabel.place(x = 850, y = 740)
-    XYDistEntry = tk.Entry(root, width=8,font=("",12))     
-    XYDistEntry.insert(tk.END, config.XY_DIST)
-    XYDistEntry.place(x = 970, y = 740)  
+    xy_dist_label = tk.Label(root, text="XY面距離[mm]",font=("",12))
+    xy_dist_label.place(x = 850, y = 740)
+    xy_dist_entry = tk.Entry(root, width=8,font=("",12))     
+    xy_dist_entry.insert(tk.END, config.XY_DIST)
+    xy_dist_entry.place(x = 970, y = 740)  
 
     # Ver2.1 追加
     #【カット面距離入力コンソール2】   
-    UVDistLabel = tk.Label(root, text="UV面距離[mm]",font=("",12))
-    UVDistLabel.place(x = 1070, y = 740)
-    UVDistEntry = tk.Entry(root, width=8,font=("",12))     
-    UVDistEntry.insert(tk.END, config.UV_DIST)
-    UVDistEntry.place(x = 1190, y = 740)
+    uv_dist_label = tk.Label(root, text="UV面距離[mm]",font=("",12))
+    uv_dist_label.place(x = 1070, y = 740)
+    uv_dist_entry = tk.Entry(root, width=8,font=("",12))     
+    uv_dist_entry.insert(tk.END, config.UV_DIST)
+    uv_dist_entry.place(x = 1190, y = 740)
 
     #Ver2.1 位置変更 
     #【マシン距離入力コンソール】   
-    MachDistLabel = tk.Label(root, text="駆動面距離[mm]",font=("",12))
-    MachDistLabel.place(x = 1290, y = 740)
-    MachDistEntry = tk.Entry(root, width=8,font=("",12))     
-    MachDistEntry.insert(tk.END, config.MACH_DIST)
-    MachDistEntry.place(x = 1420, y = 740)  
+    mech_dist_label = tk.Label(root, text="駆動面距離[mm]",font=("",12))
+    mech_dist_label.place(x = 1290, y = 740)
+    mech_dist_entry = tk.Entry(root, width=8,font=("",12))     
+    mech_dist_entry.insert(tk.END, config.MACH_DIST)
+    mech_dist_entry.place(x = 1420, y = 740)  
 
 
     #======================================================================================================================================
@@ -1571,129 +1568,129 @@ if __name__ == "__main__":
     #======================================================================================================================================
 
     #【X-Y用 dxfファイル読込用のエクスプローラーを開くボタン】
-    LoadBtn0 = tk.Button(root, text="開く", command = lambda: open_dxf_explorer(dxf0, FileNameEntry0, isRefineSpline, MessageWindow))
-    LoadBtn0.place(x=1160, y=70)  
+    open_btn0 = tk.Button(root, text="開く", command = lambda: open_dxf_explorer(dxf0, filename_entry0, is_spline_refine, message_window))
+    open_btn0.place(x=1160, y=70)  
 
     #【U-V用 dxfファイル読込用のエクスプローラーを開くボタン】   
-    LoadBtn1 = tk.Button(root, text="開く", command = lambda: open_dxf_explorer(dxf1, FileNameEntry1, isRefineSpline, MessageWindow))
-    LoadBtn1.place(x=1560, y=70)    
+    open_btn1 = tk.Button(root, text="開く", command = lambda: open_dxf_explorer(dxf1, filename_entry1, is_spline_refine, message_window))
+    open_btn1.place(x=1560, y=70)    
 
     #【X-Y用 dxfファイル名の読込ボタン】
-    LoadBtn0 = tk.Button(root, text="再読込", command = lambda: load_file(dxf0, FileNameEntry0, isRefineSpline, MessageWindow))
-    LoadBtn0.place(x=1200, y=70)  
+    load_btn0 = tk.Button(root, text="再読込", command = lambda: load_file(dxf0, filename_entry0, is_spline_refine, message_window))
+    load_btn0.place(x=1200, y=70)  
 
     #【U-V用 dxfファイル名の読込ボタン】   
-    LoadBtn1 = tk.Button(root, text="再読込", command = lambda: load_file(dxf1, FileNameEntry1, isRefineSpline, MessageWindow))
-    LoadBtn1.place(x=1600, y=70)    
+    load_btn1 = tk.Button(root, text="再読込", command = lambda: load_file(dxf1, filename_entry1, is_spline_refine, message_window))
+    load_btn1.place(x=1600, y=70)    
 
 
     #【X-Y用 オフセット距離反映ボタン】
-    OffsetBtn0 = tk.Button(root, text="オフセット量設定", width = 15, bg='#fffacd', \
-                         command = lambda: Set_OffsetDist(dxf0, OffsetDistEntry0, dxf1, OffsetDistEntry1, \
-                                                          chkValue, removeCollisionValue, "XY面", "UV面", MessageWindow))
-    OffsetBtn0.place(x=1125, y=492)  
+    offset_btn0 = tk.Button(root, text="オフセット量設定", width = 15, bg='#fffacd', \
+                         command = lambda: set_offset_dist(dxf0, offset_dist_entry0, dxf1, offset_dist_entry1, \
+                                                          is_xy_uv_link, is_remove_collision, "XY面", "UV面", message_window))
+    offset_btn0.place(x=1125, y=492)  
 
 
     #【U-V用 オフセット距離反映ボタン】
-    OffsetBtn1 = tk.Button(root, text="オフセット量設定", width = 15, bg='#fffacd', \
-                         command = lambda: Set_OffsetDist(dxf1, OffsetDistEntry1, dxf0, OffsetDistEntry0, \
-                                                          chkValue, removeCollisionValue, "UV面", "XY面", MessageWindow))
-    OffsetBtn1.place(x=1525, y=492)  
+    offset_btn1 = tk.Button(root, text="オフセット量設定", width = 15, bg='#fffacd', \
+                         command = lambda: set_offset_dist(dxf1, offset_dist_entry1, dxf0, offset_dist_entry0, \
+                                                          is_xy_uv_link, is_remove_collision, "UV面", "XY面", message_window))
+    offset_btn1.place(x=1525, y=492)  
 
 
     #【configファイル読込用のエクスプローラーを開くボタン】
-    ConfigLoadBtn0 = tk.Button(root, text="開く", command = lambda: load_config(config, ConfigFileEntry, dlEntry,\
-                                                                              OffsetDistEntry0, OffsetDistEntry1, CutSpeedEntry,\
-                                                                              CutSpeedDefCB, CNCSpeedDefCB, XYDistEntry, UVDistEntry,\
-                                                                              MachDistEntry, MessageWindow))
-    ConfigLoadBtn0.place(x=1207, y=570)  
+    config_load_btn = tk.Button(root, text="開く", command = lambda: load_config(config, config_file_entry, dl_entry,\
+                                                                              offset_dist_entry0, offset_dist_entry1, cut_speed_entry,\
+                                                                              cut_speed_def_cb, cnc_speed_def_cb, xy_dist_entry, uv_dist_entry,\
+                                                                              mech_dist_entry, message_window))
+    config_load_btn.place(x=1207, y=570)  
 
     #【オフセット関数ファイル読込用のエクスプローラーを開くボタン】   
-    OffsetFuncLoadBtn1 = tk.Button(root, text="開く", command = lambda: load_offset_func(config, OffsetFuncEntry, MessageWindow))
-    OffsetFuncLoadBtn1.place(x=1207, y=532)    
+    offset_func_load_btn = tk.Button(root, text="開く", command = lambda: load_offset_func(config, offset_func_entry, message_window))
+    offset_func_load_btn.place(x=1207, y=532)    
 
     #【オフセット値更新ボタン】    
-    OffsetBtn = tk.Button(root, text = "溶け量ファイルからオフセット量設定", height = 1, width = 34, font=("",10),  bg='#fffacd', \
-                          command = lambda: Set_OffsetDistFromFunction(dxf0, dxf1, XYDistEntry, UVDistEntry, MachDistEntry, CutSpeedEntry, CutSpeedDefCB,\
-                                                                       config.offset_function, removeCollisionValue, MessageWindow))
-    OffsetBtn.place(x = 1255, y = 532)
+    offset_from_func_btn = tk.Button(root, text = "溶け量ファイルからオフセット量設定", height = 1, width = 34, font=("",10),  bg='#fffacd', \
+                          command = lambda: set_offset_dist_from_function(dxf0, dxf1, xy_dist_entry, uv_dist_entry, mech_dist_entry, cut_speed_entry, cut_speed_def_cb,\
+                                                                       config.offset_function, is_remove_collision, message_window))
+    offset_from_func_btn.place(x = 1255, y = 532)
 
 
     #【オフセットボタン】
-    OriginOffsetBtn0 = tk.Button(root, text="更新", command = lambda: offset_origin(dxf0, dxf1, OriginOffsetEntry_X, OriginOffsetEntry_Y, MessageWindow))
-    OriginOffsetBtn0.place(x=1205, y=607)   
+    origin_offset_btn = tk.Button(root, text="更新", command = lambda: offset_origin(dxf0, dxf1, origin_offset_entry_x, origin_offset_entry_y, message_window))
+    origin_offset_btn.place(x=1205, y=607)   
 
     #【回転ボタン】
-    RotateBtn0 = tk.Button(root, text="更新", command = lambda: Rotate(dxf0, dxf1, RotateEntry, MessageWindow))
-    RotateBtn0.place(x=1450, y=607)   
+    rotate_btn = tk.Button(root, text="更新", command = lambda: rotate_origin(dxf0, dxf1, rotate_entry, message_window))
+    rotate_btn.place(x=1450, y=607)   
 
 
     #【X-Yラインテーブル用　カット方向入れ替えボタン】
-    ChangeCutDirBtn0 = tk.Button(root, text="カット方向入替え", width =15, bg = "#3cb371", command = lambda: Change_CutDir(dxf0, dxf1, chkValue, "XY面", "UV面", MessageWindow))
-    ChangeCutDirBtn0.place(x=855, y=435)   
+    change_cut_dir_btn0 = tk.Button(root, text="カット方向入替え", width =15, bg = "#3cb371", command = lambda: change_cut_dir(dxf0, dxf1, is_xy_uv_link, "XY面", "UV面", message_window))
+    change_cut_dir_btn0.place(x=855, y=435)   
     
     #【X-Yラインテーブル用　ライン整列ボタン】    
-    AutoAlignmentBtn0 = tk.Button(root, text="ライン整列", width =15, bg = "#3cb371", command = lambda: AutoLineSort(dxf0, dxf1, chkValue, "XY面", "UV面", MessageWindow))
-    AutoAlignmentBtn0.place(x=990, y=435)
+    auto_alignment_btn0 = tk.Button(root, text="ライン整列", width =15, bg = "#3cb371", command = lambda: auto_sort_line(dxf0, dxf1, is_xy_uv_link, "XY面", "UV面", message_window))
+    auto_alignment_btn0.place(x=990, y=435)
             
     #【X-Yラインテーブル用　カット順逆転ボタン】    
-    ReverseBtn0 = tk.Button(root, text="カット順逆転", width =15, bg = "#3cb371", command = lambda: Reverse(dxf0, dxf1, chkValue, "XY面", "UV面", MessageWindow))
-    ReverseBtn0.place(x=1125, y=435)  
+    reverse_line_btn0 = tk.Button(root, text="カット順逆転", width =15, bg = "#3cb371", command = lambda: reverse_line(dxf0, dxf1, is_xy_uv_link, "XY面", "UV面", message_window))
+    reverse_line_btn0.place(x=1125, y=435)  
     
     
     #【X-Yラインテーブル用　ライン結合ボタン】
-    SwapBtn0 = tk.Button(root, text="ライン結合", width =15, bg = "#4ba3fb", command = lambda: Merge_line(dxf0, dxf1, chkValue, removeCollisionValue, "XY面", "UV面", MessageWindow))
-    SwapBtn0.place(x=855, y=465) 
+    merge_line_btn0 = tk.Button(root, text="ライン結合", width =15, bg = "#4ba3fb", command = lambda: merge_line(dxf0, dxf1, is_xy_uv_link, is_remove_collision, "XY面", "UV面", message_window))
+    merge_line_btn0.place(x=855, y=465) 
     
     #【X-Yラインテーブル用　ライン分割ボタン】    
-    SeparateBtn0 = tk.Button(root, text="ライン分割", width = 15, bg = "#b45c04", command = lambda: separate_line(dxf0, removeCollisionValue, "XY面", MessageWindow))
-    SeparateBtn0.place(x=990, y=465)
+    separate_line_btn0 = tk.Button(root, text="ライン分割", width = 15, bg = "#b45c04", command = lambda: separate_line(dxf0, is_remove_collision, "XY面", message_window))
+    separate_line_btn0.place(x=990, y=465)
 
     #【X-Yラインテーブル用　ライン削除ボタン】    
-    DelateBtn0 = tk.Button(root, text="ライン削除", width = 15, bg = "#ff6347", command = lambda: delete_line(dxf0, dxf1, chkValue, removeCollisionValue, "XY面", "UV面", MessageWindow))
-    DelateBtn0.place(x=1125, y=465)
+    delete_line_btn0 = tk.Button(root, text="ライン削除", width = 15, bg = "#ff6347", command = lambda: delete_line(dxf0, dxf1, is_xy_uv_link, is_remove_collision, "XY面", "UV面", message_window))
+    delete_line_btn0.place(x=1125, y=465)
   
   
     #【U-Vラインテーブル用　カット方向入れ替えボタン】    
-    ChangeCutDirBtn1 = tk.Button(root, text="カット方向入替え", width =15, bg = "#3cb371", command = lambda: Change_CutDir(dxf1, dxf0, chkValue, "UV面", "XY面", MessageWindow))
-    ChangeCutDirBtn1.place(x=1255, y=435)
+    change_cut_dir_btn1 = tk.Button(root, text="カット方向入替え", width =15, bg = "#3cb371", command = lambda: change_cut_dir(dxf1, dxf0, is_xy_uv_link, "UV面", "XY面", message_window))
+    change_cut_dir_btn1.place(x=1255, y=435)
     
     #【U-Vラインテーブル用　ライン整列ボタン】    
-    AutoAlignmentBtn1 = tk.Button(root, text="ライン整列", width =15, bg = "#3cb371", command = lambda: AutoLineSort(dxf1, dxf0, chkValue, "UV面", "XY面", MessageWindow))
-    AutoAlignmentBtn1.place(x=1390, y=435)
+    auto_alignment_btn1 = tk.Button(root, text="ライン整列", width =15, bg = "#3cb371", command = lambda: auto_sort_line(dxf1, dxf0, is_xy_uv_link, "UV面", "XY面", message_window))
+    auto_alignment_btn1.place(x=1390, y=435)
     
     #【U-Vラインテーブル用　カット順逆転ボタン】    
-    ReverseBtn1 = tk.Button(root, text="カット順逆転", width =15, bg = "#3cb371", command = lambda: Reverse(dxf1, dxf0, chkValue, "UV面", "XY面", MessageWindow))
-    ReverseBtn1.place(x=1525, y=435)   
+    reverse_line_btn1 = tk.Button(root, text="カット順逆転", width =15, bg = "#3cb371", command = lambda: reverse_line(dxf1, dxf0, is_xy_uv_link, "UV面", "XY面", message_window))
+    reverse_line_btn1.place(x=1525, y=435)   
     
     #【U-Vラインテーブル用　ライン結合ボタン】    
-    DelateBtn1 = tk.Button(root, text="ライン結合", width = 15, bg = "#4ba3fb" , command = lambda: Merge_line(dxf1, dxf0, chkValue, removeCollisionValue, "UV面", "XY面", MessageWindow))
-    DelateBtn1.place(x=1255, y=465)   
+    merge_line_btn1 = tk.Button(root, text="ライン結合", width = 15, bg = "#4ba3fb" , command = lambda: merge_line(dxf1, dxf0, is_xy_uv_link, is_remove_collision, "UV面", "XY面", message_window))
+    merge_line_btn1.place(x=1255, y=465)   
  
     #【U-Vラインテーブル用　ライン分割ボタン】    
-    SeparateBtn1 = tk.Button(root, text="ライン分割", width = 15, bg = "#b45c04", command = lambda: separate_line(dxf1, removeCollisionValue, "UV面", MessageWindow))
-    SeparateBtn1.place(x=1390, y=465) 
+    separate_line_btn1 = tk.Button(root, text="ライン分割", width = 15, bg = "#b45c04", command = lambda: separate_line(dxf1, is_remove_collision, "UV面", message_window))
+    separate_line_btn1.place(x=1390, y=465) 
     
     #【U-Vラインテーブル用　ライン削除ボタン】    
-    DelateBtn1 = tk.Button(root, text="ライン削除", width = 15, bg = "#ff6347" , command = lambda: delete_line(dxf1, dxf0, chkValue, removeCollisionValue, "UV面", "XY面", MessageWindow))
-    DelateBtn1.place(x=1525, y=465)
+    delete_line_btn1 = tk.Button(root, text="ライン削除", width = 15, bg = "#ff6347" , command = lambda: delete_line(dxf1, dxf0, is_xy_uv_link, is_remove_collision, "UV面", "XY面", message_window))
+    delete_line_btn1.place(x=1525, y=465)
     
 
     #Ver2.0 変更　WorkDistWntryを追加
     #【パスチェックボタン】    
-    ChkPassBtn = tk.Button(root, text = "パスチェック", height = 2, width = 12,font=("",12), bg='#3cb371', \
-                           command = lambda: path_chk(root, dxf0, dxf1, AutoAlignmentEntry_X, AutoAlignmentEntry_Y, CutEndEntry_X, CutEndEntry_Y, \
-                                                      XYDistEntry, UVDistEntry, MachDistEntry, dlEntry, is3dPathCheck, MessageWindow))
-    ChkPassBtn.place(x = 1530, y = 660)
+    path_check_btn = tk.Button(root, text = "パスチェック", height = 2, width = 12,font=("",12), bg='#3cb371', \
+                           command = lambda: path_chk(root, dxf0, dxf1, cut_start_entry_x, cut_start_entry_y, cut_end_entry_x, cut_end_entry_y, \
+                                                      xy_dist_entry, uv_dist_entry, mech_dist_entry, dl_entry, is_3d_path_check, message_window))
+    path_check_btn.place(x = 1530, y = 660)
     
 
     #Ver2.0 変更　MechDistEntry, WorkDistWntryを追加
     #【Gコード生成ボタン】        
-    GenGCodeBtn = tk.Button(root, text = "Gコード生成", height = 2, width = 12,font=("",12), bg='#ff6347', \
-                            command = lambda: gen_g_code(dxf0, dxf1, AutoAlignmentEntry_X, AutoAlignmentEntry_Y, CutEndEntry_X, CutEndEntry_Y, \
-                                                         XYDistEntry, UVDistEntry, MachDistEntry, CutSpeedEntry, CutSpeedDefCB, CNCSpeedDefCB, \
-                                                         dlEntry, MessageWindow, config))
-    GenGCodeBtn.place(x = 1530, y = 720)
+    generate_g_code_btn = tk.Button(root, text = "Gコード生成", height = 2, width = 12,font=("",12), bg='#ff6347', \
+                            command = lambda: gen_g_code(dxf0, dxf1, cut_start_entry_x, cut_start_entry_y, cut_end_entry_x, cut_end_entry_y, \
+                                                         xy_dist_entry, uv_dist_entry, mech_dist_entry, cut_speed_entry, cut_speed_def_cb, cnc_speed_def_cb, \
+                                                         dl_entry, message_window, config))
+    generate_g_code_btn.place(x = 1530, y = 720)
 
 
 
@@ -1702,26 +1699,26 @@ if __name__ == "__main__":
     #======================================================================================================================================
 
     #【U-V画面とX-Y画面の連動チェックボックス】
-    chkValue = tk.BooleanVar()
-    chk0 = tk.Checkbutton(root, text="X-Y画面とU-V画面を連動させる", var=chkValue , command =  lambda: XY_UV_Link(chkValue, table0, table1, MessageWindow))
-    chk0.place(x=1490, y=5)
+    is_xy_uv_link = tk.BooleanVar()
+    xy_uv_link_checkbox = tk.Checkbutton(root, text="X-Y画面とU-V画面を連動させる", var=is_xy_uv_link , command =  lambda: xy_uv_link(is_xy_uv_link, table0, table1, message_window))
+    xy_uv_link_checkbox.place(x=1490, y=5)
 
     #【自己交差除去チェックボックス】
-    removeCollisionValue = tk.BooleanVar()
-    removeCollisionValue.set(config.REMOVE_COLLISION)
-    chk1 = tk.Checkbutton(root, text="自己交差除去有効化", var=removeCollisionValue, command =  lambda: EnableRemoveSelfCollision(removeCollisionValue, MessageWindow))
-    chk1.place(x=1350, y=5)
+    is_remove_collision = tk.BooleanVar()
+    is_remove_collision.set(config.REMOVE_COLLISION)
+    remove_collision_checkbox = tk.Checkbutton(root, text="自己交差除去有効化", var=is_remove_collision, command =  lambda: enable_remove_self_collision(is_remove_collision, message_window))
+    remove_collision_checkbox.place(x=1350, y=5)
     
     #【スプラインをリファインするかどうかのチェックボックス】
-    isRefineSpline = tk.BooleanVar()
-    isRefineSpline.set(config.REFINE)
-    chk2 = tk.Checkbutton(root, text="スプライン点列をリファインする", var=isRefineSpline, command =  lambda: EnableSplineRefine(isRefineSpline, MessageWindow))
-    chk2.place(x=1180, y=5)  
+    is_spline_refine = tk.BooleanVar()
+    is_spline_refine.set(config.REFINE)
+    spline_refine_checkbox = tk.Checkbutton(root, text="スプライン点列をリファインする", var=is_spline_refine, command =  lambda: enable_spline_refine(is_spline_refine, message_window))
+    spline_refine_checkbox.place(x=1180, y=5)  
 
     #【パスチェックを3Dで実施するかどうかのチェックボックス】
-    is3dPathCheck = tk.BooleanVar()
-    chk3 = tk.Checkbutton(root, text="3Dでパスチェックする", var=is3dPathCheck, command =  lambda: Enable3dPathCheck(is3dPathCheck, MessageWindow))
-    chk3.place(x=1525, y=635)  
+    is_3d_path_check = tk.BooleanVar()
+    path_check_checkbox = tk.Checkbutton(root, text="3Dでパスチェックする", var=is_3d_path_check, command =  lambda: enable_3d_path_check(is_3d_path_check, message_window))
+    path_check_checkbox.place(x=1525, y=635)  
 
     #======================================================================================================================================
     #                 メインループ

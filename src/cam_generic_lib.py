@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Aug 11 15:37:04 2025
+"""CAMで共通する処理をまとめたライブラリ
 
-@author: hirar
 """
 # 外部ライブラリ
 import numpy as np
@@ -97,14 +95,38 @@ from error_log import *
 
 
 
-def offset_line(x, y, d, interp_mode): #ver2.2 interp_mode 追加　ポリラインの場合，オフセット点を中点ではなく，点列を使用するため
+def offset_line(x, y, d, interp_mode):
+    """オフセットした座標点列を計算する
+
+    x,y の座標点列をdだけオフセットした点列を作成する。
+    オフセットした座標は、座標点における接線の傾きkを計算し、以下から計算する
+
+    .. math:: 
+        x_{new} = x-d\\cdot\\sin(k)
+
+        y_{new} = x+d\\cdot\\cos(k)
+
+    接線の傾きkは、x座標の増減の向きを反映させるため、およびy軸と並行な座標点列に対応するため、arctan2を用いて計算する
+
+    Args:
+        x (numpy.array): 元のx座標点列
+        y (numpy.array): 元のy座標点列
+        d (float): オフセット距離
+        interp_mode (str): スプラインの場合、ポリラインとしてオフセットするかどうか(linear:ポリラインとしてオフセット)
+
+    Returns:
+        np.array: オフセット後のx座標点列
+        np.array: オフセット後のy座標点列
+    """
     new_x = []
     new_y = []
     k = 0
     
+    # 点の場合はオフセット方向を定義できないので、オフセットせずに元の点列を出力する
     if len(x) < 2: 
         return x, y
 
+    # 線分の場合、始点と終点で傾きは同じなので、同じkを用いてそれぞれオフセットする
     if len(x) == 2:
         k = np.arctan2((y[1]-y[0]), (x[1]-x[0]))
         new_x.append(x[0] - d*np.sin(k))
@@ -112,7 +134,9 @@ def offset_line(x, y, d, interp_mode): #ver2.2 interp_mode 追加　ポリライ
         new_y.append(y[0] + d*np.cos(k))
         new_y.append(y[1] + d*np.cos(k))
 
+    # スプラインの場合
     if len(x) > 2:
+        # ポリラインの場合、角が失われないように、線の端点をそれぞれオフセットする（点の数は2倍になる）
         if interp_mode == "linear" and len(x)%2 == 0:
             num = 0
             while num < len(x)/2:
@@ -130,6 +154,9 @@ def offset_line(x, y, d, interp_mode): #ver2.2 interp_mode 追加　ポリライ
                 num += 1
             
         else:
+            # スプラインの場合、始点と中点以外は、１つ先と１つ前の点を用いて傾きを計算する
+            # アルゴリズムの参考：https://stackoverflow.com/questions/32772638/python-how-to-get-the-x-y-coordinates-of-a-offset-spline-from-a-x-y-list-of-poi
+            # 点列の間隔が狭い場合、傾きが正常に計算できないことがあるので、近傍点の場合(normがDIST_NEAR未満の場合）はスキップする
             i = 0
             while i < len(x):
                 if i == 0:
@@ -153,10 +180,40 @@ def offset_line(x, y, d, interp_mode): #ver2.2 interp_mode 追加　ポリライ
 
 
 def norm(x0, y0, x, y):
+    """2次元座標における、2点(x0, y0)と(x, y)の距離dを計算する
+
+    .. math::
+        d = \\sqrt{(x-x_0)^2 + (y-y_0)^2}
+
+    Args:
+        x0 (float): 1つめの座標点のx座標
+        y0 (float): 1つめの座標点のy座標
+        x (float): 2つめの座標点のx座標
+        y (float): 2つめの座標点のy座標
+
+    Returns:
+        float: 2点(x0, y0)と(x, y)の間の距離
+    """
     return np.sqrt((x-x0)**2 + (y-y0)**2)
 
 
 def norm_3d(x0, y0, z0, x, y, z):
+    """3次元座標における、2点(x0, y0, z0)と(x, y, z)の距離dを計算する
+
+    .. math::
+        d = \\sqrt{(x-x_0)^2 + (y-y_0)^2 +(z-z_0)^2 }
+
+    Args:
+        x0 (float): 1つめの座標点のx座標
+        y0 (float): 1つめの座標点のy座標
+        z0 (float): 1つめの座標点のz座標
+        x (float): 2つめの座標点のx座標
+        y (float): 2つめの座標点のy座標
+        z (float): 2つめの座標点のz座標
+
+    Returns:
+        float: 2点(x0, y0, z0)と(x, y, z)の間の距離
+    """
     return np.sqrt((x-x0)**2 + (y-y0)**2 + (z-z0)**2)
 
 

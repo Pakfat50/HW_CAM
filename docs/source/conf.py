@@ -23,8 +23,23 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
     'myst_parser',
-    'japanesesupport'
+    'japanesesupport',
+    'sphinxcontrib.plantuml',
+    'sphinx.ext.mathjax'
     ]
+
+plantuml_jar = "plantuml-mit-1.2025.7.jar"
+plantuml_java_options=" ".join([
+             "-DPLANTUML_LIMIT_SIZE=8192",
+             "-Djava.awt.headless=true"
+])
+
+# sphinxcontrib-plantumlのオプション
+plantuml = f"java {plantuml_java_options} -jar {plantuml_jar}"
+plantuml_output_format="svg_img"
+plantuml_latex_output_format="png"
+# plantuml_epstopdf="epstopdf", # TeXLive
+# plantuml_cache_path="_plantuml" ,
 
 templates_path = ['_templates']
 exclude_patterns = []

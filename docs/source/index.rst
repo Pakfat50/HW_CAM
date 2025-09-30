@@ -12,11 +12,5 @@ HW_CAM documentation
    :maxdepth: 2
    :caption: Contents:
 
-   HWCAM
-   dxf_file
-   line_object
-   messeage_window
-   error_log
-   cam_generic_lib
-   cam_global
+   modules.rst
 

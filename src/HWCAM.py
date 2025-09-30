@@ -1128,8 +1128,8 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
                         if n_interp_line2line < 2:
                             n_interp_line2line = 2
                         
-                        xp, yp = generate_arc_length_points4line(x_array[-1], y_array[-1], x[0], y[0], n_interp_line2line)
-                        up, vp = generate_arc_length_points4line(u_array[-1], v_array[-1], u[0], v[0], n_interp_line2line)
+                        xp, yp = refine_line([x_array[-1], x[0]],  [y_array[-1], y[0]], n_interp_line2line)
+                        up, vp = refine_line([u_array[-1], u[0]],  [v_array[-1], v[0]], n_interp_line2line)
                         x_array = np.concatenate([x_array, xp], 0)
                         y_array = np.concatenate([y_array, yp], 0)
                         u_array = np.concatenate([u_array, up], 0)
@@ -1152,8 +1152,8 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
                 if n_interp_line2line < 2:
                     n_interp_line2line = 2
                 
-                xp, yp = generate_arc_length_points4line(x_array[-1], y_array[-1], ex, ey, n_interp_line2line)
-                up, vp = generate_arc_length_points4line(u_array[-1], v_array[-1], ex, ey, n_interp_line2line)
+                xp, yp = refine_line([x_array[-1], ex], [y_array[-1], ey], n_interp_line2line)
+                up, vp = refine_line([u_array[-1], ex], [v_array[-1], ey], n_interp_line2line)
                 x_array = np.concatenate([x_array, xp], 0)
                 y_array = np.concatenate([y_array, yp], 0)
                 u_array = np.concatenate([u_array, up], 0)

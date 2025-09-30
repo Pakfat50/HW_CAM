@@ -25,6 +25,7 @@ extensions = [
     'myst_parser',
     'japanesesupport',
     'sphinxcontrib.plantuml',
+    'sphinx.ext.todo',
     'sphinx.ext.mathjax'
     ]
 
@@ -44,6 +45,8 @@ plantuml_latex_output_format="png"
 templates_path = ['_templates']
 exclude_patterns = []
 
+todo_include_todos = True
+
 language = 'ja'
 
 # -- Options for HTML output -------------------------------------------------
@@ -51,3 +54,4 @@ language = 'ja'
 
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
+napoleon_custom_sections = [('Returns', 'params_style')]

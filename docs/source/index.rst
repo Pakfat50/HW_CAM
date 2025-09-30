@@ -8,6 +8,9 @@ HW_CAM documentation
 
 本ソフトウェアは、オープンソースの熱線カッターCNC向け2D CAMソフトウェアです。
 
+.. image:: 
+   ../../documents/res/main_window.png
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:

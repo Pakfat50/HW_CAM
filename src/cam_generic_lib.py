@@ -932,19 +932,28 @@ def generate_offset_function(x_array, y_array):
     return offset_function
 
 
-def get_cross_point(p1_x, p1_y, p2_x, p2_y, p3_x, p3_y, p4_x, p4_y):
-    # https://imagingsolution.blog.fc2.com/blog-entry-137.html
-    s1 = ((p4_x - p2_x) * (p1_y - p2_y) - (p4_y - p2_y) * (p1_x - p2_x)) / 2.0
-    s2 = ((p4_x - p2_x) * (p2_y - p3_y) - (p4_y - p2_y) * (p2_x - p3_x)) / 2.0
-    
-    c1_x = p1_x + (p3_x - p1_x) * (s1 / (s1 + s2))
-    c1_y = p1_y + (p3_y - p1_y) * (s1 / (s1 + s2))
-    
-    return c1_x, c1_y
-
-
 def get_cross_point_from_point(p1_x, p1_y, p2_x, p2_y, p3_x, p3_y, p4_x, p4_y):
-    # https://imagingsolution.blog.fc2.com/blog-entry-137.html
+    """4点(p1,p2,p3,p4)の交点の座標を求める
+
+    Args:
+        p1_x (float): p1のx座標
+        p1_y (float): p1のy座標
+        p2_x (float): p2のx座標
+        p2_y (float): p2のy座標
+        p3_x (float): p3のx座標
+        p3_y (float): p3のy座標
+        p4_x (float): p4のx座標
+        p4_y (float): p4のy座標
+
+    Returns:
+        float: 交点のx座標
+        float: 交点のy座標
+    
+    See Also:
+        https://imagingsolution.blog.fc2.com/blog-entry-137.html
+        
+    """
+
     s1 = ((p4_x - p2_x) * (p1_y - p2_y) - (p4_y - p2_y) * (p1_x - p2_x)) / 2.0
     s2 = ((p4_x - p2_x) * (p2_y - p3_y) - (p4_y - p2_y) * (p2_x - p3_x)) / 2.0
     
@@ -955,7 +964,22 @@ def get_cross_point_from_point(p1_x, p1_y, p2_x, p2_y, p3_x, p3_y, p4_x, p4_y):
 
 
 def get_cross_point_from_lines(a, b, c, d):
-    # https://mathwords.net/nityokusenkoten
+    """傾きa,切片bの直線と、傾きc,切片dの直線の交点の座標を求める
+
+    Args:
+        a (float): 1本目の直線の傾き
+        b (float): 1本目の直線の切片
+        c (float): 2本目の直線の傾き
+        d (float): 2本目の直線の切片
+
+    Returns:
+        float: 交点のx座標
+        float: 交点のy座標
+
+    See Also:
+        https://mathwords.net/nityokusenkoten
+    """
+    
     c1_x = (d-b)/(a-c)
     c1_y = (a*d - b*c)/(a-c)
     return c1_x, c1_y
@@ -963,6 +987,15 @@ def get_cross_point_from_lines(a, b, c, d):
 
 
 def get_flatten(array):
+    """1*1のサイズの配列が含まれる長さNの配列を、1*Nの配列に整形する
+
+    Args:
+        array (numpy.array): 元の配列（内包されるデータはfloat型）
+
+    Returns:
+        numpy.array: 整形後の配列
+    """
+    
     ret = []
     for val in array:
         ret.append(float(val))

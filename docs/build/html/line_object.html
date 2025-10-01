@@ -1,0 +1,438 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="ja" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>line_object module &mdash; HW_CAM 4.0 ドキュメント</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=064fed73"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/translations.js?v=4755f45a"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="索引" href="genindex.html" />
+    <link rel="search" title="検索" href="search.html" />
+    <link rel="next" title="messeage_window module" href="messeage_window.html" />
+    <link rel="prev" title="error_log module" href="error_log.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            HW_CAM
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">src</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="HWCAM.html">HWCAM module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cam_generic_lib.html">cam_generic_lib module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cam_global.html">cam_global module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dxf_file.html">dxf_file module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="error_log.html">error_log module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">line_object module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#line_object.LineObject"><code class="docutils literal notranslate"><span class="pre">LineObject</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#line_object.LineObject.x_raw"><code class="docutils literal notranslate"><span class="pre">LineObject.x_raw</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#line_object.LineObject.y_raw"><code class="docutils literal notranslate"><span class="pre">LineObject.y_raw</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#line_object.LineObject.st"><code class="docutils literal notranslate"><span class="pre">LineObject.st</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#line_object.LineObject.ed"><code class="docutils literal notranslate"><span class="pre">LineObject.ed</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#line_object.LineObject.num"><code class="docutils literal notranslate"><span class="pre">LineObject.num</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#line_object.LineObject.line_type"><code class="docutils literal notranslate"><span class="pre">LineObject.line_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#line_object.LineObject.offset_dist"><code class="docutils literal notranslate"><span class="pre">LineObject.offset_dist</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#line_object.LineObject.ccw"><code class="docutils literal notranslate"><span class="pre">LineObject.ccw</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#line_object.LineObject.cutspeed_work"><code class="docutils literal notranslate"><span class="pre">LineObject.cutspeed_work</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#line_object.LineObject.cutspeed_mech"><code class="docutils literal notranslate"><span class="pre">LineObject.cutspeed_mech</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#line_object.LineObject.x"><code class="docutils literal notranslate"><span class="pre">LineObject.x</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#line_object.LineObject.y"><code class="docutils literal notranslate"><span class="pre">LineObject.y</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#line_object.LineObject.calc_length_array"><code class="docutils literal notranslate"><span class="pre">LineObject.calc_length_array()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#line_object.LineObject.get_length"><code class="docutils literal notranslate"><span class="pre">LineObject.get_length()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#line_object.LineObject.move_origin"><code class="docutils literal notranslate"><span class="pre">LineObject.move_origin()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#line_object.LineObject.remove_self_collision"><code class="docutils literal notranslate"><span class="pre">LineObject.remove_self_collision()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#line_object.LineObject.reset_point"><code class="docutils literal notranslate"><span class="pre">LineObject.reset_point()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#line_object.LineObject.rotate"><code class="docutils literal notranslate"><span class="pre">LineObject.rotate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#line_object.LineObject.set_ccw"><code class="docutils literal notranslate"><span class="pre">LineObject.set_ccw()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#line_object.LineObject.set_cutspeed"><code class="docutils literal notranslate"><span class="pre">LineObject.set_cutspeed()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#line_object.LineObject.set_num"><code class="docutils literal notranslate"><span class="pre">LineObject.set_num()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#line_object.LineObject.set_offset_dist"><code class="docutils literal notranslate"><span class="pre">LineObject.set_offset_dist()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#line_object.LineObject.toggle_cut_dir"><code class="docutils literal notranslate"><span class="pre">LineObject.toggle_cut_dir()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="messeage_window.html">messeage_window module</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">HW_CAM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">src</a></li>
+      <li class="breadcrumb-item active">line_object module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/line_object.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-line_object">
+<span id="line-object-module"></span><h1>line_object module<a class="headerlink" href="#module-line_object" title="Link to this heading"></a></h1>
+<p>LineObjectクラスを実装したパッケージ</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="line_object.LineObject">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">line_object.</span></span><span class="sig-name descname"><span class="pre">LineObject</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_refine</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interp_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cubic'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#line_object.LineObject" title="Link to this definition"></a></dt>
+<dd><p>ベースクラス:<code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>CAMで取り扱い線に関する情報を格納するクラスである</p>
+<p>線（線分、スプライン）に対する操作は、本クラスを介して行う。</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="line_object.LineObject.x_raw">
+<span class="sig-name descname"><span class="pre">x_raw</span></span><a class="headerlink" href="#line_object.LineObject.x_raw" title="Link to this definition"></a></dt>
+<dd><p>オフセット適用前のx座標点列</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="line_object.LineObject.y_raw">
+<span class="sig-name descname"><span class="pre">y_raw</span></span><a class="headerlink" href="#line_object.LineObject.y_raw" title="Link to this definition"></a></dt>
+<dd><p>オフセット適用前のy座標点列</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="line_object.LineObject.st">
+<span class="sig-name descname"><span class="pre">st</span></span><a class="headerlink" href="#line_object.LineObject.st" title="Link to this definition"></a></dt>
+<dd><p>x_raw, y_rawの始点(0番目)の座標</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="line_object.LineObject.ed">
+<span class="sig-name descname"><span class="pre">ed</span></span><a class="headerlink" href="#line_object.LineObject.ed" title="Link to this definition"></a></dt>
+<dd><p>x_raw, y_rawの終点(-1番目)の座標</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="line_object.LineObject.num">
+<span class="sig-name descname"><span class="pre">num</span></span><a class="headerlink" href="#line_object.LineObject.num" title="Link to this definition"></a></dt>
+<dd><p>ラインの番号</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="line_object.LineObject.line_type">
+<span class="sig-name descname"><span class="pre">line_type</span></span><a class="headerlink" href="#line_object.LineObject.line_type" title="Link to this definition"></a></dt>
+<dd><p>線種(point/line/spline)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="line_object.LineObject.offset_dist">
+<span class="sig-name descname"><span class="pre">offset_dist</span></span><a class="headerlink" href="#line_object.LineObject.offset_dist" title="Link to this definition"></a></dt>
+<dd><p>オフセット距離</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="line_object.LineObject.ccw">
+<span class="sig-name descname"><span class="pre">ccw</span></span><a class="headerlink" href="#line_object.LineObject.ccw" title="Link to this definition"></a></dt>
+<dd><p>ラインが反時計回りかどうか(True:反時計回り/ False:時計周り)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="line_object.LineObject.cutspeed_work">
+<span class="sig-name descname"><span class="pre">cutspeed_work</span></span><a class="headerlink" href="#line_object.LineObject.cutspeed_work" title="Link to this definition"></a></dt>
+<dd><p>ワーク端面(ラインの座標面)でのカット速度</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="line_object.LineObject.cutspeed_mech">
+<span class="sig-name descname"><span class="pre">cutspeed_mech</span></span><a class="headerlink" href="#line_object.LineObject.cutspeed_mech" title="Link to this definition"></a></dt>
+<dd><p>CNC駆動面(ラインの座標面からz軸方向にオフセットした面)でのカット速度</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="line_object.LineObject.x">
+<span class="sig-name descname"><span class="pre">x</span></span><a class="headerlink" href="#line_object.LineObject.x" title="Link to this definition"></a></dt>
+<dd><p>オフセット適用後のx座標点列</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="line_object.LineObject.y">
+<span class="sig-name descname"><span class="pre">y</span></span><a class="headerlink" href="#line_object.LineObject.y" title="Link to this definition"></a></dt>
+<dd><p>オフセット適用後のy座標点列</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="line_object.LineObject.calc_length_array">
+<span class="sig-name descname"><span class="pre">calc_length_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'offset'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#line_object.LineObject.calc_length_array" title="Link to this definition"></a></dt>
+<dd><p>始点からi番目の座標点までの線長を計算した配列を出力する</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>mode</strong>(<em>str</em><em>, </em><em>optional</em>)--元の座標データとオフセット後の座標データのどちらで線長を計算するか. Defaults to &quot;offset&quot;.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>np.array</strong>-- 始点からi番目の座標点までの線長を計算した配列</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="line_object.LineObject.get_length">
+<span class="sig-name descname"><span class="pre">get_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'offset'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#line_object.LineObject.get_length" title="Link to this definition"></a></dt>
+<dd><p>始点から終点までの線長を計算する</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>mode</strong>(<em>str</em><em>, </em><em>optional</em>)--元の座標データとオフセット後の座標データのどちらで線長を計算するか. Defaults to &quot;offset&quot;.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>float</strong>-- 始点から終点までの線長</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="line_object.LineObject.move_origin">
+<span class="sig-name descname"><span class="pre">move_origin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dy</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#line_object.LineObject.move_origin" title="Link to this definition"></a></dt>
+<dd><p>座標点を指定の距離(dx,dy)だけすべてオフセットする</p>
+<p>線が持つ座標データ（x_raw, y_raw, st, ed, x, y）をすべて、指定の距離だけ移動する原点の移動に相当する</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dx</strong>(<em>float</em>)--x方向移動距離</p></li>
+<li><p><strong>dy</strong>(<em>float</em>)--y方向移動距離</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="line_object.LineObject.remove_self_collision">
+<span class="sig-name descname"><span class="pre">remove_self_collision</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#line_object.LineObject.remove_self_collision" title="Link to this definition"></a></dt>
+<dd><p>オフセット後の座標点列に自己交差がある場合、除去する</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>bool</strong>-- 自己交差の有無(True:自己交差あり, False:自己交差なし)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="line_object.LineObject.reset_point">
+<span class="sig-name descname"><span class="pre">reset_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_points</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#line_object.LineObject.reset_point" title="Link to this definition"></a></dt>
+<dd><p>座標データを更新する</p>
+<p>座標点列以外のデータは、設定済みのものを引き継ぐオフセットが設定されている場合は、入力された座標点列に対し、オフセットした座標点も計算する</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_points</strong>(<em>numpy.array</em>)--x座標点列</p></li>
+<li><p><strong>y_points</strong>(<em>numpy.array</em>)--y座標点列</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="line_object.LineObject.rotate">
+<span class="sig-name descname"><span class="pre">rotate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d_sita</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ry</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#line_object.LineObject.rotate" title="Link to this definition"></a></dt>
+<dd><p>座標点を指定の座標(rx,ry)を中心に、指定の角度(d_sita)だけ回転する</p>
+<p>線が持つ座標データ（x_raw, y_raw, st, ed, x, y）をすべて、指定の距離だけ回転する</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>d_sita</strong>(<em>float</em>)--回転角度。正で時計回り、負で反時計周りに回転</p></li>
+<li><p><strong>rx</strong>(<em>float</em>)--回転中心x座標</p></li>
+<li><p><strong>ry</strong>(<em>float</em>)--回転中心y座標</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="line_object.LineObject.set_ccw">
+<span class="sig-name descname"><span class="pre">set_ccw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ccw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#line_object.LineObject.set_ccw" title="Link to this definition"></a></dt>
+<dd><p>線に回転方向を設定する</p>
+<p>回転方向が変更となった場合、オフセット方向も変更となるので、オフセットした座標点も更新する</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ccw</strong>(<em>bool</em>)--ラインが反時計回りかどうか(True:反時計回り/ False:時計周り)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="line_object.LineObject.set_cutspeed">
+<span class="sig-name descname"><span class="pre">set_cutspeed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cutspeed_work</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutspeed_mech</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#line_object.LineObject.set_cutspeed" title="Link to this definition"></a></dt>
+<dd><p>カット速度を設定する</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cutspeed_work</strong>(<em>float</em>)--ワーク端面(ラインの座標面)でのカット速度</p></li>
+<li><p><strong>cutspeed_mech</strong>(<em>float</em>)--CNC駆動面(ラインの座標面からz軸方向にオフセットした面)でのカット速度</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="line_object.LineObject.set_num">
+<span class="sig-name descname"><span class="pre">set_num</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#line_object.LineObject.set_num" title="Link to this definition"></a></dt>
+<dd><p>ライン番号を設定する</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>num</strong>(<em>int</em>)--ラインの番号</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p>int以外のデータが渡された場合、例外を発生させる例外は、標準出力へ表示した上で、output_logによりエラーファイルにも出力する</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="line_object.LineObject.set_offset_dist">
+<span class="sig-name descname"><span class="pre">set_offset_dist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">offset_dist</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#line_object.LineObject.set_offset_dist" title="Link to this definition"></a></dt>
+<dd><p>オフセット後の座標点を更新する</p>
+<p>オフセットする方向は、線が時計回りか反時計周りかで変更するオフセット方向は、必ず閉曲線の外側向きにオフセットする以下であれば、外向きにオフセットされる・閉曲線が反時計回り(ccw=True)のとき、接線を-90度回転させる方向・閉曲線が時計回り(ccw=False)のとき、接線を90度回転させる方向オフセット座標点の計算は、時計回りを基準（90度回転）であるので、ccw=Trueのときはオフセット距離を負として計算する</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>offset_dist</strong>(<em>float</em>)--オフセット距離</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p>float以外のデータが渡された場合、例外を発生させる例外は、標準出力へ表示した上で、output_logによりエラーファイルにも出力する</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="line_object.LineObject.toggle_cut_dir">
+<span class="sig-name descname"><span class="pre">toggle_cut_dir</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#line_object.LineObject.toggle_cut_dir" title="Link to this definition"></a></dt>
+<dd><p>カット方向(座標点列の向き)を反転させる</p>
+<p>線が持つ座標データ（x_raw, y_raw, x, y）をすべて反転させる始点、終点は、入れ替わるため座標点を入れ替える回転方向は、点列の反転に併せて反転するので、回転方向もトグルする</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="error_log.html" class="btn btn-neutral float-left" title="error_log module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="messeage_window.html" class="btn btn-neutral float-right" title="messeage_window module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Pakfat50.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

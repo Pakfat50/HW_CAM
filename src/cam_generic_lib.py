@@ -1003,6 +1003,15 @@ def get_flatten(array):
 
 
 def detect_rotation(x, y):
+    """点列の回転方向（ccw/cw）を検出する
+
+    Args:
+        x (numpy.array): x座標点列
+        y (numpy.array): y座標点列
+
+    Returns:
+        bool: ccwかcwか(True:CCW, False/CW)
+    """
     i = 0
     temp_s = 0
 

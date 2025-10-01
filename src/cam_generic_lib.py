@@ -1011,6 +1011,10 @@ def detect_rotation(x, y):
 
     Returns:
         bool: ccwかcwか(True:CCW, False/CW)
+
+    See Also:
+        https://okwave.jp/qa/q5568876.html 
+        
     """
     i = 0
     temp_s = 0

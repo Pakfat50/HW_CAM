@@ -78,11 +78,13 @@ Gコード生成前に、2Dおよび3Dにて、加工パスを確認できます
 
 
 ## 使用方法
-以下を参照ください。
+ソフトウェアの使い方は、以下を参照ください。
 
 [ユーザマニュアル](https://github.com/Pakfat50/HW_CAM/blob/main/documents/README.adoc "ユーザマニュアル")
 
 
+## ドキュメント
+コードの説明は、以下を参照ください。
 
-
+[ドキュメント](https://pakfat50.github.io/HW_CAM/index.html "ドキュメント")
 

@@ -1009,6 +1009,7 @@ def detect_rotation(x, y):
         x (numpy.array): x座標点列
         y (numpy.array): y座標点列
 
+        
     Returns:
         bool: ccwかcwか(True:CCW, False/CW)
 

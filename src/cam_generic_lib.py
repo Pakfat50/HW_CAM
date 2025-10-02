@@ -1034,6 +1034,19 @@ def detect_rotation(x, y):
 
 
 def get_filet_sita(sita_st, sita_ed):
+    """フィレットの開始角・終了角のなす角がpi未満となるようにラッピングする
+    
+    Args:
+        sita_st (float): 開始角
+        sita_ed (float): 終了角
+
+    Returns:
+        float: ラッピング後の開始角
+        float: ラッピング後の終了角
+    Note: 
+        フィレットの開始角と終了角のなす角は、必ずpi未満となる
+
+    """
     
     # 開始角から終了角までの変化量（sita_stとsita_edの傾きをもつ線のなす角）を計算
     delta_sita = sita_ed - sita_st
@@ -1050,8 +1063,27 @@ def get_filet_sita(sita_st, sita_ed):
     
 
 def generate_offset_interporate_point(l0_x, l0_y, l1_x, l1_y, l0_offset, l1_offset):
-    #x_intp = np.array([l0_x[1], l1_x[0]])
-    #y_intp = np.array([l0_y[1], l1_y[0]])  
+    """線をオフセットしてできた2本の線分l0とl1について、l0とl1の端点の隙間に、l0->l1の方向へフィレットを作成する
+    
+    フィレット半径は、オフセット距離となる。l0とl1でオフセット距離が異なる場合は、小さい値を採用する。
+
+    Args:
+        l0_x (float): l0のx座標
+        l0_y (float): l0のy座標
+        l1_x (float): l1のx座標
+        l1_y (float): l1のy座標
+        l0_offset (float): l0のオフセット距離
+        l1_offset (float): l1のオフセット距離
+
+    Returns:
+        numpy.array: フィレットのx座標
+        numpy.array: フィレットのy座標
+
+    Note:
+        フィレット半径がDIST_FILET未満と十分小さい場合は、空行列を出力する
+        
+    """
+
     x_intp = np.array([])
     y_intp = np.array([])
     
@@ -1113,23 +1145,40 @@ def generate_offset_interporate_point(l0_x, l0_y, l1_x, l1_y, l0_offset, l1_offs
 
     except:
         traceback.print_exc()
+        output_log(traceback.format_exc())
         pass
     
     return x_intp, y_intp
 
 
-# https://qiita.com/wihan23/items/03efd7cd40dfec96a987
-def max_min_cross(p1, p2, p3, p4):
-    min_ab, max_ab = min(p1, p2), max(p1, p2)
-    min_cd, max_cd = min(p3, p4), max(p3, p4)
 
-    if min_ab > max_cd or max_ab < min_cd:
-        return False
-
-    return True
-
-# https://qiita.com/wihan23/items/03efd7cd40dfec96a987
 def cross_judge(a, b, c, d):
+    """4点(a,b,c,d)が交差するかを判定する
+
+    アルゴリズムは、参考のものをそのまま実装
+    
+    Args:
+        a (numpy.array): aの座標(x,y)
+        b (numpy.array): bの座標(x,y)
+        c (numpy.array): cの座標(x,y)
+        d (numpy.array): dの座標(x,y)
+
+    Returns:
+        bool: True:交差する/ False:交差しない
+    
+    See Also:
+        https://qiita.com/wihan23/items/03efd7cd40dfec96a987
+    
+    """
+
+    def max_min_cross(p1, p2, p3, p4):
+        min_ab, max_ab = min(p1, p2), max(p1, p2)
+        min_cd, max_cd = min(p3, p4), max(p3, p4)
+
+        if min_ab > max_cd or max_ab < min_cd:
+            return False
+
+        return True
     
     # x座標による判定
     if not max_min_cross(a[0], b[0], c[0], d[0]):
@@ -1147,6 +1196,20 @@ def cross_judge(a, b, c, d):
 
 
 def remove_self_collision(x, y):
+    """線が自己交差を保つ場合、自己交差を解消した座標点列を出力する
+
+    自己交差の開始点と終了点を検出し、その間の座標点を削除することで自己交差を解消する
+
+    Args:
+        x (numpy.array): x座標点列
+        y (numpy.array): x座標点列
+
+    Returns:
+        numpy.array : 自己交差修正後のx座標点列
+        numpy.array : 自己交差修正後のy座標点列
+        bool: True:自己交差あり/ False:自己交差なし
+    """
+
     # 同一点があると正しく自己交差を検出できないため、削除する
     x, y = remove_same_point(x, y)
     
@@ -1177,6 +1240,27 @@ def remove_self_collision(x, y):
 
 
 def remove_collision(x1, y1, x2, y2):
+    """線が次の線と交差する場合、交差を解消した座標点列を出力する
+
+    以下により、線同士の交差を解消する。
+
+        今の線：交点から終点までを削除
+
+        次の線：始点から交点までを削除
+
+    Args:
+        x1 (_type_): 今の線のx座標点列
+        y1 (_type_): 今の線のy座標点列
+        x2 (_type_): 次の線のx座標点列
+        y2 (_type_): 次の線のy座標点列
+
+    Returns:
+        numpy.array : 交差修正後の今の線のx座標点列
+        numpy.array : 交差修正後の今の線のy座標点列
+        numpy.array : 交差修正後の次の線のx座標点列
+        numpy.array : 交差修正後の次の線のy座標点列        
+        bool: True:自己交差あり/ False:自己交差なし
+    """
     # 前提：x1[-1] -> x2[0] と繋がる
     x1, y1 = remove_same_point(x1, y1)
     x2, y2 = remove_same_point(x2, y2)
@@ -1216,7 +1300,21 @@ def remove_collision(x1, y1, x2, y2):
     else:
         return x1, y1, x2, y2, detection
 
+
 def rotate(x, y, sita, rx, ry):
+    """座標点列をrx,ryを回転中心として、sitaだけ反時計周りに回転する
+
+    Args:
+        x (numpy.array): x座標点列
+        y (numpy.array): y座標点列
+        sita (float): 回転角度[rad]
+        rx (float): 回転中心x座標
+        ry (float): 回転中心y座標
+
+    Returns:
+        numpy.array: 回転後のx座標点列
+        numpy.array: 回転後のy座標点列
+    """
     A = np.array([[np.cos(sita), -np.sin(sita)],
                   [np.sin(sita), np.cos(sita)]])
     x = np.array(x) - rx

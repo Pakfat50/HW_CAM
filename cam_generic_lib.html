@@ -65,7 +65,6 @@
 <li class="toctree-l3"><a class="reference internal" href="#cam_generic_lib.get_flatten"><code class="docutils literal notranslate"><span class="pre">get_flatten()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#cam_generic_lib.get_spline_length"><code class="docutils literal notranslate"><span class="pre">get_spline_length()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#cam_generic_lib.get_spline_length_array"><code class="docutils literal notranslate"><span class="pre">get_spline_length_array()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#cam_generic_lib.max_min_cross"><code class="docutils literal notranslate"><span class="pre">max_min_cross()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#cam_generic_lib.norm"><code class="docutils literal notranslate"><span class="pre">norm()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#cam_generic_lib.norm_3d"><code class="docutils literal notranslate"><span class="pre">norm_3d()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#cam_generic_lib.offset_line"><code class="docutils literal notranslate"><span class="pre">offset_line()</span></code></a></li>
@@ -159,7 +158,26 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="cam_generic_lib.cross_judge">
 <span class="sig-prename descclassname"><span class="pre">cam_generic_lib.</span></span><span class="sig-name descname"><span class="pre">cross_judge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cam_generic_lib.cross_judge" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>4点(a,b,c,d)が交差するかを判定する</p>
+<p>アルゴリズムは、参考のものをそのまま実装</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>a</strong>(<em>numpy.array</em>)--aの座標(x,y)</p></li>
+<li><p><strong>b</strong>(<em>numpy.array</em>)--bの座標(x,y)</p></li>
+<li><p><strong>c</strong>(<em>numpy.array</em>)--cの座標(x,y)</p></li>
+<li><p><strong>d</strong>(<em>numpy.array</em>)--dの座標(x,y)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>bool</strong>-- True:交差する/ False:交差しない</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">参考</p>
+<p><a class="reference external" href="https://qiita.com/wihan23/items/03efd7cd40dfec96a987">https://qiita.com/wihan23/items/03efd7cd40dfec96a987</a></p>
+</div>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="cam_generic_lib.detect_rotation">
@@ -298,7 +316,31 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="cam_generic_lib.generate_offset_interporate_point">
 <span class="sig-prename descclassname"><span class="pre">cam_generic_lib.</span></span><span class="sig-name descname"><span class="pre">generate_offset_interporate_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">l0_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l0_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l1_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l1_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l0_offset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l1_offset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cam_generic_lib.generate_offset_interporate_point" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>線をオフセットしてできた2本の線分l0とl1について、l0とl1の端点の隙間に、l0-&gt;l1の方向へフィレットを作成する</p>
+<p>フィレット半径は、オフセット距離となる。l0とl1でオフセット距離が異なる場合は、小さい値を採用する。</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>l0_x</strong>(<em>float</em>)--l0のx座標</p></li>
+<li><p><strong>l0_y</strong>(<em>float</em>)--l0のy座標</p></li>
+<li><p><strong>l1_x</strong>(<em>float</em>)--l1のx座標</p></li>
+<li><p><strong>l1_y</strong>(<em>float</em>)--l1のy座標</p></li>
+<li><p><strong>l0_offset</strong>(<em>float</em>)--l0のオフセット距離</p></li>
+<li><p><strong>l1_offset</strong>(<em>float</em>)--l1のオフセット距離</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>numpy.array</strong>-- フィレットのx座標</p></li>
+<li><p><strong>numpy.array</strong>-- フィレットのy座標</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p>フィレット半径がDIST_FILET未満と十分小さい場合は、空行列を出力する</p>
+</div>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="cam_generic_lib.get_cross_point_from_lines">
@@ -376,7 +418,26 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="cam_generic_lib.get_filet_sita">
 <span class="sig-prename descclassname"><span class="pre">cam_generic_lib.</span></span><span class="sig-name descname"><span class="pre">get_filet_sita</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sita_st</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sita_ed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cam_generic_lib.get_filet_sita" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>フィレットの開始角・終了角のなす角がpi未満となるようにラッピングする</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sita_st</strong>(<em>float</em>)--開始角</p></li>
+<li><p><strong>sita_ed</strong>(<em>float</em>)--終了角</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>float</strong>-- ラッピング後の開始角</p></li>
+<li><p><strong>float</strong>-- ラッピング後の終了角</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p>フィレットの開始角と終了角のなす角は、必ずpi未満となる</p>
+</div>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="cam_generic_lib.get_flatten">
@@ -429,11 +490,6 @@
 </dd>
 </dl>
 </dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="cam_generic_lib.max_min_cross">
-<span class="sig-prename descclassname"><span class="pre">cam_generic_lib.</span></span><span class="sig-name descname"><span class="pre">max_min_cross</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p4</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cam_generic_lib.max_min_cross" title="Link to this definition"></a></dt>
-<dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="cam_generic_lib.norm">
@@ -637,7 +693,32 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="cam_generic_lib.remove_collision">
 <span class="sig-prename descclassname"><span class="pre">cam_generic_lib.</span></span><span class="sig-name descname"><span class="pre">remove_collision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cam_generic_lib.remove_collision" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>線が次の線と交差する場合、交差を解消した座標点列を出力する</p>
+<p>以下により、線同士の交差を解消する。</p>
+<blockquote>
+<div><p>今の線：交点から終点までを削除</p>
+<p>次の線：始点から交点までを削除</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x1</strong>(<em>_type_</em>)--今の線のx座標点列</p></li>
+<li><p><strong>y1</strong>(<em>_type_</em>)--今の線のy座標点列</p></li>
+<li><p><strong>x2</strong>(<em>_type_</em>)--次の線のx座標点列</p></li>
+<li><p><strong>y2</strong>(<em>_type_</em>)--次の線のy座標点列</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>numpy.array</strong>-- 交差修正後の今の線のx座標点列</p></li>
+<li><p><strong>numpy.array</strong>-- 交差修正後の今の線のy座標点列</p></li>
+<li><p><strong>numpy.array</strong>-- 交差修正後の次の線のx座標点列</p></li>
+<li><p><strong>numpy.array</strong>-- 交差修正後の次の線のy座標点列</p></li>
+<li><p><strong>bool</strong>-- True:自己交差あり/ False:自己交差なし</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="cam_generic_lib.remove_same_point">
@@ -662,12 +743,47 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="cam_generic_lib.remove_self_collision">
 <span class="sig-prename descclassname"><span class="pre">cam_generic_lib.</span></span><span class="sig-name descname"><span class="pre">remove_self_collision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cam_generic_lib.remove_self_collision" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>線が自己交差を保つ場合、自己交差を解消した座標点列を出力する</p>
+<p>自己交差の開始点と終了点を検出し、その間の座標点を削除することで自己交差を解消する</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong>(<em>numpy.array</em>)--x座標点列</p></li>
+<li><p><strong>y</strong>(<em>numpy.array</em>)--x座標点列</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>numpy.array</strong>-- 自己交差修正後のx座標点列</p></li>
+<li><p><strong>numpy.array</strong>-- 自己交差修正後のy座標点列</p></li>
+<li><p><strong>bool</strong>-- True:自己交差あり/ False:自己交差なし</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="cam_generic_lib.rotate">
 <span class="sig-prename descclassname"><span class="pre">cam_generic_lib.</span></span><span class="sig-name descname"><span class="pre">rotate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sita</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ry</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cam_generic_lib.rotate" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>座標点列をrx,ryを回転中心として、sitaだけ反時計周りに回転する</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong>(<em>numpy.array</em>)--x座標点列</p></li>
+<li><p><strong>y</strong>(<em>numpy.array</em>)--y座標点列</p></li>
+<li><p><strong>sita</strong>(<em>float</em>)--回転角度[rad]</p></li>
+<li><p><strong>rx</strong>(<em>float</em>)--回転中心x座標</p></li>
+<li><p><strong>ry</strong>(<em>float</em>)--回転中心y座標</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>numpy.array</strong>-- 回転後のx座標点列</p></li>
+<li><p><strong>numpy.array</strong>-- 回転後のy座標点列</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 </section>
 

@@ -117,7 +117,7 @@
 <dt class="sig sig-object py" id="line_object.LineObject">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">line_object.</span></span><span class="sig-name descname"><span class="pre">LineObject</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_refine</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interp_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cubic'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#line_object.LineObject" title="Link to this definition"></a></dt>
 <dd><p>ベースクラス:<code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>CAMで取り扱い線に関する情報を格納するクラスである</p>
+<p>CAMで取り扱い線に関する情報を格納するクラスである。</p>
 <p>線（線分、スプライン）に対する操作は、本クラスを介して行う。</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="line_object.LineObject.x_raw">
@@ -283,7 +283,8 @@
 <dt class="sig sig-object py" id="line_object.LineObject.move_origin">
 <span class="sig-name descname"><span class="pre">move_origin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dy</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#line_object.LineObject.move_origin" title="Link to this definition"></a></dt>
 <dd><p>座標点を指定の距離(dx,dy)だけすべてオフセットする</p>
-<p>線が持つ座標データ（x_raw, y_raw, st, ed, x, y）をすべて、指定の距離だけ移動する原点の移動に相当する</p>
+<p>線が持つ座標データ（x_raw, y_raw, st, ed, x, y）をすべて、指定の距離だけ移動する。</p>
+<p>原点の移動に相当する。</p>
 <dl class="field-list simple">
 <dt class="field-odd">パラメータ<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -309,7 +310,8 @@
 <dt class="sig sig-object py" id="line_object.LineObject.reset_point">
 <span class="sig-name descname"><span class="pre">reset_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_points</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#line_object.LineObject.reset_point" title="Link to this definition"></a></dt>
 <dd><p>座標データを更新する</p>
-<p>座標点列以外のデータは、設定済みのものを引き継ぐオフセットが設定されている場合は、入力された座標点列に対し、オフセットした座標点も計算する</p>
+<p>座標点列以外のデータは、設定済みのものを引き継ぐ。</p>
+<p>オフセットが設定されている場合は、入力された座標点列に対し、オフセットした座標点も計算する。</p>
 <dl class="field-list simple">
 <dt class="field-odd">パラメータ<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -323,8 +325,8 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="line_object.LineObject.rotate">
 <span class="sig-name descname"><span class="pre">rotate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d_sita</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ry</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#line_object.LineObject.rotate" title="Link to this definition"></a></dt>
-<dd><p>座標点を指定の座標(rx,ry)を中心に、指定の角度(d_sita)だけ回転する</p>
-<p>線が持つ座標データ（x_raw, y_raw, st, ed, x, y）をすべて、指定の距離だけ回転する</p>
+<dd><p>座標点を指定の座標(rx,ry)を中心に、指定の角度(d_sita)だけ回転する。</p>
+<p>線が持つ座標データ（x_raw, y_raw, st, ed, x, y）をすべて、指定の距離だけ回転する。</p>
 <dl class="field-list simple">
 <dt class="field-odd">パラメータ<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -340,7 +342,7 @@
 <dt class="sig sig-object py" id="line_object.LineObject.set_ccw">
 <span class="sig-name descname"><span class="pre">set_ccw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ccw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#line_object.LineObject.set_ccw" title="Link to this definition"></a></dt>
 <dd><p>線に回転方向を設定する</p>
-<p>回転方向が変更となった場合、オフセット方向も変更となるので、オフセットした座標点も更新する</p>
+<p>回転方向が変更となった場合、オフセット方向も変更となるので、オフセットした座標点も更新する。</p>
 <dl class="field-list simple">
 <dt class="field-odd">パラメータ<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>ccw</strong>(<em>bool</em>)--ラインが反時計回りかどうか(True:反時計回り/ False:時計周り)</p>
@@ -373,7 +375,8 @@
 </dl>
 <div class="admonition note">
 <p class="admonition-title">注釈</p>
-<p>int以外のデータが渡された場合、例外を発生させる例外は、標準出力へ表示した上で、output_logによりエラーファイルにも出力する</p>
+<p>int以外のデータが渡された場合、例外を発生させる。</p>
+<p>例外は、標準出力へ表示した上で、output_logによりエラーファイルにも出力する。</p>
 </div>
 </dd></dl>
 
@@ -381,7 +384,12 @@
 <dt class="sig sig-object py" id="line_object.LineObject.set_offset_dist">
 <span class="sig-name descname"><span class="pre">set_offset_dist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">offset_dist</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#line_object.LineObject.set_offset_dist" title="Link to this definition"></a></dt>
 <dd><p>オフセット後の座標点を更新する</p>
-<p>オフセットする方向は、線が時計回りか反時計周りかで変更するオフセット方向は、必ず閉曲線の外側向きにオフセットする以下であれば、外向きにオフセットされる・閉曲線が反時計回り(ccw=True)のとき、接線を-90度回転させる方向・閉曲線が時計回り(ccw=False)のとき、接線を90度回転させる方向オフセット座標点の計算は、時計回りを基準（90度回転）であるので、ccw=Trueのときはオフセット距離を負として計算する</p>
+<p>オフセットする方向は、線が時計回りか反時計周りかで変更する。</p>
+<p>オフセット方向は、必ず閉曲線の外側向きにオフセットする。</p>
+<p>以下であれば、外向きにオフセットされる。</p>
+<p>・閉曲線が反時計回り(ccw=True)のとき、接線を-90度回転させる方向</p>
+<p>・閉曲線が時計回り(ccw=False)のとき、接線を90度回転させる方向</p>
+<p>オフセット座標点の計算は、時計回りを基準（90度回転）であるので、ccw=Trueのときはオフセット距離を負として計算する。</p>
 <dl class="field-list simple">
 <dt class="field-odd">パラメータ<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>offset_dist</strong>(<em>float</em>)--オフセット距離</p>
@@ -389,7 +397,8 @@
 </dl>
 <div class="admonition note">
 <p class="admonition-title">注釈</p>
-<p>float以外のデータが渡された場合、例外を発生させる例外は、標準出力へ表示した上で、output_logによりエラーファイルにも出力する</p>
+<p>float以外のデータが渡された場合、例外を発生させる。</p>
+<p>例外は、標準出力へ表示した上で、output_logによりエラーファイルにも出力する。</p>
 </div>
 </dd></dl>
 
@@ -397,7 +406,9 @@
 <dt class="sig sig-object py" id="line_object.LineObject.toggle_cut_dir">
 <span class="sig-name descname"><span class="pre">toggle_cut_dir</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#line_object.LineObject.toggle_cut_dir" title="Link to this definition"></a></dt>
 <dd><p>カット方向(座標点列の向き)を反転させる</p>
-<p>線が持つ座標データ（x_raw, y_raw, x, y）をすべて反転させる始点、終点は、入れ替わるため座標点を入れ替える回転方向は、点列の反転に併せて反転するので、回転方向もトグルする</p>
+<p>線が持つ座標データ（x_raw, y_raw, x, y）をすべて反転させる。</p>
+<p>始点、終点は、入れ替わるため座標点を入れ替える。</p>
+<p>回転方向は、点列の反転に併せて反転するので、回転方向もトグルする。</p>
 </dd></dl>
 
 </dd></dl>

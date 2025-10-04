@@ -159,7 +159,7 @@
 <dt class="sig sig-object py" id="cam_generic_lib.cross_judge">
 <span class="sig-prename descclassname"><span class="pre">cam_generic_lib.</span></span><span class="sig-name descname"><span class="pre">cross_judge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cam_generic_lib.cross_judge" title="Link to this definition"></a></dt>
 <dd><p>4点(a,b,c,d)が交差するかを判定する</p>
-<p>アルゴリズムは、参考のものをそのまま実装</p>
+<p>アルゴリズムは、参考のものをそのまま実装。</p>
 <dl class="field-list simple">
 <dt class="field-odd">パラメータ<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -183,6 +183,8 @@
 <dt class="sig sig-object py" id="cam_generic_lib.detect_rotation">
 <span class="sig-prename descclassname"><span class="pre">cam_generic_lib.</span></span><span class="sig-name descname"><span class="pre">detect_rotation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cam_generic_lib.detect_rotation" title="Link to this definition"></a></dt>
 <dd><p>点列の回転方向（ccw/cw）を検出する</p>
+<div class="math notranslate nohighlight">
+\[ccw=\sum_{k=1}^{n}{\mathbf{P}_k+\mathbf{P}_{k+1}=\sum_{k=1}^{n}{x_ky_{k+1}-x_{k+1}y_k}}\]</div>
 <dl class="field-list simple">
 <dt class="field-odd">パラメータ<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -218,26 +220,25 @@
 <dt class="sig sig-object py" id="cam_generic_lib.gen_g_code_line_str">
 <span class="sig-prename descclassname"><span class="pre">cam_generic_lib.</span></span><span class="sig-name descname"><span class="pre">gen_g_code_line_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cs_xy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cs_uv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cnc_cs_def</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cam_generic_lib.gen_g_code_line_str" title="Link to this definition"></a></dt>
 <dd><p>座標点列からGコードに出力する文字列を作成する</p>
-<p>Gコードは、G01で生成する</p>
-<p>G01のFeedRate(F)は、xy平面のカット速度指令値およびuv平面のカット速度指令値を用いて、CNCコントローラーにおける速度指令値の解釈方法に併せて、以下のように計算する</p>
+<p>Gコードは、G01で生成する。</p>
+<p>G01のFeedRate(F)は、xy平面のカット速度指令値およびuv平面のカット速度指令値を用いて、CNCコントローラーにおける速度指令値の解釈方法に併せて、以下のように計算する。</p>
 <ol class="arabic">
 <li><dl>
-<dt>CNCコントローラーがXY(UV)座標軸の速度を採用している場合</dt><dd><p>この場合、XY(UV)のカット速度指令値をそのままFeedRateとする</p>
+<dt>CNCコントローラーがXY(UV)座標軸の速度を採用している場合</dt><dd><p>この場合、XY(UV)のカット速度指令値をそのままFeedRateとする。</p>
 <div class="math notranslate nohighlight">
 \[F =  CS_{xy}\]</div>
 </dd>
 </dl>
 </li>
 <li><dl>
-<dt>CNCコントローラーがXYU(XYV)座標軸の速度を採用している場合</dt><dd><p>この場合は、CAMはXY座標速度でカットしたいにもかかわらず、U(V)軸の移動速度もCNCコントローラー側は考慮してしまう</p>
-<p>よって、XY速度をXYU速度に直して指令値とする</p>
+<dt>CNCコントローラーがXYU(XYV)座標軸の速度を採用している場合</dt><dd><p>この場合は、CAMはXY座標速度でカットしたいにもかかわらず、U(V)軸の移動速度もCNCコントローラー側は考慮してしまう。よって、XY速度をXYU速度に直して指令値とする。</p>
 <div class="math notranslate nohighlight">
 \[F = CS_{xy}\cdot\frac{\sqrt{\Delta x^2 + \Delta y^2 +\Delta u^2 }}{\sqrt{\Delta x^2 + \Delta y^2 }}\]</div>
 </dd>
 </dl>
 </li>
 <li><dl>
-<dt>CNCコントローラーがG93(逆時間送り)を採用している場合</dt><dd><p>この場合、次の点までの移動時間をFeedRateとする</p>
+<dt>CNCコントローラーがG93(逆時間送り)を採用している場合</dt><dd><p>この場合、次の点までの移動時間をFeedRateとする。</p>
 <div class="math notranslate nohighlight">
 \[ \begin{align}\begin{aligned}F_{xy} = \frac{\sqrt{\Delta x^2 + \Delta y^2 }}{CS_{xy}}\\F_{uv} = \frac{\sqrt{\Delta u^2 + \Delta v^2 }}{CS_{uv}}\\F = min(F_{xy}, F_{uv})\end{aligned}\end{align} \]</div>
 </dd>
@@ -270,11 +271,13 @@
 <dt class="sig sig-object py" id="cam_generic_lib.generate_arc_length_points">
 <span class="sig-prename descclassname"><span class="pre">cam_generic_lib.</span></span><span class="sig-name descname"><span class="pre">generate_arc_length_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">line</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cam_generic_lib.generate_arc_length_points" title="Link to this definition"></a></dt>
 <dd><p>線を等間隔分割した座標点を算出する</p>
-<p>点の場合、同じ座標をN個格納した配列を出力する</p>
-<p>線分の場合、線をN分割した配列を出力する</p>
-<p>スプラインの場合、スプライン補完関数により線長をN等分した配列を出力する</p>
-<p>スプラインで線長をN等分する場合、i(i=0...N）点目までの線長を計算し、これを0~1に正規化した媒介変数を用いて座標点列を補完することで、等間隔の媒介変数を用いて補完点列を作成すると、出力される座標点列の間隔も線長に対して等間隔となる</p>
-<p>スプライン補完の補完方法は、CADと同じ3次スプラインと、角があっても線がうねらないPCHIPアルゴリズムを選択できるようにする</p>
+<p>点の場合、同じ座標をN個格納した配列を出力する。</p>
+<p>線分の場合、線をN分割した配列を出力する。</p>
+<p>スプラインの場合、スプライン補完関数により線長をN等分した配列を出力する。</p>
+<p>スプラインで線長をN等分する場合、i(i=0...N）点目までの線長を計算し、これを0~1に正規化した媒介変数を用いて座標点列を補完することで、等間隔の媒介変数を用いて補完点列を作成すると、出力される座標点列の間隔も線長に対して等間隔となる。</p>
+<div class="math notranslate nohighlight">
+\[ \begin{align}\begin{aligned}l_o=0\\l_i=i_{i-1}+\sqrt{\left(x_i-x_{i-1}\right)^2+\left(y_i-y_{i-1}\right)^2}\\u_i=\frac{v_i}{v_N}\end{aligned}\end{align} \]</div>
+<p>スプライン補完の補完方法は、CADと同じ3次スプラインと、角があっても線がうねらないPCHIPアルゴリズムをUSE_PCHIPにより選択できるようにする。</p>
 <dl class="field-list simple">
 <dt class="field-odd">パラメータ<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -295,7 +298,8 @@
 <dt class="sig sig-object py" id="cam_generic_lib.generate_offset_function">
 <span class="sig-prename descclassname"><span class="pre">cam_generic_lib.</span></span><span class="sig-name descname"><span class="pre">generate_offset_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_array</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cam_generic_lib.generate_offset_function" title="Link to this definition"></a></dt>
 <dd><p>カット速度vs溶け量のグラフから線形補完関数を作成する</p>
-<p>グラフの範囲外のカット速度がCAM側で計算された場合に備えて、0~10000 mm/minの範囲で端点を0次ホールドする更に、保管時に外挿オプション（fill_value=&quot;extrapolate&quot;）とする</p>
+<p>グラフの範囲外のカット速度がCAM側で計算された場合に備えて、0~10000 mm/minの範囲で端点を0次ホールドする。</p>
+<p>更に、保管時に外挿オプション（fill_value=&quot;extrapolate&quot;）とする。</p>
 <dl class="field-list simple">
 <dt class="field-odd">パラメータ<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -318,6 +322,7 @@
 <span class="sig-prename descclassname"><span class="pre">cam_generic_lib.</span></span><span class="sig-name descname"><span class="pre">generate_offset_interporate_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">l0_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l0_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l1_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l1_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l0_offset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l1_offset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cam_generic_lib.generate_offset_interporate_point" title="Link to this definition"></a></dt>
 <dd><p>線をオフセットしてできた2本の線分l0とl1について、l0とl1の端点の隙間に、l0-&gt;l1の方向へフィレットを作成する</p>
 <p>フィレット半径は、オフセット距離となる。l0とl1でオフセット距離が異なる場合は、小さい値を採用する。</p>
+<p>フィレット半径の最小値は、DIST_NEAR*10とする。また、フィレットに作成する座標点数の最小値は4とする。</p>
 <dl class="field-list simple">
 <dt class="field-odd">パラメータ<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -346,6 +351,8 @@
 <dt class="sig sig-object py" id="cam_generic_lib.get_cross_point_from_lines">
 <span class="sig-prename descclassname"><span class="pre">cam_generic_lib.</span></span><span class="sig-name descname"><span class="pre">get_cross_point_from_lines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cam_generic_lib.get_cross_point_from_lines" title="Link to this definition"></a></dt>
 <dd><p>傾きa,切片bの直線と、傾きc,切片dの直線の交点の座標を求める</p>
+<div class="math notranslate nohighlight">
+\[(cx,\ cy)=\ \left(\frac{d-b}{a-c},\ \ \frac{ad-bc}{a-c}\right)\]</div>
 <dl class="field-list simple">
 <dt class="field-odd">パラメータ<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -457,7 +464,7 @@
 <dt class="sig sig-object py" id="cam_generic_lib.get_spline_length">
 <span class="sig-prename descclassname"><span class="pre">cam_generic_lib.</span></span><span class="sig-name descname"><span class="pre">get_spline_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cam_generic_lib.get_spline_length" title="Link to this definition"></a></dt>
 <dd><p>始点から終点までの線長を計算する</p>
-<p>get_spline_length_arrayにより始点からi番目の座標点までの線長を計算した配列を計算し、配列の最後の値を出力する</p>
+<p>get_spline_length_arrayにより始点からi番目の座標点までの線長を計算した配列を計算し、配列の最後の値を出力する。</p>
 <dl class="field-list simple">
 <dt class="field-odd">パラメータ<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -475,7 +482,7 @@
 <dt class="sig sig-object py" id="cam_generic_lib.get_spline_length_array">
 <span class="sig-prename descclassname"><span class="pre">cam_generic_lib.</span></span><span class="sig-name descname"><span class="pre">get_spline_length_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cam_generic_lib.get_spline_length_array" title="Link to this definition"></a></dt>
 <dd><p>与えられた座標点列に対して、始点からi番目の座標点までの線長を計算した配列を出力する</p>
-<p>線長は、以下で計算する。x,yの微分は、x,y座標配列を媒介変数形式の3次スプラインで補完した後、媒介変数で微分する</p>
+<p>線長は、以下で計算する。x,yの微分は、x,y座標配列を媒介変数形式の3次スプラインで補完した後、媒介変数で微分する。</p>
 <div class="math notranslate nohighlight">
 \[ \begin{align}\begin{aligned}L_k = \int_{0}^{t_k}\Delta l(t) dt\\\Delta l=\sqrt{(\frac{\text{d}x}{\text{d}t})^2 + (\frac{\text{d}y}{\text{d}t})^2 }\end{aligned}\end{align} \]</div>
 <dl class="field-list simple">
@@ -540,10 +547,10 @@
 <span class="sig-prename descclassname"><span class="pre">cam_generic_lib.</span></span><span class="sig-name descname"><span class="pre">offset_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interp_mode</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cam_generic_lib.offset_line" title="Link to this definition"></a></dt>
 <dd><p>オフセットした座標点列を計算する</p>
 <p>x,y の座標点列をdだけオフセットした点列を作成する。</p>
-<p>オフセットした座標は、座標点における接線の傾きkを計算し、以下から計算する</p>
+<p>オフセットした座標は、座標点における接線の傾きkを計算し、以下から計算する。</p>
 <div class="math notranslate nohighlight">
 \[ \begin{align}\begin{aligned}x_{new} = x-d\cdot\sin(k)\\y_{new} = x+d\cdot\cos(k)\end{aligned}\end{align} \]</div>
-<p>接線の傾きkは、x座標の増減の向きを反映させるため、およびy軸と並行な座標点列に対応するため、arctan2を用いて計算する</p>
+<p>接線の傾きkは、x座標の増減の向きを反映させるため、およびy軸と並行な座標点列に対応するため、arctan2を用いて計算する。</p>
 <dl class="field-list simple">
 <dt class="field-odd">パラメータ<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -571,7 +578,7 @@
 <dt class="sig sig-object py" id="cam_generic_lib.plot_3d_cut_path">
 <span class="sig-prename descclassname"><span class="pre">cam_generic_lib.</span></span><span class="sig-name descname"><span class="pre">plot_3d_cut_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ym</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">um</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_xy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_uv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_per_plot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cam_generic_lib.plot_3d_cut_path" title="Link to this definition"></a></dt>
 <dd><p>3Dカットパスのうち、frameで指定された線を描画する</p>
-<p>axに対し、以下の3本の線を作図する。ここでi = num_per_plot*frame</p>
+<p>axに対し、以下の3本の線を作図する。ここでi = num_per_plot*frameである。</p>
 <ol class="arabic simple">
 <li><dl class="simple">
 <dt>(x[i],y[i])-&gt;(u[i],v[i])</dt><dd><p>赤線で作図。ワークを表現する</p>
@@ -611,7 +618,7 @@
 </dl>
 <div class="admonition note">
 <p class="admonition-title">注釈</p>
-<p>描画処理中に、例外が発生した場合、標準出力へ表示した上で、output_logによりエラーファイルにも出力する</p>
+<p>描画処理中に、例外が発生した場合、標準出力へ表示した上で、output_logによりエラーファイルにも出力する。</p>
 </div>
 <div class="admonition seealso">
 <p class="admonition-title">参考</p>
@@ -623,7 +630,7 @@
 <dt class="sig sig-object py" id="cam_generic_lib.poly_to_spline">
 <span class="sig-prename descclassname"><span class="pre">cam_generic_lib.</span></span><span class="sig-name descname"><span class="pre">poly_to_spline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">poly_obj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cam_generic_lib.poly_to_spline" title="Link to this definition"></a></dt>
 <dd><p>ezdxfのPolylineオブジェクトから、座標点列を作成する</p>
-<p>ポリラインは線分の集合体なので、同じ座標点列を２個ずつ作成する</p>
+<p>ポリラインは線分の集合体なので、同じ座標点列を２個ずつ作成する。</p>
 <dl class="field-list simple">
 <dt class="field-odd">パラメータ<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>poly_obj</strong>(<em>ezdxf.entities.Polyline</em>)--ezdxfのポリラインオブジェクト</p>
@@ -634,7 +641,7 @@
 </dl>
 <div class="admonition-todo admonition" id="id1">
 <p class="admonition-title">課題</p>
-<p>同じ座標点列を２個ずつ作成する必要性は、要検討</p>
+<p>同じ座標点列を２個ずつ作成する必要性は、要検討。</p>
 </div>
 <div class="admonition seealso">
 <p class="admonition-title">参考</p>
@@ -646,7 +653,7 @@
 <dt class="sig sig-object py" id="cam_generic_lib.refine_line">
 <span class="sig-prename descclassname"><span class="pre">cam_generic_lib.</span></span><span class="sig-name descname"><span class="pre">refine_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cam_generic_lib.refine_line" title="Link to this definition"></a></dt>
 <dd><p>線分の座標点列をリファインした座標を計算する</p>
-<p>線分の場合、始点、終点のx,y座標を等間隔で分割すればよい</p>
+<p>線分の場合、始点、終点のx,y座標を等間隔で分割すればよい。</p>
 <dl class="field-list simple">
 <dt class="field-odd">パラメータ<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -668,11 +675,21 @@
 <dt class="sig sig-object py" id="cam_generic_lib.refine_spline_curvature">
 <span class="sig-prename descclassname"><span class="pre">cam_generic_lib.</span></span><span class="sig-name descname"><span class="pre">refine_spline_curvature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cam_generic_lib.refine_spline_curvature" title="Link to this definition"></a></dt>
 <dd><p>スプラインの座標点列を、曲率に基づいてリファインした座標を計算する</p>
-<p>媒介変数表示されたスプラインでは、下式により曲率cを計算できる</p>
+<p>媒介変数表示されたスプラインでは、下式により曲率cを計算できる。</p>
 <div class="math notranslate nohighlight">
 \[c = \frac{|x'y''-y'x''|}{(x'^2+y'^2)^{\frac{3}{2}}}\]</div>
-<p>曲率cの積算値を0~1の範囲で正規化したものを用いてスプライン点列を補完することで、曲率に比例して点列を増すようにする</p>
-<p>スプラインの端点は、間隔が大きいと、スプラインと他の線を結合した場合に形状を維持できないので、間隔を狭める</p>
+<p>曲率cの積算値を0~1の範囲で正規化したものを用いてスプライン点列を補完することで、曲率に比例して点列を増すようにする。</p>
+<p>点の密度に関連するパラメータは、以下の２つである。</p>
+<ul class="simple">
+<li><p>R_C_MAX: 曲率半径の最大値。これを大きくすると、曲率半径の大きい区間での点列の密度が小さくなる。</p></li>
+<li><p>R_C_MIN: 曲率半径の最小値。これを小さくすると、曲率半径の小さい区間での点列の密度が高くなる。</p></li>
+</ul>
+<p>スプラインの端点は、間隔が大きいと、スプラインと他の線を結合した場合に形状を維持できない。よって、REFINE_SPLINE_EDGE = Trueの場合、DIST_SPLINE_EDGEの間隔でN_SPLINE_EDGEだけ端点に点列を追加する。</p>
+<p>リファイン時の点列の補完方法は、REFINE_SPLINE_PCHIPの値により以下の２通りから選択できる。</p>
+<ul class="simple">
+<li><p>True: PCHIPで補完する。角のある座標点列であっても、うねることなく補完できる。</p></li>
+<li><p>False: 3次スプラインで補完する。CADと同じアルゴリズムであり、CADの形状と一致する。</p></li>
+</ul>
 <dl class="field-list simple">
 <dt class="field-odd">パラメータ<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -744,7 +761,7 @@
 <dt class="sig sig-object py" id="cam_generic_lib.remove_self_collision">
 <span class="sig-prename descclassname"><span class="pre">cam_generic_lib.</span></span><span class="sig-name descname"><span class="pre">remove_self_collision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cam_generic_lib.remove_self_collision" title="Link to this definition"></a></dt>
 <dd><p>線が自己交差を保つ場合、自己交差を解消した座標点列を出力する</p>
-<p>自己交差の開始点と終了点を検出し、その間の座標点を削除することで自己交差を解消する</p>
+<p>自己交差の開始点と終了点を検出し、その間の座標点を削除することで自己交差を解消する。</p>
 <dl class="field-list simple">
 <dt class="field-odd">パラメータ<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">

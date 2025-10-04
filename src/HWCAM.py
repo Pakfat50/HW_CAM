@@ -579,7 +579,7 @@ def separate_line(dxf_obj, is_remove_collision, name, messeage_window):
         
         
 def delete_line(dxf_obj, x_dxf_obj, is_xy_uv_link, is_remove_collision, name, x_name, messeage_window):
-    dxf_obj.delete_Selected_line()
+    dxf_obj.delete_selected_line()
     messeage_window.set_messeage("%sの選択したラインを削除しました。\n"%name)
     
     if is_remove_collision.get():
@@ -588,7 +588,7 @@ def delete_line(dxf_obj, x_dxf_obj, is_xy_uv_link, is_remove_collision, name, x_
     dxf_obj.update()
 
     if is_xy_uv_link.get():
-        x_dxf_obj.delete_Selected_line()
+        x_dxf_obj.delete_selected_line()
         messeage_window.set_messeage("%sの選択したラインを削除しました。\n"%x_name)
         
         if is_remove_collision.get():
@@ -626,7 +626,9 @@ def set_offset_dist(dxf_obj, entry, x_dxf_obj, x_entry, is_xy_uv_link, is_remove
         pass
 
 def remove_collision(dxf_obj, name, messeage_window):
-    self_collision_list, collision_line_list = dxf_obj.remove_collision()
+    self_collision_list = dxf_obj.remove_self_collision()
+    collision_line_list = dxf_obj.remove_line_collision()
+    
     if len(self_collision_list) > 0:
         for num in self_collision_list:
             messeage_window.set_messeage("%sの%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(name, num))
@@ -1312,7 +1314,7 @@ if __name__ == "__main__":
     
     #【メインウィンドウ】
     root = tk.Tk()                                                   #メインウィンドウの枠となるインスタンス
-    root.title("HotwireDXF CAM ver%s"%VERSION)                          #メインウィンドウの名称
+    root.title("HotwireDXF CAM ver%s"%VERSION)                       #メインウィンドウの名称
     root.geometry("1700x950")                                        #メインウィンドウのサイズ（単位：pixcel）
     root.protocol('WM_DELETE_WINDOW', _destroyWindow)                #メインウィンドウを閉じたときにインスタンスを破棄する処理
     style = ttk.Style()
@@ -1353,14 +1355,14 @@ if __name__ == "__main__":
    
     #【X-Y ラインテーブル】
     table0 = SuperTable(root, y_height = 15, x = 850,y = 100)       #XYテーブルの枠となるインスタンスを生成
-    table0_label = tk.Label(root, text="X-Y",font=("",20))            #XYテーブル用のテキスト
-    table0_label.place(x = 860, y = 40)                               #XYテーブル用のテキストを配置
+    table0_label = tk.Label(root, text="X-Y",font=("",20))          #XYテーブル用のテキスト
+    table0_label.place(x = 860, y = 40)                             #XYテーブル用のテキストを配置
 
     
     #【U-V ラインテーブル】
     table1 = SuperTable(root, y_height = 15, x = 1250,y = 100)      #UVテーブルの枠となるインスタンスを生成
-    table1_label = tk.Label(root, text="U-V",font=("",20))            #UVテーブル用のテキスト
-    table1_label.place(x = 1260, y = 40)                              #UVテーブル用のテキストを配置  
+    table1_label = tk.Label(root, text="U-V",font=("",20))          #UVテーブル用のテキスト
+    table1_label.place(x = 1260, y = 40)                            #UVテーブル用のテキストを配置  
 
 
     #======================================================================================================================================

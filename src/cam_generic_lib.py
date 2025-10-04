@@ -17,97 +17,20 @@ import traceback
 from cam_global import *
 from error_log import *
 
-#======================================================================================================================================
-#            汎用関数
-#======================================================================================================================================
-#
-#   offset_line(list x, list y, float d, str cut_dir, str interp_mode)
-#   【引数】　x, y, d, cut_dir
-#   【戻り値】　new_x, new_y
-#   【機能】 x,y の座標点列をdだけオフセットした点列を作成する．カット方向により，オフセット方向が変わらないように，cut_dirによってオフセット方向を変更する．
-#　　　　　　　　アルゴリズムは下記を実装する．(円弧補間は不要なので省略している)
-#          https://stackoverflow.com/questions/32772638/python-how-to-get-the-x-y-coordinates-of-a-offset-spline-from-a-x-y-list-of-poi
-#　　　　　　　　
-#   norm(float x0, float y0, float x, float y)
-#   【引数】 x0, y0, x, y
-#   【戻り値】　float 距離
-#   【機能】　(x0,y0) と(x,y)の距離を計算する．
-#
-#   norm_3d(float x0, float y0, float z0, float x, float y, float z)
-#   【引数】 x0, y0, z0, x, y, z
-#   【戻り値】 float 距離
-#   【機能】 (x0,y0,z0) と(x,y,z)の距離を計算する
-#
-#   generate_arc_length_points(line line, int N)
-#   【引数】 line, N
-#   【戻り値】　list x_p, y_p
-#   【機能】 lineのx, y点列をスプライン補完し，これをN等分した点列を作成する．
-#        
-#   generate_arc_length_points4line(float x_st, float  y_st, float x_ed, float y_ed, int N)
-#   【引数】　x_st, y_st, x_ed, y_ed, N
-#   【戻り値】　list x_p, y_p
-#   【機能】 (x_st, y_st), (x_ed, y_ed)を両端に持つ直線を，N等分した点列を作成する．
-#
-#   plot_3d_cut_path(Axes ax, list x, list y, list u, list v, float Z, int n_plot)
-#   【引数】 ax, x, y, u, v, Z, n_plot
-#   【戻り値】　list point_dist_list
-#   【機能】　axにx,y,u,vをプロットする．x,y平面とu,v平面の距離はZとする．各(x,y),(u,v)の点の距離を計算し，point_dist_list配列として出力する．
-#
-#   file_chk(str filename)
-#   【引数】 file_name
-#   【戻り値】 int 成功可否(1：読み取り成功, 0:拡張子が.dxfでない, -1:ファイル存在せず)
-#   【機能】 指定されたfilenameのファイルが存在するか，拡張子が.dxfかをチェックする．
-#
-#   gen_g_code_line_str(list x, list y, list u, list v, float cut_speed)
-#   【引数】 x, y, u, v, cut_speed
-#   【戻り値】 list code_str
-#   【機能】 x, y, u, vの各座標および移動速度指令からgコードを生成する．gコードはX,Y,Z,A軸を使用するとする，gコードは「G01 X** Y** U** V** F**」のフォーマットとする．（G01は移動指令）
-#
-#   arc_to_spline(ezdxf.entities.Arc arc_obj)
-#   【引数】 arc_obj
-#   【戻り値】 np.array [xp, yp]
-#   【機能】 円弧からスプラインの点列を作成する．点数は10degにつき1点とする．点数は最少で3点以上となる．
-#
-#   poly_to_spline(ezdxf.entities.LWPolyline poly_obj)
-#   【引数】 poly_obj
-#   【戻り値】 np.array [xp, yp]
-#   【機能】 ポリラインから点列を作成する．
-#
-#   get_curdir()
-#   【引数】 なし
-#   【戻り値】 curdir
-#   【機能】 メイン関数が実行されているディレクトリを取得し、出力する
-#
-#   generate_offset_function(list x_array, list y_array)
-#   【引数】 x_array, y_array
-#   【戻り値】 offset_function
-#   【機能】 x_array、y_arrayを線形補完し、offset_functionを作成する。0～10000のカット速度の範囲で対応できるように、x_arrayの範囲外は0次補完する
-#
-#   get_cross_point(float p1_x, float p1_y, float p2_x, float p2_y, float p3_x, pfloat 3_y, float p4_x, float p4_y)
-#   【引数】 p1_x, p1_y, p2_x, p2_y, p3_x, p3_y, p4_x, p4_y
-#   【戻り値】 c1_x, c1_y
-#   【機能】 4点（p1,p2,p3,p4）の交点座標（c1_x, c1_y）を算出する
-#
-#   enerate_offset_interporate_point(list l0_x, list l0_y, list l1_x, list l1_y, float l0_offset, float l1_offset)
-#   【引数】 l0_x, l0_y, l1_x, l1_y, l0_offset, l1_offset
-#   【戻り値】 x_intp, y_intp
-#   【機能】 l0の終端およびl1の始点を、l0_offset, l1_offsetの小さい方のRでフィレット補完する点群を作成する
-
-
 
 def offset_line(x, y, d, interp_mode):
     """オフセットした座標点列を計算する
 
     x,y の座標点列をdだけオフセットした点列を作成する。
 
-    オフセットした座標は、座標点における接線の傾きkを計算し、以下から計算する
+    オフセットした座標は、座標点における接線の傾きkを計算し、以下から計算する。
 
     .. math:: 
         x_{new} = x-d\\cdot\\sin(k)
 
         y_{new} = x+d\\cdot\\cos(k)
 
-    接線の傾きkは、x座標の増減の向きを反映させるため、およびy軸と並行な座標点列に対応するため、arctan2を用いて計算する
+    接線の傾きkは、x座標の増減の向きを反映させるため、およびy軸と並行な座標点列に対応するため、arctan2を用いて計算する。
 
     Args:
         x (numpy.array): 元のx座標点列
@@ -247,7 +170,7 @@ def remove_same_point(x, y):
 def get_spline_length_array(x, y):
     """与えられた座標点列に対して、始点からi番目の座標点までの線長を計算した配列を出力する
 
-    線長は、以下で計算する。x,yの微分は、x,y座標配列を媒介変数形式の3次スプラインで補完した後、媒介変数で微分する
+    線長は、以下で計算する。x,yの微分は、x,y座標配列を媒介変数形式の3次スプラインで補完した後、媒介変数で微分する。
 
     .. math:: 
         L_k = \\int_{0}^{t_k}\\Delta l(t) dt
@@ -297,7 +220,7 @@ def get_spline_length_array(x, y):
 def get_spline_length(x, y):
     """始点から終点までの線長を計算する
 
-    get_spline_length_arrayにより始点からi番目の座標点までの線長を計算した配列を計算し、配列の最後の値を出力する
+    get_spline_length_arrayにより始点からi番目の座標点までの線長を計算した配列を計算し、配列の最後の値を出力する。
     
     Args:
         x (numpy.array): x座標点列
@@ -315,14 +238,27 @@ def get_spline_length(x, y):
 def refine_spline_curvature(x, y, N):
     """スプラインの座標点列を、曲率に基づいてリファインした座標を計算する
 
-    媒介変数表示されたスプラインでは、下式により曲率cを計算できる
+    媒介変数表示されたスプラインでは、下式により曲率cを計算できる。
 
     .. math::
         c = \\frac{|x'y''-y'x''|}{(x'^2+y'^2)^{\\frac{3}{2}}}
 
-    曲率cの積算値を0~1の範囲で正規化したものを用いてスプライン点列を補完することで、曲率に比例して点列を増すようにする
+    曲率cの積算値を0~1の範囲で正規化したものを用いてスプライン点列を補完することで、曲率に比例して点列を増すようにする。
 
-    スプラインの端点は、間隔が大きいと、スプラインと他の線を結合した場合に形状を維持できないので、間隔を狭める
+    点の密度に関連するパラメータは、以下の２つである。
+
+    * R_C_MAX: 曲率半径の最大値。これを大きくすると、曲率半径の大きい区間での点列の密度が小さくなる。
+
+    * R_C_MIN: 曲率半径の最小値。これを小さくすると、曲率半径の小さい区間での点列の密度が高くなる。
+
+    スプラインの端点は、間隔が大きいと、スプラインと他の線を結合した場合に形状を維持できない。
+    よって、REFINE_SPLINE_EDGE = Trueの場合、DIST_SPLINE_EDGEの間隔でN_SPLINE_EDGEだけ端点に点列を追加する。
+    
+    リファイン時の点列の補完方法は、REFINE_SPLINE_PCHIPの値により以下の２通りから選択できる。
+
+    * True: PCHIPで補完する。角のある座標点列であっても、うねることなく補完できる。
+
+    * False: 3次スプラインで補完する。CADと同じアルゴリズムであり、CADの形状と一致する。
 
     Args:
         x (numpy.array): x座標点列
@@ -454,7 +390,7 @@ def refine_spline_curvature(x, y, N):
 def refine_line(x, y, N):
     """線分の座標点列をリファインした座標を計算する
 
-    線分の場合、始点、終点のx,y座標を等間隔で分割すればよい
+    線分の場合、始点、終点のx,y座標を等間隔で分割すればよい。
 
     Args:
         x (numpy.array): x座標点列
@@ -474,19 +410,27 @@ def refine_line(x, y, N):
 def generate_arc_length_points(line, N):
     """線を等間隔分割した座標点を算出する
 
-    点の場合、同じ座標をN個格納した配列を出力する
+    点の場合、同じ座標をN個格納した配列を出力する。
 
-    線分の場合、線をN分割した配列を出力する
+    線分の場合、線をN分割した配列を出力する。
 
-    スプラインの場合、スプライン補完関数により線長をN等分した配列を出力する
+    スプラインの場合、スプライン補完関数により線長をN等分した配列を出力する。
 
     スプラインで線長をN等分する場合、i(i=0...N）点目までの線長を計算し、
     これを0~1に正規化した媒介変数を用いて座標点列を補完することで、
     等間隔の媒介変数を用いて補完点列を作成すると、出力される座標点列の間隔も
-    線長に対して等間隔となる
+    線長に対して等間隔となる。
+
+    .. math::
+        l_o=0
+
+        l_i=i_{i-1}+\\sqrt{\\left(x_i-x_{i-1}\\right)^2+\\left(y_i-y_{i-1}\\right)^2}
+
+        u_i=\\frac{v_i}{v_N}
+
 
     スプライン補完の補完方法は、CADと同じ3次スプラインと、角があっても線がうねらない
-    PCHIPアルゴリズムを選択できるようにする
+    PCHIPアルゴリズムをUSE_PCHIPにより選択できるようにする。
 
     Args:
         line (LineObject): LineObjectクラスのインスタンス
@@ -591,7 +535,7 @@ def calc_point_dist(x, y, u, v, z1, z2):
 def plot_3d_cut_path(ax, x, y, u, v, xm, ym, um, vm, z_xy, z_uv, z_m, num_per_plot, frame):
     """3Dカットパスのうち、frameで指定された線を描画する
 
-    axに対し、以下の3本の線を作図する。ここでi = num_per_plot*frame
+    axに対し、以下の3本の線を作図する。ここでi = num_per_plot*frameである。
 
     1. (x[i],y[i])->(u[i],v[i])    
         赤線で作図。ワークを表現する
@@ -619,7 +563,7 @@ def plot_3d_cut_path(ax, x, y, u, v, xm, ym, um, vm, z_xy, z_uv, z_m, num_per_pl
         frame (int): 作図する線の番号
 
     Note:
-        描画処理中に、例外が発生した場合、標準出力へ表示した上で、output_logによりエラーファイルにも出力する
+        描画処理中に、例外が発生した場合、標準出力へ表示した上で、output_logによりエラーファイルにも出力する。
 
     See Also:
         https://matplotlib.org/stable/api/axes_api.html
@@ -668,27 +612,26 @@ def file_chk(filename):
 def gen_g_code_line_str(x,y,u,v, x0,y0,u0,v0, cs_xy, cs_uv, cnc_cs_def):
     """座標点列からGコードに出力する文字列を作成する
 
-    Gコードは、G01で生成する
+    Gコードは、G01で生成する。
 
     G01のFeedRate(F)は、xy平面のカット速度指令値およびuv平面のカット速度指令値を用いて、
-    CNCコントローラーにおける速度指令値の解釈方法に併せて、以下のように計算する
+    CNCコントローラーにおける速度指令値の解釈方法に併せて、以下のように計算する。
 
     1. CNCコントローラーがXY(UV)座標軸の速度を採用している場合
-        この場合、XY(UV)のカット速度指令値をそのままFeedRateとする
+        この場合、XY(UV)のカット速度指令値をそのままFeedRateとする。
 
         .. math:: 
             F =  CS_{xy}
 
     2. CNCコントローラーがXYU(XYV)座標軸の速度を採用している場合
-        この場合は、CAMはXY座標速度でカットしたいにもかかわらず、U(V)軸の移動速度もCNCコントローラー側は考慮してしまう
-
-        よって、XY速度をXYU速度に直して指令値とする
+        この場合は、CAMはXY座標速度でカットしたいにもかかわらず、U(V)軸の移動速度もCNCコントローラー側は考慮してしまう。
+        よって、XY速度をXYU速度に直して指令値とする。
 
         .. math:: 
             F = CS_{xy}\\cdot\\frac{\\sqrt{\\Delta x^2 + \\Delta y^2 +\\Delta u^2 }}{\\sqrt{\\Delta x^2 + \\Delta y^2 }}
     
     3. CNCコントローラーがG93(逆時間送り)を採用している場合
-        この場合、次の点までの移動時間をFeedRateとする
+        この場合、次の点までの移動時間をFeedRateとする。
 
         .. math:: 
             F_{xy} = \\frac{\\sqrt{\\Delta x^2 + \\Delta y^2 }}{CS_{xy}}
@@ -838,7 +781,7 @@ def arc_to_spline(arc_obj):
 def poly_to_spline(poly_obj):
     """ezdxfのPolylineオブジェクトから、座標点列を作成する
 
-    ポリラインは線分の集合体なので、同じ座標点列を２個ずつ作成する
+    ポリラインは線分の集合体なので、同じ座標点列を２個ずつ作成する。
     
     Args:
         poly_obj (ezdxf.entities.Polyline): ezdxfのポリラインオブジェクト
@@ -847,7 +790,7 @@ def poly_to_spline(poly_obj):
         numpy.array: ポリラインの座標点列
 
     Todo:
-        同じ座標点列を２個ずつ作成する必要性は、要検討
+        同じ座標点列を２個ずつ作成する必要性は、要検討。
 
     See Also:
         https://ezdxf.readthedocs.io/en/stable/dxfentities/polyline.html 
@@ -901,8 +844,9 @@ def get_curdir():
 def generate_offset_function(x_array, y_array):
     """カット速度vs溶け量のグラフから線形補完関数を作成する
 
-    グラフの範囲外のカット速度がCAM側で計算された場合に備えて、0~10000 mm/minの範囲で端点を0次ホールドする
-    更に、保管時に外挿オプション（fill_value="extrapolate"）とする
+    グラフの範囲外のカット速度がCAM側で計算された場合に備えて、0~10000 mm/minの範囲で端点を0次ホールドする。
+
+    更に、保管時に外挿オプション（fill_value="extrapolate"）とする。
 
     Args:
         x_array (numpy.array): カット速度
@@ -966,6 +910,9 @@ def get_cross_point_from_point(p1_x, p1_y, p2_x, p2_y, p3_x, p3_y, p4_x, p4_y):
 def get_cross_point_from_lines(a, b, c, d):
     """傾きa,切片bの直線と、傾きc,切片dの直線の交点の座標を求める
 
+    .. math::
+        (cx,\\ cy)=\\ \\left(\\frac{d-b}{a-c},\\ \\ \\frac{ad-bc}{a-c}\\right)
+
     Args:
         a (float): 1本目の直線の傾き
         b (float): 1本目の直線の切片
@@ -1005,6 +952,9 @@ def get_flatten(array):
 def detect_rotation(x, y):
     """点列の回転方向（ccw/cw）を検出する
 
+    .. math::
+        ccw=\\sum_{k=1}^{n}{\\mathbf{P}_k+\\mathbf{P}_{k+1}=\\sum_{k=1}^{n}{x_ky_{k+1}-x_{k+1}y_k}}
+    
     Args:
         x (numpy.array): x座標点列
         y (numpy.array): y座標点列
@@ -1066,6 +1016,8 @@ def generate_offset_interporate_point(l0_x, l0_y, l1_x, l1_y, l0_offset, l1_offs
     """線をオフセットしてできた2本の線分l0とl1について、l0とl1の端点の隙間に、l0->l1の方向へフィレットを作成する
     
     フィレット半径は、オフセット距離となる。l0とl1でオフセット距離が異なる場合は、小さい値を採用する。
+
+    フィレット半径の最小値は、DIST_NEAR*10とする。また、フィレットに作成する座標点数の最小値は4とする。
 
     Args:
         l0_x (float): l0のx座標
@@ -1155,7 +1107,7 @@ def generate_offset_interporate_point(l0_x, l0_y, l1_x, l1_y, l0_offset, l1_offs
 def cross_judge(a, b, c, d):
     """4点(a,b,c,d)が交差するかを判定する
 
-    アルゴリズムは、参考のものをそのまま実装
+    アルゴリズムは、参考のものをそのまま実装。
     
     Args:
         a (numpy.array): aの座標(x,y)
@@ -1198,7 +1150,7 @@ def cross_judge(a, b, c, d):
 def remove_self_collision(x, y):
     """線が自己交差を保つ場合、自己交差を解消した座標点列を出力する
 
-    自己交差の開始点と終了点を検出し、その間の座標点を削除することで自己交差を解消する
+    自己交差の開始点と終了点を検出し、その間の座標点を削除することで自己交差を解消する。
 
     Args:
         x (numpy.array): x座標点列

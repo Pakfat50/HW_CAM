@@ -49,7 +49,73 @@
 <li class="toctree-l2"><a class="reference internal" href="HWCAM.html">HWCAM module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cam_generic_lib.html">cam_generic_lib module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cam_global.html">cam_global module</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">dxf_file module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">dxf_file module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#dxf_file.DxfFile"><code class="docutils literal notranslate"><span class="pre">DxfFile</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.ax"><code class="docutils literal notranslate"><span class="pre">DxfFile.ax</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.canvas"><code class="docutils literal notranslate"><span class="pre">DxfFile.canvas</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.table"><code class="docutils literal notranslate"><span class="pre">DxfFile.table</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.x_table"><code class="docutils literal notranslate"><span class="pre">DxfFile.x_table</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.name"><code class="docutils literal notranslate"><span class="pre">DxfFile.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.line_list"><code class="docutils literal notranslate"><span class="pre">DxfFile.line_list</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.selected_point"><code class="docutils literal notranslate"><span class="pre">DxfFile.selected_point</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.line_num_max"><code class="docutils literal notranslate"><span class="pre">DxfFile.line_num_max</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.ox"><code class="docutils literal notranslate"><span class="pre">DxfFile.ox</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.oy"><code class="docutils literal notranslate"><span class="pre">DxfFile.oy</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.rx"><code class="docutils literal notranslate"><span class="pre">DxfFile.rx</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.ry"><code class="docutils literal notranslate"><span class="pre">DxfFile.ry</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.sita"><code class="docutils literal notranslate"><span class="pre">DxfFile.sita</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.add_line"><code class="docutils literal notranslate"><span class="pre">DxfFile.add_line()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.change_cut_dir"><code class="docutils literal notranslate"><span class="pre">DxfFile.change_cut_dir()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.delete_line"><code class="docutils literal notranslate"><span class="pre">DxfFile.delete_line()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.delete_selected_line"><code class="docutils literal notranslate"><span class="pre">DxfFile.delete_selected_line()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.get_cg"><code class="docutils literal notranslate"><span class="pre">DxfFile.get_cg()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.get_index"><code class="docutils literal notranslate"><span class="pre">DxfFile.get_index()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.get_index_from_item"><code class="docutils literal notranslate"><span class="pre">DxfFile.get_index_from_item()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.get_item"><code class="docutils literal notranslate"><span class="pre">DxfFile.get_item()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.get_item_from_index"><code class="docutils literal notranslate"><span class="pre">DxfFile.get_item_from_index()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.get_selected_point"><code class="docutils literal notranslate"><span class="pre">DxfFile.get_selected_point()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.load_file"><code class="docutils literal notranslate"><span class="pre">DxfFile.load_file()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.merge_selected_line"><code class="docutils literal notranslate"><span class="pre">DxfFile.merge_selected_line()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.offset_origin"><code class="docutils literal notranslate"><span class="pre">DxfFile.offset_origin()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.plot"><code class="docutils literal notranslate"><span class="pre">DxfFile.plot()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.plot_vector"><code class="docutils literal notranslate"><span class="pre">DxfFile.plot_vector()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.reload"><code class="docutils literal notranslate"><span class="pre">DxfFile.reload()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.remove_line_collision"><code class="docutils literal notranslate"><span class="pre">DxfFile.remove_line_collision()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.remove_self_collision"><code class="docutils literal notranslate"><span class="pre">DxfFile.remove_self_collision()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.reset_line_num"><code class="docutils literal notranslate"><span class="pre">DxfFile.reset_line_num()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.reverse_all"><code class="docutils literal notranslate"><span class="pre">DxfFile.reverse_all()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.rotate"><code class="docutils literal notranslate"><span class="pre">DxfFile.rotate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.select_index"><code class="docutils literal notranslate"><span class="pre">DxfFile.select_index()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.selected"><code class="docutils literal notranslate"><span class="pre">DxfFile.selected()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.separate_line"><code class="docutils literal notranslate"><span class="pre">DxfFile.separate_line()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.set_offset_dist"><code class="docutils literal notranslate"><span class="pre">DxfFile.set_offset_dist()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.sort_line"><code class="docutils literal notranslate"><span class="pre">DxfFile.sort_line()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.table_reload"><code class="docutils literal notranslate"><span class="pre">DxfFile.table_reload()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.DxfFile.update"><code class="docutils literal notranslate"><span class="pre">DxfFile.update()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#dxf_file.SelectedPoint"><code class="docutils literal notranslate"><span class="pre">SelectedPoint</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.SelectedPoint.x"><code class="docutils literal notranslate"><span class="pre">SelectedPoint.x</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.SelectedPoint.y"><code class="docutils literal notranslate"><span class="pre">SelectedPoint.y</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.SelectedPoint.index"><code class="docutils literal notranslate"><span class="pre">SelectedPoint.index</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.SelectedPoint.reset"><code class="docutils literal notranslate"><span class="pre">SelectedPoint.reset()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#dxf_file.SuperTable"><code class="docutils literal notranslate"><span class="pre">SuperTable</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.SuperTable.x_pos"><code class="docutils literal notranslate"><span class="pre">SuperTable.x_pos</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.SuperTable.y_pos"><code class="docutils literal notranslate"><span class="pre">SuperTable.y_pos</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.SuperTable.root"><code class="docutils literal notranslate"><span class="pre">SuperTable.root</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.SuperTable.y_height"><code class="docutils literal notranslate"><span class="pre">SuperTable.y_height</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.SuperTable.sync"><code class="docutils literal notranslate"><span class="pre">SuperTable.sync</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.SuperTable.sync_update"><code class="docutils literal notranslate"><span class="pre">SuperTable.sync_update</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.SuperTable.table"><code class="docutils literal notranslate"><span class="pre">SuperTable.table</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.SuperTable.scrollbar"><code class="docutils literal notranslate"><span class="pre">SuperTable.scrollbar</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.SuperTable.reset"><code class="docutils literal notranslate"><span class="pre">SuperTable.reset()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dxf_file.SuperTable.set_sync"><code class="docutils literal notranslate"><span class="pre">SuperTable.set_sync()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="error_log.html">error_log module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="line_object.html">line_object module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="messeage_window.html">messeage_window module</a></li>
@@ -82,8 +148,936 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="dxf-file-module">
-<h1>dxf_file module<a class="headerlink" href="#dxf-file-module" title="Link to this heading"></a></h1>
+  <section id="module-dxf_file">
+<span id="dxf-file-module"></span><h1>dxf_file module<a class="headerlink" href="#module-dxf_file" title="Link to this heading"></a></h1>
+<p>CAD図面(dxfファイル)に紐づくデータをまとめたライブラリ</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="dxf_file.DxfFile">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dxf_file.</span></span><span class="sig-name descname"><span class="pre">DxfFile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">canvas</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_table</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.DxfFile" title="Link to this definition"></a></dt>
+<dd><p>ベースクラス:<code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>dxfファイルに関連する情報として、LineObjectやSuperTableなどを格納する。</p>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p>ox, oy, rx, ry, sitaの値は、元のdxfファイルに対しての値である。</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p>line_listのインデックスと、tableのインデックスは同期させるように処理する。例えば、tableで線番号が[2,1,3]と線が並ぶとき、line_listの線も[2,1,3]と並べる。</p>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.ax">
+<span class="sig-name descname"><span class="pre">ax</span></span><a class="headerlink" href="#dxf_file.DxfFile.ax" title="Link to this definition"></a></dt>
+<dd><p>線をプロットするAxesオブジェクト</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>matplotlib.axes</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.canvas">
+<span class="sig-name descname"><span class="pre">canvas</span></span><a class="headerlink" href="#dxf_file.DxfFile.canvas" title="Link to this definition"></a></dt>
+<dd><p>グラフをtkinterに表示するためのオブジェクト(描画時に必要)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>matplotlib.backends.backend_tkagg.FigureCanvasTkAgg</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.table">
+<span class="sig-name descname"><span class="pre">table</span></span><a class="headerlink" href="#dxf_file.DxfFile.table" title="Link to this definition"></a></dt>
+<dd><p>dxfファイル内の線を管理するテーブル</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#dxf_file.SuperTable" title="dxf_file.SuperTable">SuperTable</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.x_table">
+<span class="sig-name descname"><span class="pre">x_table</span></span><a class="headerlink" href="#dxf_file.DxfFile.x_table" title="Link to this definition"></a></dt>
+<dd><p>もう1つの断面のdxfファイル内の線を管理するテーブル（X-YであればU-V, U-VであればX-Y）</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#dxf_file.SuperTable" title="dxf_file.SuperTable">SuperTable</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#dxf_file.DxfFile.name" title="Link to this definition"></a></dt>
+<dd><p>断面の名称(X-Y or U-V)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.line_list">
+<span class="sig-name descname"><span class="pre">line_list</span></span><a class="headerlink" href="#dxf_file.DxfFile.line_list" title="Link to this definition"></a></dt>
+<dd><p>dxfファイル内の線をLineObjectに変換したオブジェクトを格納するリスト</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.selected_point">
+<span class="sig-name descname"><span class="pre">selected_point</span></span><a class="headerlink" href="#dxf_file.DxfFile.selected_point" title="Link to this definition"></a></dt>
+<dd><p>グラフ内で選択された点を管理するSelectedPointオブジェクト</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#dxf_file.SelectedPoint" title="dxf_file.SelectedPoint">SelectedPoint</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.line_num_max">
+<span class="sig-name descname"><span class="pre">line_num_max</span></span><a class="headerlink" href="#dxf_file.DxfFile.line_num_max" title="Link to this definition"></a></dt>
+<dd><p>線番号の最大値</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.ox">
+<span class="sig-name descname"><span class="pre">ox</span></span><a class="headerlink" href="#dxf_file.DxfFile.ox" title="Link to this definition"></a></dt>
+<dd><p>グラフの原点のx座標</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.oy">
+<span class="sig-name descname"><span class="pre">oy</span></span><a class="headerlink" href="#dxf_file.DxfFile.oy" title="Link to this definition"></a></dt>
+<dd><p>グラフの原点のy座標</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.rx">
+<span class="sig-name descname"><span class="pre">rx</span></span><a class="headerlink" href="#dxf_file.DxfFile.rx" title="Link to this definition"></a></dt>
+<dd><p>グラフの回転中心のx座標</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.ry">
+<span class="sig-name descname"><span class="pre">ry</span></span><a class="headerlink" href="#dxf_file.DxfFile.ry" title="Link to this definition"></a></dt>
+<dd><p>グラフの回転中心のy座標</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.sita">
+<span class="sig-name descname"><span class="pre">sita</span></span><a class="headerlink" href="#dxf_file.DxfFile.sita" title="Link to this definition"></a></dt>
+<dd><p>グラフの回転角度[rad]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.add_line">
+<span class="sig-name descname"><span class="pre">add_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">line</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.DxfFile.add_line" title="Link to this definition"></a></dt>
+<dd><p>線をアイテムIDの次の位置に追加する。</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>item</strong>(<em>str</em>)--tableの行のアイテムID</p></li>
+<li><p><strong>line</strong>(<a class="reference internal" href="line_object.html#line_object.LineObject" title="line_object.LineObject"><em>LineObject</em></a>)--追加する線</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.change_cut_dir">
+<span class="sig-name descname"><span class="pre">change_cut_dir</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.DxfFile.change_cut_dir" title="Link to this definition"></a></dt>
+<dd><p>tableで選択された線の方向を入れ替える</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.delete_line">
+<span class="sig-name descname"><span class="pre">delete_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.DxfFile.delete_line" title="Link to this definition"></a></dt>
+<dd><p>アイテムIDで指定された線をtableおよびline_listから削除する。</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>item</strong>(<em>str</em>)--tableの行のアイテムID</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p>同様の処理がdelete_selected_lineとmerge_lineで必要なので、別のメソッドとして実装。</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.delete_selected_line">
+<span class="sig-name descname"><span class="pre">delete_selected_line</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.DxfFile.delete_selected_line" title="Link to this definition"></a></dt>
+<dd><p>選択した線をtableおよびline_listから削除する。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.get_cg">
+<span class="sig-name descname"><span class="pre">get_cg</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.DxfFile.get_cg" title="Link to this definition"></a></dt>
+<dd><p>すべての線の重心の座標を計算する</p>
+<p>重心は、すべての点の座標の平均値で計算する。</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>float</strong>-- 重心のx座標</p></li>
+<li><p><strong>float</strong>-- 重心のy座標</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.get_index">
+<span class="sig-name descname"><span class="pre">get_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.DxfFile.get_index" title="Link to this definition"></a></dt>
+<dd><p>table内のインデックスの番号を取得する</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>all</strong>(<em>bool</em><em>, </em><em>optional</em>)--True: すべての行のインデックスを取得, False: 選択されている行のインデックスを取得. Defaults to False.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>list</strong>-- 行のインデックスのリスト</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p>all=Trueの場合、行の数をNとすると、[0,1,2, ... N]が返される。</p>
+</div>
+<p class="rubric">サンプル</p>
+<p>tableが5行である場合に、tableの2,4行目(インデックス1, 3)が選択されている時</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="bp">self</span><span class="o">.</span><span class="n">get_index</span><span class="p">()</span>
+<span class="go">[1,3]</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="bp">self</span><span class="o">.</span><span class="n">get_index</span><span class="p">(</span><span class="nb">all</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">[0,1,2,3,4]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.get_index_from_item">
+<span class="sig-name descname"><span class="pre">get_index_from_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.DxfFile.get_index_from_item" title="Link to this definition"></a></dt>
+<dd><p>itemsで指定したアイテムIDを有する行のインデックスを取得する</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>items</strong>(<em>list</em><em>, </em><em>str</em>)--アイテムIDのリスト または アイテムIDの文字列</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>list, int</strong>-- itemsがリストの場合:インデックスのリスト, strの場合: インデックスの番号</p>
+</dd>
+</dl>
+<p class="rubric">サンプル</p>
+<p>tableのアイテムIDが[&quot;I001&quot;, &quot;I002&quot;, &quot;I003&quot;, &quot;I004&quot;]の場合</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="bp">self</span><span class="o">.</span><span class="n">get_index_from_item</span><span class="p">([</span><span class="s2">&quot;I001&quot;</span><span class="p">,</span> <span class="s2">&quot;I004&quot;</span><span class="p">])</span>
+<span class="go">[0, 3]</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="bp">self</span><span class="o">.</span><span class="n">get_item_from_index</span><span class="p">(</span><span class="s2">&quot;I003&quot;</span><span class="p">)</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.get_item">
+<span class="sig-name descname"><span class="pre">get_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.DxfFile.get_item" title="Link to this definition"></a></dt>
+<dd><p>table内のアイテムのIDを取得する</p>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p>アイテムのIDは、&quot;I001&quot;のような形式で、行追加時に自動的に割り当てられる。行固有の値。</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>all</strong>(<em>bool</em><em>, </em><em>optional</em>)--True: すべてのアイテムのIDを取得, False: 選択されている行のアイテムのIDを取得。 Defaults to False.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>list</strong>-- アイテムIDのリスト</p>
+</dd>
+</dl>
+<p class="rubric">サンプル</p>
+<p>tableのアイテムIDが[&quot;I001&quot;, &quot;I002&quot;, &quot;I003&quot;]の場合に、2行目と3行目が選択されている時</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="bp">self</span><span class="o">.</span><span class="n">get_item</span><span class="p">()</span>
+<span class="go">[&quot;I002&quot;, &quot;I003&quot;]</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="bp">self</span><span class="o">.</span><span class="n">get_item</span><span class="p">(</span><span class="nb">all</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">[&quot;I001&quot;, &quot;I002&quot;, &quot;I003&quot;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.get_item_from_index">
+<span class="sig-name descname"><span class="pre">get_item_from_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indexs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.DxfFile.get_item_from_index" title="Link to this definition"></a></dt>
+<dd><p>indexsで指定したインデックスのアイテムIDを出力する</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>indexs</strong>(<em>list</em><em>, </em><em>int</em>)--行のインデックスのリスト または 行番号</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>list, str</strong>-- indexsがリストの場合:アイテムIDのリスト, intの場合: アイテムIDの文字列</p>
+</dd>
+</dl>
+<p class="rubric">サンプル</p>
+<p>tableのアイテムIDが[&quot;I001&quot;, &quot;I002&quot;, &quot;I003&quot;, &quot;I004&quot;]の場合</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="bp">self</span><span class="o">.</span><span class="n">get_item_from_index</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>
+<span class="go">[&quot;I001&quot;, &quot;I004&quot;]</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="bp">self</span><span class="o">.</span><span class="n">get_item_from_index</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">&quot;I002&quot;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.get_selected_point">
+<span class="sig-name descname"><span class="pre">get_selected_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.DxfFile.get_selected_point" title="Link to this definition"></a></dt>
+<dd><p>matplotlibのpick_eventにバインドされるメソッド</p>
+<p>選択点の座標をeventから取得し、インデックス、座標を更新する。</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>event</strong>(<em>matplotlib.backend_bases.PickEvent</em>)--matplotlibのpick_event</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p><a class="reference external" href="https://matplotlib.org/stable/users/explain/figure/event_handling.html">https://matplotlib.org/stable/users/explain/figure/event_handling.html</a></p>
+<p><a class="reference external" href="https://matplotlib.org/stable/api/backend_bases_api.html#matplotlib.backend_bases.PickEvent">https://matplotlib.org/stable/api/backend_bases_api.html#matplotlib.backend_bases.PickEvent</a></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.load_file">
+<span class="sig-name descname"><span class="pre">load_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_refine</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.DxfFile.load_file" title="Link to this definition"></a></dt>
+<dd><p>filenameで指定されたdxfファイルを読み込む</p>
+<p>AUTOSORT_WHEN_LOADFILE = Trueの場合、ロード時に自動で線を整列する</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong>(<em>str</em>)--読み込むdxfファイルのパス</p></li>
+<li><p><strong>is_refine</strong>(<em>bool</em>)--True: スプライン点列をリファインして読み込む, False:リファインしない</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.merge_selected_line">
+<span class="sig-name descname"><span class="pre">merge_selected_line</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.DxfFile.merge_selected_line" title="Link to this definition"></a></dt>
+<dd><p>選択された線を結合する</p>
+<p>結合は、選択された線の端点の距離がLINE_MARGE_NORM_MN未満の場合に実施する。</p>
+<p>端点が始点か終点かを判定し、始点→終点　の順になるように、必要に応じて線の向きを入れ替えて結合する。</p>
+<p>結合された方のLineObjectは削除されるので、どの線番号が結合されたかの情報が失われる。</p>
+<p>よって、結合する前に、どの線番号が選択されていたかを配列にて出力する。</p>
+<p>また、結合結果を配列にて出力する。</p>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p>選択された線が複数の場合、tableにおけるインデックスの小さい順（上から下）に結合する。</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>list</strong>-- 結合前に選択されていた線番号のリスト</p></li>
+<li><p><strong>list</strong>-- 結合結果のリスト(True: 結合成功. False:失敗)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.offset_origin">
+<span class="sig-name descname"><span class="pre">offset_origin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">offset_ox</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset_oy</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.DxfFile.offset_origin" title="Link to this definition"></a></dt>
+<dd><p>指定の座標に原点をオフセットする。</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>offset_ox</strong>(<em>float</em>)--原点のx座標</p></li>
+<li><p><strong>offset_oy</strong>(<em>float</em>)--原点のy座標</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keep_view</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.DxfFile.plot" title="Link to this definition"></a></dt>
+<dd><p>グラフ上にline_list内の線をプロットする</p>
+<p>以下をプロットする。</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>プロット対象</p></td>
+<td><p>選択状態</p></td>
+<td><p>データソース</p></td>
+<td><p>プロットデータ</p></td>
+<td><p>線種</p></td>
+<td><p>色</p></td>
+<td><p>透明度</p></td>
+</tr>
+<tr class="row-even"><td rowspan="2"><p>線</p></td>
+<td><p>選択中</p></td>
+<td><p>line_list</p></td>
+<td><p>x,y</p></td>
+<td><p>実線</p></td>
+<td><p>青</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p>非選択</p></td>
+<td><p>line_list</p></td>
+<td><p>x,y</p></td>
+<td><p>実線</p></td>
+<td><p>青</p></td>
+<td><p>0.1</p></td>
+</tr>
+<tr class="row-even"><td rowspan="2"><p>線の向き</p></td>
+<td><p>選択中</p></td>
+<td><p>line_list</p></td>
+<td><p>x,y</p></td>
+<td><p>ベクトル</p></td>
+<td><p>青</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p>非選択</p></td>
+<td><p>line_list</p></td>
+<td><p>x,y</p></td>
+<td><p>ベクトル</p></td>
+<td><p>青</p></td>
+<td><p>0.1</p></td>
+</tr>
+<tr class="row-even"><td rowspan="2"><p>オフセット方向</p></td>
+<td><p>選択中</p></td>
+<td><p>line_list</p></td>
+<td><p>x,y,x_raw,y_raw</p></td>
+<td><p>ベクトル</p></td>
+<td><p>黃</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p>非選択</p></td>
+<td><p>line_list</p></td>
+<td><p>x,y,x_raw,y_raw</p></td>
+<td><p>ベクトル</p></td>
+<td><p>黃</p></td>
+<td><p>0.1</p></td>
+</tr>
+<tr class="row-even"><td><p>選択点</p></td>
+<td><p>ー</p></td>
+<td><p>selected_point</p></td>
+<td><p>x,y</p></td>
+<td><p>点</p></td>
+<td><p>赤</p></td>
+<td><p>1</p></td>
+</tr>
+</tbody>
+</table>
+<p>線の向きは、x,yの0番目→1番目の座標へのベクトルをプロットする。スプラインは、N-1番目→N番目のベクトルも併せてプロットする。</p>
+<p>オフセット方向は、x_raw, y_rawの0番目から、x,yの0番目へのベクトルをプロットする。</p>
+<p>プロット前にグラフの描画範囲をxlim,ylimに格納しておく。keep_view=Trueの場合は、プロット後に描画範囲をxlim,ylimに再適用することで、グラフの描画範囲を維持する。</p>
+<p>選択中の線はマーカーサイズを5、非選択の線はマーカーサイズを0とすることで、選択中の線のみ、分割点を設定できるようにする。</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>keep_view</strong>(<em>bool</em><em>, </em><em>optional</em>)--True: グラフの描画範囲を変更しない, False:リセットする. Defaults to True.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.plot_vector">
+<span class="sig-name descname"><span class="pre">plot_vector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.DxfFile.plot_vector" title="Link to this definition"></a></dt>
+<dd><p>グラフ上にベクトルを表示する</p>
+<p>ベクトルの長さは、1に正規化した上で、kをかけることで長さをkとする。</p>
+<p>ただし、matplotlib側でベクトル長を自動設定としているので、効果なし。</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x0</strong>(<em>float</em>)--始点のx座標</p></li>
+<li><p><strong>y0</strong>(<em>float</em>)--始点のy座標</p></li>
+<li><p><strong>x1</strong>(<em>float</em>)--終点のx座標</p></li>
+<li><p><strong>y1</strong>(<em>float</em>)--終点のy座標</p></li>
+<li><p><strong>k</strong>(<em>float</em>)--プロットするベクトルの長さ</p></li>
+<li><p><strong>col</strong>(<em>str</em>)--ベクトルの色</p></li>
+<li><p><strong>alpha</strong>(<em>float</em>)--ベクトルの透明度</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.reload">
+<span class="sig-name descname"><span class="pre">reload</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_refine</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.DxfFile.reload" title="Link to this definition"></a></dt>
+<dd><p>filenameで指定されたdxfファイル上の線を読み込み、LineObjectに変換した上で、line_listへ格納する</p>
+<p>dxfファイルのうち、LINE, SPLINE, ARC, LWPOLYLINE のオブジェクトを抽出し、以下のLineObjectに変換する。</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td rowspan="2"><p>読み込み順</p></td>
+<td rowspan="2"><p>dxf object</p></td>
+<td colspan="2"><p>LineObject</p></td>
+</tr>
+<tr class="row-even"><td><p>line_type</p></td>
+<td><p>interp_mode</p></td>
+</tr>
+<tr class="row-odd"><td><p>1</p></td>
+<td><p>SPLINE</p></td>
+<td><p>spline</p></td>
+<td><p>cubic</p></td>
+</tr>
+<tr class="row-even"><td><p>2</p></td>
+<td><p>ARC</p></td>
+<td><p>spline</p></td>
+<td><p>cubic</p></td>
+</tr>
+<tr class="row-odd"><td><p>3</p></td>
+<td><p>LWPOLYLINE</p></td>
+<td><p>spline</p></td>
+<td><p>linear</p></td>
+</tr>
+<tr class="row-even"><td><p>4</p></td>
+<td><p>LINE</p></td>
+<td><p>line</p></td>
+<td><p>None</p></td>
+</tr>
+</tbody>
+</table>
+<p>LineObjectの線番号(num)は、読み込んだ順に付与する。同種のdxfオブジェクトでは線番号の付与順は任意である。(dxf objectのクエリで早く検索された順)</p>
+<p>線番号の最大値(=読み込んだ線の本数)は、line_num_maxに格納する。</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>is_refine</strong>(<em>bool</em>)--True: スプライン点列をリファインして読み込む, False:リファインしない</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p>ARCは、arc_to_splineにより円弧上の座標点列を計算し、splineに変換する。</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.remove_line_collision">
+<span class="sig-name descname"><span class="pre">remove_line_collision</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.DxfFile.remove_line_collision" title="Link to this definition"></a></dt>
+<dd><p>オフセットにより生じた線同時の端点の交差を修正する</p>
+<p>line_list内のi番目とi+1番目(i=0...N-1)に対し、remove_collisionにより交差を判定する。</p>
+<p>交差している場合、i番目とi+1番目の線の座標点列を、交差を修正した座標点列に置き換える。</p>
+<p>更に、交差が検出された線のペアをリストに格納し、出力する。</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>list</strong>-- 交差が検出された線同士の線番号（ペア）のリスト</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p>オフセットが0の状態で、i番目の線の終点と、i+1番目の線の始点が一致している必要がある。</p>
+<p>自動整列後に実行すること。</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.remove_self_collision">
+<span class="sig-name descname"><span class="pre">remove_self_collision</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.DxfFile.remove_self_collision" title="Link to this definition"></a></dt>
+<dd><p>オフセットにより生じた自己交差を修正する</p>
+<p>table内のすべての線の自己交差を判定し、自己交差していれば修正する。</p>
+<p>自己交差が検出された線番号をリストとして出力する。</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>list</strong>-- 自己交差が検出された線番号のリスト</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.reset_line_num">
+<span class="sig-name descname"><span class="pre">reset_line_num</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.DxfFile.reset_line_num" title="Link to this definition"></a></dt>
+<dd><p>線の番号を、line_listのインデックス順に再設定する</p>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p>line_listのインデックスとtableのインデックスは同期しているので、tableの並び順（昇順）に線の番号が振り直される。</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.reverse_all">
+<span class="sig-name descname"><span class="pre">reverse_all</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.DxfFile.reverse_all" title="Link to this definition"></a></dt>
+<dd><p>line_list内のLineObjectの座標点列と、line_listを反転する</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.rotate">
+<span class="sig-name descname"><span class="pre">rotate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sita</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ry</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.DxfFile.rotate" title="Link to this definition"></a></dt>
+<dd><p>指定の座標を中心に、指定の角度だけ線を回転する</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sita</strong>(<em>float</em>)--回転角度[rad]</p></li>
+<li><p><strong>rx</strong>(<em>float</em>)--回転中心x座標</p></li>
+<li><p><strong>ry</strong>(<em>float</em>)--回転中心y座標</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.select_index">
+<span class="sig-name descname"><span class="pre">select_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.DxfFile.select_index" title="Link to this definition"></a></dt>
+<dd><p>インデックスで指定されたtableの行を選択する</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>index</strong>(<em>int</em>)--tableの行のインデックス</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.selected">
+<span class="sig-name descname"><span class="pre">selected</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.DxfFile.selected" title="Link to this definition"></a></dt>
+<dd><p>tkinterのtableの&lt;&lt;TreeviewSelect&gt;&gt;イベントにバインドされるメソッド</p>
+<p>tableのデータを選択した際に、グラフの再描画を行う。</p>
+<p>XY-UV同期中の場合は、相手のテーブル(x_table)に選択イベントを発生させる。この処理フローは下図による。</p>
+<p class="plantuml">
+<img src="_images/plantuml-d9b947787c16930f8e54b94bd1f47fa18760fde9.svg" alt="&#64;startuml
+actor User
+
+User -&gt; table : table内のi行目選択
+activate table
+table -&gt; table : 1度のみグラフ更新
+
+alt XY-UV同期中
+    table -&gt; x_table : x_table内のi行目選択
+    deactivate table
+    activate x_table
+    x_table -&gt; x_table : 1度のみグラフ更新
+    x_table -&gt; table : table内のi行目選択
+    deactivate x_table
+    activate table
+    table -&gt; table : グラフ表示判定フラグ初期化
+end
+table -&gt; User : 更新済みのグラフ表示
+
+&#64;enduml"/></p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>event</strong>(<em>Event</em>)--Python標準のイベントクラス。本メソッドでは使用しない</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p><a class="reference external" href="https://docs.python.org/ja/3.13/library/tkinter.ttk.html">https://docs.python.org/ja/3.13/library/tkinter.ttk.html</a></p>
+<p><a class="reference external" href="https://anzeljg.github.io/rin2/book2/2405/docs/tkinter/event-handlers.html">https://anzeljg.github.io/rin2/book2/2405/docs/tkinter/event-handlers.html</a></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.separate_line">
+<span class="sig-name descname"><span class="pre">separate_line</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.DxfFile.separate_line" title="Link to this definition"></a></dt>
+<dd><p>線を選択点で分割する</p>
+<p>以下の条件がすべて成立した場合、線を分割する。</p>
+<ul class="simple">
+<li><p>tableにて線が1本だけ選択されている。</p></li>
+<li><p>選択点が選択されている。</p></li>
+<li><p>選択点が端点でない。(分割後の座標点列長の長さが2以上となる)</p></li>
+</ul>
+<p>分割結果を判定するための情報として、成否に加えて線番号のリストと分割点のインデックスも出力する。</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bool</strong>-- True:分割成功, False:失敗</p></li>
+<li><p><strong>list</strong>-- 選択されている線番号のリスト</p></li>
+<li><p><strong>int</strong>-- 分割点のインデックス</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p>選択されている線番号のリストには、分割が成功した場合、新しく生成されたLineObjectの線番号も格納する。</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.set_offset_dist">
+<span class="sig-name descname"><span class="pre">set_offset_dist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">offset_dist</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.DxfFile.set_offset_dist" title="Link to this definition"></a></dt>
+<dd><p>line_list内のLineObjectにオフセット距離を設定する</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>offset_dist</strong>(<em>float</em>)--オフセット距離</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.sort_line">
+<span class="sig-name descname"><span class="pre">sort_line</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.DxfFile.sort_line" title="Link to this definition"></a></dt>
+<dd><p>選択されている線を起点に、残りの線を並び替える。並び替え後、座標点列の向きを判定し、線に設定する。</p>
+<p>線の並び替えは、以下の手順で実施する。</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>選択されている線の終点から最も近い位置にあるライン端を検索する。</p></li>
+<li><p>1.のライン端を有するラインを、2番目に配置する。1.のライン端がラインの終端である場合，向きを入れ替える。</p></li>
+<li><p>1.のライン端の逆端から最も近い位置にあるライン端を検索する。</p></li>
+<li><p>3.のライン端を有するラインを、3番目に配置する。3.のライン端がラインの終端である場合，向きを入れ替える。</p></li>
+<li><p>3.のライン端から最も近い位置にあるライン端を検索する。</p></li>
+<li><p>3～5を、テーブルに表示されている全てのラインに対して実施する。</p></li>
+</ol>
+</div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p>CAD図面に複数の閉曲線が含まれる場合、選択した線の向きと同じ向きにすべての閉曲線を並び替える。</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p>閉曲線かどうかの判定は、端点間の距離がDIST_NEAR以下かで判定する。</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>int</strong>-- 選択されている線の数</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.table_reload">
+<span class="sig-name descname"><span class="pre">table_reload</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.DxfFile.table_reload" title="Link to this definition"></a></dt>
+<dd><p>tableの情報を最新に更新する。</p>
+<ol class="arabic simple">
+<li><p>テーブルのすべてのアイテムIDを取得する</p></li>
+<li><p>アイテムIDに対応する行のテーブルでのインデックスを取得する</p></li>
+<li><p>インデックスに対応するline_list内のLineObjectを取得する</p></li>
+<li><p>LineObjectの線番号、オフセット距離、線種、カット速度をテーブルに設定する</p></li>
+</ol>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.DxfFile.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keep_view</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.DxfFile.update" title="Link to this definition"></a></dt>
+<dd><p>グラフとtableの両方を更新する</p>
+<p>table_reloadとplotをまとめて実行するだけ。</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>keep_view</strong>(<em>bool</em><em>, </em><em>optional</em>)--True: グラフの描画範囲を変更しない, False:リセットする. Defaults to True.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dxf_file.SelectedPoint">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dxf_file.</span></span><span class="sig-name descname"><span class="pre">SelectedPoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.SelectedPoint" title="Link to this definition"></a></dt>
+<dd><p>ベースクラス:<code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>図面上で選択された点の情報を格納する</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dxf_file.SelectedPoint.x">
+<span class="sig-name descname"><span class="pre">x</span></span><a class="headerlink" href="#dxf_file.SelectedPoint.x" title="Link to this definition"></a></dt>
+<dd><p>選択点のx座標</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dxf_file.SelectedPoint.y">
+<span class="sig-name descname"><span class="pre">y</span></span><a class="headerlink" href="#dxf_file.SelectedPoint.y" title="Link to this definition"></a></dt>
+<dd><p>選択点のy座標</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dxf_file.SelectedPoint.index">
+<span class="sig-name descname"><span class="pre">index</span></span><a class="headerlink" href="#dxf_file.SelectedPoint.index" title="Link to this definition"></a></dt>
+<dd><p>選択点の線上でのインデックス</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.SelectedPoint.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.SelectedPoint.reset" title="Link to this definition"></a></dt>
+<dd><p>選択点を無効化する</p>
+<p>グラフで表示されないように、以下のように設定する。</p>
+<ul class="simple">
+<li><p>x,y座標 -&gt; numpy.nan</p></li>
+<li><p>index -&gt; None</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="dxf_file.SuperTable">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dxf_file.</span></span><span class="sig-name descname"><span class="pre">SuperTable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.SuperTable" title="Link to this definition"></a></dt>
+<dd><p>ベースクラス:<code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>dxfファイル内の線を管理するテーブルについてのクラスである</p>
+<p>tkinter.treeのインスタンスを格納する。</p>
+<p>tkinter.treeを初期化する方法がtreeの再生成しかないため、生成に必要な情報をメンバ変数として保存し、reset()関数がコールされた際にtableを削除、再生成する。</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dxf_file.SuperTable.x_pos">
+<span class="sig-name descname"><span class="pre">x_pos</span></span><a class="headerlink" href="#dxf_file.SuperTable.x_pos" title="Link to this definition"></a></dt>
+<dd><p>テーブルの画面での配置位置 X座標</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dxf_file.SuperTable.y_pos">
+<span class="sig-name descname"><span class="pre">y_pos</span></span><a class="headerlink" href="#dxf_file.SuperTable.y_pos" title="Link to this definition"></a></dt>
+<dd><p>テーブルの画面での配置位置 Y座標</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dxf_file.SuperTable.root">
+<span class="sig-name descname"><span class="pre">root</span></span><a class="headerlink" href="#dxf_file.SuperTable.root" title="Link to this definition"></a></dt>
+<dd><p>テーブル先のフレーム</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tkinter.Frame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dxf_file.SuperTable.y_height">
+<span class="sig-name descname"><span class="pre">y_height</span></span><a class="headerlink" href="#dxf_file.SuperTable.y_height" title="Link to this definition"></a></dt>
+<dd><p>テーブル先の高さ（行）</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dxf_file.SuperTable.sync">
+<span class="sig-name descname"><span class="pre">sync</span></span><a class="headerlink" href="#dxf_file.SuperTable.sync" title="Link to this definition"></a></dt>
+<dd><p>True:テーブルを他のテーブルと同期する, False:しない</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dxf_file.SuperTable.sync_update">
+<span class="sig-name descname"><span class="pre">sync_update</span></span><a class="headerlink" href="#dxf_file.SuperTable.sync_update" title="Link to this definition"></a></dt>
+<dd><p>True:同期時に更新が必要, False:不要</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dxf_file.SuperTable.table">
+<span class="sig-name descname"><span class="pre">table</span></span><a class="headerlink" href="#dxf_file.SuperTable.table" title="Link to this definition"></a></dt>
+<dd><p>テーブルのインスタンス</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tkinter.tree</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dxf_file.SuperTable.scrollbar">
+<span class="sig-name descname"><span class="pre">scrollbar</span></span><a class="headerlink" href="#dxf_file.SuperTable.scrollbar" title="Link to this definition"></a></dt>
+<dd><p>スクロールバーのインスタンス</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tkinter.Scrollbar</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.SuperTable.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.SuperTable.reset" title="Link to this definition"></a></dt>
+<dd><p>テーブルおよびスクロールバーを初期化する</p>
+<p>テーブルには、LineObjectの情報のうち、以下を表示する。</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>表示項目</p></td>
+<td><p>データソース</p></td>
+</tr>
+<tr class="row-even"><td><p>線番号</p></td>
+<td><p>num</p></td>
+</tr>
+<tr class="row-odd"><td><p>オフセット距離</p></td>
+<td><p>offset_dist</p></td>
+</tr>
+<tr class="row-even"><td><p>タイプ</p></td>
+<td><p>line_type</p></td>
+</tr>
+<tr class="row-odd"><td><p>カット速度</p></td>
+<td><p>cutspeed_work</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dxf_file.SuperTable.set_sync">
+<span class="sig-name descname"><span class="pre">set_sync</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sync</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dxf_file.SuperTable.set_sync" title="Link to this definition"></a></dt>
+<dd><p>テーブルの同期／非同期を設定する</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>sync</strong>(<em>bool</em>)--True:テーブルを他のテーブルと同期する, False:しない</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
 

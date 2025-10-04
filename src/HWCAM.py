@@ -628,7 +628,7 @@ def set_offset_dist(dxf_obj, entry, x_dxf_obj, x_entry, is_xy_uv_link, is_remove
 def remove_collision(dxf_obj, name, messeage_window):
     self_collision_list = dxf_obj.remove_self_collision()
     collision_line_list = dxf_obj.remove_line_collision()
-    
+
     if len(self_collision_list) > 0:
         for num in self_collision_list:
             messeage_window.set_messeage("%sの%s番目の線で自己交差を修正しました。形状に問題がないかをチェックしてください。\n"%(name, num))
@@ -850,6 +850,7 @@ def set_offset_dist_from_function(dxf_obj0, dxf_obj1, xy_dist_entry, uv_dist_ent
 # Ver2.1変更　引数追加，距離別指定可能
 def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, xy_dist_entry, uv_dist_entry, mach_dist_entry, cut_speed_entry, \
                cut_speed_def_cb, cb_CncCSDef, entry_dl, messeage_window, config):
+    
     set_cut_speed(dxf_obj0, dxf_obj1, xy_dist_entry, uv_dist_entry, mach_dist_entry, cut_speed_entry, cut_speed_def_cb)
     
     entry_ox_value = entry_ox.get()

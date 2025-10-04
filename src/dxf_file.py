@@ -110,7 +110,6 @@ class SuperTable:
         self.table.configure(yscroll=self.scrollbar.set)
         self.scrollbar.place(x = self.x_pos+375, y = self.y_pos+2, height = (self.y_height+1) * 20 + 7)
         
-　　　　
 
 class SelectedPoint:
     """図面上で選択された点の情報を格納する

@@ -1,30 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sat Jun 27 13:29:53 2020
-
-@author: Naoto
 """
-#======================================================================================================================================
-#            改訂履歴
-#======================================================================================================================================
-#   日付         バージョン  改訂内容
-#   2020.7.12    ver1.0   新規作成
-#   2020.10.11   ver2.0   Gコード修正/ 加工面のオフセット機能追加
-#   2020.10.13   ver2.1   加工面オフセットを両端で別値とできるように変更
 
-#======================================================================================================================================
-#            関連モジュールのインポート
-#======================================================================================================================================
-#【pip等で追加が必要なモジュール】
-# numpy
-# scipy
-# matplotlib
-# ezdxf
-#
-#【python標準モジュール（追加不要）】
-# tkinter
-# os
-# datetime
 
 # 外部ライブラリ
 import tkinter as tk
@@ -46,60 +23,46 @@ from messeage_window import *
 from cam_global import *
 from error_log import *
 
-#======================================================================================================================================
-#            クラスの実装
-#======================================================================================================================================
-
-#######################################################################################################################################
-###############    configクラス   ここから　　　#########################################################################################
-
-#【説明】
-#　CAMで使用する設定値を格納するクラスである．
-#
-#【親クラス】
-#　なし
-#
-#【メンバ変数】
-#   変数名          型              説明
-#   FILENAME_XY     string          デフォルトで読み込むXYのdxfファイル名（起動時にのみ変更）
-#   FILENAME_UV     string          デフォルトで読み込むUVのdxfファイル名（起動時にのみ変更）
-#   OX              float           切り出しの始点座標
-#   OY              float           切り出しの始点座標
-#   EX              float           切り出しの終点座標
-#   EY              float           切り出しの終点座標
-#   DELTA_LENGTH    float           G Codeの点群の間隔
-#   OFFSET_DIST     float           オフセット距離
-#   CUTSPEED        float           カット速度
-#   XY_DIST         float           XY断面とマシン駆動面との距離
-#   UV_DIST         float           UV断面とマシン駆動面との距離
-#   WORK_LENGTH     float           ワークの長さ（XY-UV断面距離）
-#   MACH_DIST       float           マシン駆動面の距離
-#   HEADER          string          Gコードの書き出し文字列
-#   x_str           string          G01でのX軸名称
-#   y_str           string          G01でのY軸名称
-#   u_str           string          G01でのU軸名称
-#   v_str           string          G01でのV軸名称
-#   offset_function object          オフセット距離の算出に使用する関数オブジェクト
-#
-#【実装メソッド】
-#   __init__()
-#   【引数】 なし
-#   【戻り値】　なし
-#   【機能】 メンバ変数をデフォルト値に設定する
-#
-#   load_config(string file_path)
-#   【引数】 file_path
-#   【戻り値】　なし
-#   【機能】 file_pathで与えられるcsvファイルを開き、csvファイルから読み込んだ値をメンバ変数に設定する。問題があればデフォルト値を設定する
-#
-#   load_offset_func(string　file_path)
-#   【引数】　string　file_path
-#   【戻り値】　なし
-#   【機能】 file_pathで与えられるcsvファイルを開き、csvファイルから読み込んだ値からoffset_functionを更新する。問題があればデフォルト値を設定する
-
 
 class Config:
+    """CAMで使用する設定値を格納するクラス
+
+    Attributes:
+        FILENAME_XY(str): デフォルトで読み込むXYのdxfファイル名（起動時にのみ変更）
+        FILENAME_UV(str): デフォルトで読み込むUVのdxfファイル名（起動時にのみ変更）
+        OX(float): 切り出しの始点座標
+        OY(float): 切り出しの始点座標
+        EX(float): 切り出しの終点座標
+        EY(float): 切り出しの終点座標
+        DELTA_LENGTH(float): G Codeの点群の間隔
+        XY_OFFSET_DIST(float): XY座標面のオフセット距離
+        UV_OFFSET_DIST(float): UV座標面のオフセット距離
+        CUTSPEED(float): カット速度
+        XY_DIST(float): XY断面とマシン駆動面との距離
+        UV_DIST(float): UV断面とマシン駆動面との距離
+        CS_DEF(str): カット速度定義面
+        CNC_CS_DEF(str): CNCコントローラーのカット速度定義
+        MACH_DIST(float): マシン駆動面の距離
+        OFFSET_X(float): 原点X座標
+        OFFSET_Y(float): 原点Y座標
+        ROTATE(float): 回転角度
+        HEADER(str): Gコードの書き出し文字列
+        X_STR(str): G01でのX軸名称
+        Y_STR(str): G01でのY軸名称
+        U_STR(str): G01でのU軸名称
+        V_STR(str): G01でのV軸名称
+        REFINE(bool): True:読み込み時にスプラインをリファインする, False:しない
+        REMOVE_COLLISION(bool): True:自己交差を修正する, False:しない
+        offset_function object: オフセット距離の算出に使用する関数オブジェクト        
+
+    """
     def __init__(self):
+        """Configクラスのコンストラクタ
+
+        メンバ変数をデフォルト値に設定する。  
+
+        """
+
         self.FILENAME_XY = "ファイル名を入力して下さい。"
         self.FILENAME_UV = "ファイル名を入力して下さい。"
         self.OX = 0.0
@@ -130,6 +93,14 @@ class Config:
         self.offset_function = generate_offset_function(x_data, y_data)
         
     def load_config(self, file_path):
+        """指定されたパスのコンフィギュレーションを読み込む。
+
+        file_pathで与えられるcsvファイルを開き、csvファイルから読み込んだ値をメンバ変数に設定する。問題があればデフォルト値を設定する
+
+        Args:
+            file_path (str): コンフィギュレーションを記述したcsvファイルのパス
+
+        """
         try:
             config_file = np.genfromtxt(file_path, delimiter = ",", skip_header = 1, dtype = str, encoding="shift-jis")
             config_data = config_file[:,2]
@@ -200,6 +171,14 @@ class Config:
             pass          
 
     def load_offset_func(self, file_path):
+        """指定されたパスのオフセット関数を読み込む
+
+        file_pathで与えられるcsvファイルを開き、csvファイルから読み込んだ値からoffset_functionを更新する。問題があればデフォルト値を設定する
+
+        Args:
+            file_path (str): オフセット関数を記述したcsvファイルのパス
+        """
+
         try:
             offset_function_file = np.genfromtxt(file_path, delimiter = ",", skip_header = 1, dtype = str, encoding="shift-jis")
             x_data = offset_function_file[0,3:]
@@ -847,7 +826,7 @@ def set_offset_dist_from_function(dxf_obj0, dxf_obj1, xy_dist_entry, uv_dist_ent
         output_log(traceback.format_exc())
         messeage_window.set_messeage("入力値に誤りがあります。オフセット値更新を中止しました。\n")
 
-# Ver2.1変更　引数追加，距離別指定可能
+
 def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, xy_dist_entry, uv_dist_entry, mach_dist_entry, cut_speed_entry, \
                cut_speed_def_cb, cb_CncCSDef, entry_dl, messeage_window, config):
     

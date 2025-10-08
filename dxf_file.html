@@ -767,27 +767,30 @@
 <dd><p>tkinterのtableの&lt;&lt;TreeviewSelect&gt;&gt;イベントにバインドされるメソッド</p>
 <p>tableのデータを選択した際に、グラフの再描画を行う。</p>
 <p>XY-UV同期中の場合は、相手のテーブル(x_table)に選択イベントを発生させる。この処理フローは下図による。</p>
+<figure class="align-center">
 <p class="plantuml">
-<img src="_images/plantuml-d9b947787c16930f8e54b94bd1f47fa18760fde9.svg" alt="&#64;startuml
-actor User
+<img src="_images/plantuml-df17e0c8f919f11708e4ac840f69c6be9f2094a2.svg" alt="&#64;startuml
 
-User -&gt; table : table内のi行目選択
-activate table
-table -&gt; table : 1度のみグラフ更新
+    actor User
 
-alt XY-UV同期中
-    table -&gt; x_table : x_table内のi行目選択
-    deactivate table
-    activate x_table
-    x_table -&gt; x_table : 1度のみグラフ更新
-    x_table -&gt; table : table内のi行目選択
-    deactivate x_table
+    User -&gt; table : table内のi行目選択
     activate table
-    table -&gt; table : グラフ表示判定フラグ初期化
-end
-table -&gt; User : 更新済みのグラフ表示
+    table -&gt; table : 1度のみグラフ更新
+
+    alt XY-UV同期中
+        table -&gt; x_table : x_table内のi行目選択
+        deactivate table
+        activate x_table
+        x_table -&gt; x_table : 1度のみグラフ更新
+        x_table -&gt; table : table内のi行目選択
+        deactivate x_table
+        activate table
+        table -&gt; table : グラフ表示判定フラグ初期化
+    end
+    table -&gt; User : 更新済みのグラフ表示
 
 &#64;enduml"/></p>
+</figure>
 <dl class="field-list simple">
 <dt class="field-odd">パラメータ<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>event</strong>(<em>Event</em>)--Python標準のイベントクラス。本メソッドでは使用しない</p>

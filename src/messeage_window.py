@@ -38,7 +38,7 @@ from cam_global import *
 #　　　　　　　　
 #
 
-class messeage_window(tk.Text):
+class MesseageWindow(tk.Text):
     def __init__(self, root, width, height):
         self.width = width
         self.height = height

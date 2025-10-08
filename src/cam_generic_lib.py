@@ -853,7 +853,7 @@ def generate_offset_function(x_array, y_array):
         y_array (numpy.array): オフセット量（溶け量）
 
     Returns:
-        interp1d: オフセット関数のオブジェクト
+        scipy.interpolate.interp1d: オフセット関数のオブジェクト
 
     See Also:
         https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.interp1d.html
@@ -1223,7 +1223,13 @@ def remove_collision(x1, y1, x2, y2):
     cx = 0
     cy = 0
     
-    i = 1
+    # 閉曲線の場合、前の線の始点は次の線の終点と交差するので、始点をスキップ
+    if norm(x1[0], y1[0], x2[-1], y2[-1]) < DIST_NEAR:
+        i = 2
+    # 開曲線の場合
+    else:
+        i = 1
+    
     while (i < len(x1)) and (detection==False):
         j = 1
         p1 = [x1[i-1], y1[i-1]]

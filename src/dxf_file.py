@@ -699,25 +699,28 @@ class DxfFile:
         この処理フローは下図による。
 
         .. uml::
+            :scale: 50 %
+            :align: center
 
             @startuml
-            actor User
 
-            User -> table : table内のi行目選択
-            activate table
-            table -> table : 1度のみグラフ更新
+                actor User
 
-            alt XY-UV同期中
-                table -> x_table : x_table内のi行目選択
-                deactivate table
-                activate x_table
-                x_table -> x_table : 1度のみグラフ更新
-                x_table -> table : table内のi行目選択
-                deactivate x_table
+                User -> table : table内のi行目選択
                 activate table
-                table -> table : グラフ表示判定フラグ初期化
-            end
-            table -> User : 更新済みのグラフ表示
+                table -> table : 1度のみグラフ更新
+
+                alt XY-UV同期中
+                    table -> x_table : x_table内のi行目選択
+                    deactivate table
+                    activate x_table
+                    x_table -> x_table : 1度のみグラフ更新
+                    x_table -> table : table内のi行目選択
+                    deactivate x_table
+                    activate table
+                    table -> table : グラフ表示判定フラグ初期化
+                end
+                table -> User : 更新済みのグラフ表示
 
             @enduml
 
@@ -986,7 +989,7 @@ class DxfFile:
                 # 結合後の座標点列
                 new_x = []
                 new_y = []
-                
+
                 # 親ラインの終点→子ラインの始点　の場合（入れ替え不要）
                 if norm(x_p_ed, y_p_ed, x_c_st, y_c_st) < LINE_MARGE_NORM_MN:
                     # 親ラインに子ラインを接続
@@ -1027,14 +1030,14 @@ class DxfFile:
                 else:
                     # 端点が隣接していない線同士であるので、結合すべきではない。
                     result = False # 結合失敗
-                
+
                 # 結合成功の場合
                 if result == True:
                     # 親ラインの座標点列を、子ラインを結合したものに更新
                     parent_line.reset_point(new_x, new_y)
                     # 子ラインを削除
                     self.delete_line(items[i])
-                
+
                 # 結合結果を配列に格納
                 results.append(result)
                 i += 1

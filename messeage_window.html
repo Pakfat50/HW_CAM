@@ -53,6 +53,9 @@
 <li class="toctree-l2"><a class="reference internal" href="line_object.html">line_object module</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">messeage_window module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#messeage_window.MesseageWindow"><code class="docutils literal notranslate"><span class="pre">MesseageWindow</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#messeage_window.MesseageWindow.root"><code class="docutils literal notranslate"><span class="pre">MesseageWindow.root</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#messeage_window.MesseageWindow.width"><code class="docutils literal notranslate"><span class="pre">MesseageWindow.width</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#messeage_window.MesseageWindow.height"><code class="docutils literal notranslate"><span class="pre">MesseageWindow.height</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#messeage_window.MesseageWindow.set_messeage"><code class="docutils literal notranslate"><span class="pre">MesseageWindow.set_messeage()</span></code></a></li>
 </ul>
 </li>
@@ -89,16 +92,61 @@
              
   <section id="module-messeage_window">
 <span id="messeage-window-module"></span><h1>messeage_window module<a class="headerlink" href="#module-messeage_window" title="Link to this heading"></a></h1>
-<p>Created on Mon Aug 11 15:46:13 2025</p>
-<p>&#64;author: hirar</p>
+<p>メッセージ出力に関連するライブラリ</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="messeage_window.MesseageWindow">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">messeage_window.</span></span><span class="sig-name descname"><span class="pre">MesseageWindow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#messeage_window.MesseageWindow" title="Link to this definition"></a></dt>
 <dd><p>ベースクラス:<code class="xref py py-class docutils literal notranslate"><span class="pre">Text</span></code></p>
+<p>メッセージ出力用のクラス</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="messeage_window.MesseageWindow.root">
+<span class="sig-name descname"><span class="pre">root</span></span><a class="headerlink" href="#messeage_window.MesseageWindow.root" title="Link to this definition"></a></dt>
+<dd><p>textウィンドウを配置するフレーム</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tkinter.Frame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="messeage_window.MesseageWindow.width">
+<span class="sig-name descname"><span class="pre">width</span></span><a class="headerlink" href="#messeage_window.MesseageWindow.width" title="Link to this definition"></a></dt>
+<dd><p>textウィンドウの幅（文字数で指定）</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="messeage_window.MesseageWindow.height">
+<span class="sig-name descname"><span class="pre">height</span></span><a class="headerlink" href="#messeage_window.MesseageWindow.height" title="Link to this definition"></a></dt>
+<dd><p>textウィンドウの高さ（文字列数で指定）</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tk</strong>(<em>tkinter.Text</em>)--メッセージ出力先のtkinter.Textクラス</p>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="messeage_window.MesseageWindow.set_messeage">
 <span class="sig-name descname"><span class="pre">set_messeage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">messeage</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#messeage_window.MesseageWindow.set_messeage" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>指定の文字列をメッセージウィンドウの最下行に出力する。</p>
+<p>文字列を挿入後に、最下列を表示する。</p>
+<dl class="field-list simple">
+<dt class="field-odd">パラメータ<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>messeage</strong>(<em>str</em>)--メッセージウィンドウに出力する文字列</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -114,7 +162,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Pakfat50.</p>
+    <p>&#169; Copyright 2025, Team Azamino.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

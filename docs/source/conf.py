@@ -12,8 +12,8 @@ sys.path.insert(0, os.path.abspath('.'))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'HW_CAM'
-copyright = '2025, Pakfat50'
-author = 'Pakfat50'
+copyright = '2025, Team Azamino'
+author = 'Team Azamino'
 release = '4.0'
 
 # -- General configuration ---------------------------------------------------

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""
-"""
+"""HW_CAMソフトウェア本体
 
+"""
 
 # 外部ライブラリ
 import tkinter as tk
@@ -195,142 +195,6 @@ class Config:
             self.offset_function = generate_offset_function(x_data, y_data)
             self.MESSEAGE = "溶け量ファイルの読み込み失敗\n"
 
-
-#======================================================================================================================================
-#            ボタンにより呼び出される関数
-#======================================================================================================================================
-#
-#   open_file_explorer(entry)
-#   【引数】　entry
-#   【戻り値】　なし
-#   【機能】 エクスプローラーを使ってファイルパスを指定し、パスをEntryにセットする。
-#
-#   load_config(config, config_entry, dl_entry, cut_speed_entry, xy_dist_entry, uv_dist_entry, WorkLengthEntry, mach_dist_entry, message_window)
-#   【引数】　config, config_entry, dl_entry, cut_speed_entry, xy_dist_entry, uv_dist_entry, WorkLengthEntry, mach_dist_entry, message_window
-#   【戻り値】　なし
-#   【機能】 open_file_explorerを用いて、config_entryにconfigファイルのパスを設定する
-#           configクラスのload_configメソッドを使用して、configファイルのパスを読みこみ、configオブジェクトの値を更新する
-#           dl_entry, cut_speed_entry, xy_dist_entry, uv_dist_entry, WorkLengthEntry, MachDistEntryの値を、configオブジェクトの値に更新する
-#           MessageWindowにconfig.load_configの結果およびGコードの書き出しを出力する
-#
-#   load_offset_func(config, offset_func_entry, message_window)
-#   【引数】　config, offset_func_entry, message_window
-#   【戻り値】　なし
-#   【機能】 open_file_explorerを用いて、offset_func_entryに溶け量ファイルのパスを設定する
-#           configクラスのload_offset_funcメソッドを使用して、溶け量ファイルのパスを読みこみ、configオブジェクトのoffset_functionのメンバーを更新する
-#           MessageWindowにconfig.load_offset_funcの結果を出力する
-# 
-#   open_dxf_explorer(dxf_obj, entry, messeage_window)
-#   【引数】　dxf_obj, entry, messeage_window
-#   【戻り値】　なし
-#   【機能】 エクスプローラーを使ってファイルパスを読みこむ。パスをEntryにセットしたうえで、load_fileによりファイルを読み込む。
-#
-#   load_file(DxfFile　dxf_obj, tk.Entry entry, messeage_window messeage_window)
-#   【引数】　dxf_obj, entry, messeage_window
-#   【戻り値】　なし
-#   【機能】 Entryに入力されたファイル名称をdxf_obj.load_fileにより読み込む．file_chkをコールし，読み取り可否をmesseage_windowに通知する．
-#　　　　　　　　
-#   xy_uv_link(tk.BooleanVar is_xy_uv_link, SuperTable xy_table, SuperTable uv_table, messeage_window  messeage_window)
-#   【引数】 is_xy_uv_link, xy_table, uv_table, messeage_window
-#   【戻り値】　なし
-#   【機能】　chkValue=trueの場合，table_XY.parent=1, uv_table.parent=0に設定する．
-#
-#   swap_line(DxfFile　dxf_obj, messeage_window messeage_window)
-#   【引数】 dxf_obj, messeage_window
-#   【戻り値】 なし
-#   【機能】 dxf_obj.Swap_Selected_lineをコールし，選択された2本のラインを入れ替える．入れ替え結果をmesseage_windowに表示する．
-#
-#   change_cut_dir(DxfFile　dxf_obj, messeage_window messeage_window)
-#   【引数】 dxf_obj, messeage_window
-#   【戻り値】 なし
-#   【機能】 dxf_obj.change_cut_dirをコールし，選択したラインのカット方向を入れ替える．入れ替え結果をmesseage_windowに表示する．
-#
-#   Change_OffsetDir(DxfFile　dxf_obj, messeage_window messeage_window)
-#   【引数】 dxf_obj, messeage_window
-#   【戻り値】　なし
-#   【機能】 dxf_obj.Change_OffsetDirをコールし，選択したラインのオフセット方向を入れ替える．入れ替え結果をmesseage_windowに表示する．
-#   
-#   merge_line(dxf_obj,  messeage_window)
-#   【引数】　dxf_obj,  messeage_window
-#   【戻り値】　なし
-#   【機能】 テーブルで選択された２本のラインを結合する。後に選択した方のラインは削除する
-#     
-#   set_offset_dist(DxfFile　dxf_obj0, DxfFile　dxf_obj1, tk.Entry entry, messeage_window messeage_window)
-#   【引数】　dxf_obj0, dxf_obj1, entry, messeage_window
-#   【戻り値】　なし
-#   【機能】 entryに入力されたオフセット距離を読み取り，dxf_obj0.set_offset_dist，dxf_obj1.set_offset_distをコールする．変更結果をmesseage_windowに表示する．
-#
-#   delete_line(DxfFile　dxf_obj, messeage_window messeage_window)
-#   【引数】 dxf_obj, messeage_window
-#   【戻り値】　なし
-#   【機能】 delete_Selected_lineをコールし，選択したラインを削除する．削除した結果をmesseage_windowに表示する．
-#
-#   auto_sort_line(DxfFile　dxf_obj0, DxfFile　dxf_obj1, tk.Entry entry_x, tk.Entry entry_y, messeage_window messeage_window)
-#   【引数】 dxf_obj0, dxf_obj1, entry_x, entry_y, messeage_window
-#   【戻り値】 なし
-#   【機能】 entry_x, entry_yからox, oyを読み取り．dxf_obj0.sort_line, dxf_obj1.sort_lineをコールする．結果をmesseage_windowに表示する．
-#        
-#   reverse_line(DxfFile　dxf_obj, messeage_window messeage_window)
-#   【引数】　dxf_obj, messeage_window
-#   【戻り値】　なし
-#   【機能】 dxf_obj.reverse_allをコールし，カット順を逆転させる．結果をmesseage_windowに表示する．
-#
-#   Replace_G01_code(g_code_str, x_str, y_str, u_str, v_str)
-#   【引数】g_code_str, x_str, y_str, u_str, v_str
-#   【戻り値】g_code_str
-#   【機能】g_code_strのX,Y,U,Vの座標文字をX_str, y_str, u_str, V_strで指定されるものに置換する
-#
-#   make_offset_path(x_array, y_array, u_array, v_array, z_xy, z_uv, z_mach)
-#   【引数】x_array, y_array, u_array, v_array, z_xy, z_uv, z_mach
-#   【戻り値】new_x, new_y, new_u, new_v
-#   【機能】ワーク上のXY, UV座標点列（x_array, y_array, u_array, v_array）から、マシン駆動面上の座標点列を作成し、出力する
-#
-#   get_offset_and_cut_speed(length_xy, length_uv, z_xy, z_uv, z_mach, cut_speed, offset_function)
-#   【引数】length_XY, length_uv, z_xy, z_uv, z_mach, cut_speed, offset_function
-#   【戻り値】offset_XY_Work, offset_UV_Work, cutspeed_XY_Work, cutspeed_UV_Work, cutspeed_XY_Mech, cutspeed_UV_Mech
-#   【機能】(1) XY断面の線長とUV断面の線長から、ワークの中間点での線長を算出する
-#          (2) ワークの中間点でのカット速度が、CutSpeedとするとして、(1)の線長比から、XY、UV断面でのカット速度(cutspeed_XY_Work, cutspeed_UV_Work)を算出する
-#          (3) offset_functionを用いて、XY、UV断面のカット速度における溶け量を推定し、これをキャンセルするようにオフセット量（offset_XY_Work, offset_UV_Work）を設定する。
-#              ※マシン駆動面上での座標点列作成は、その他の線郡と同様に、gen_g_code側にて行う
-#          (4) ワーク端面（XY面, UV面）とマシン駆動面との距離（Z_XY, z_uv, Z_Mach）から、cutspeed_XY_Work, cutspeed_UV_Workを実現するマシン駆動面速度（cutspeed_XY_Mech, cutspeed_UV_Mech）を算出する
-#
-#   set_offset_dist_from_function(dxf_obj0, dxf_obj1, xy_dist_entry, uv_dist_entry, mach_dist_entry, cut_speed_entry, offset_function, messeage_window)
-#   【引数】dxf_obj0, dxf_obj1, xy_dist_entry, uv_dist_entry, mach_dist_entry, cut_speed_entry, offset_function, messeage_window
-#   【戻り値】なし
-#   【機能】dxf_obj0, dxf_obj1の対応する線から、XY断面の線長、UV断面の線長を取得し、get_offset_and_cut_speedにより線ごとにオフセット距離、カット速度を取得する
-#          取得したオフセット距離、カット速度を線（line Object）に設定し、オフセット距離を更新する
-#
-#   gen_g_code(DxfFile　dxf_obj0, DxfFile　dxf_obj1, tk.Entry entry_ox, tk.Entry entry_oy, tk.Entry entry_ex, tk.Entry entry_ey, tk.Entry cut_speed_entry, tk.Entry entry_dl, str header, messeage_window messeage_window)
-#   【引数】 dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, cut_speed_entry, entry_dl, header, messeage_window
-#   【戻り値】　なし
-#   【機能】　gコードを生成する．始点をentry_ox, entry_oyから，終点をentry_ex, entry_eyから読み取る．カット速度をentry_CSから読み取る．分割距離をentry_dlから読み取る．gコードの書き出しをheaderとする．
-#　　　　　　　　1. dxf_obj0, dxf_obj1のline_num_listにて0以上の値を取得し，a_line_num_list0,a_line_num_list1に格納する．
-#　　　　　　　　2. a_line_num_list0,a_line_num_list1のライン数が一致しているかを確認する．
-#　　　　　　　　3. a_line_num_list0,a_line_num_list1のラインを順にgコード化する．各ラインについてget_length()にてライン長を取得し，N=get_length()/dlから分割数を決定する
-#　　　　　　　　4. 各ラインについてgenerate_arc_length_pointsをコールし，等間隔点列x, y, u, vを取得する．
-#　　　　　　　　5. gen_g_code_line_str(x, y, u, v)をコールし，x, y, u, vからgコードを生成する．
-#　　　　　　　　6. 各ラインのgコードを結合し，保存する．保存名は 「dxf_obj0.filename,dxf_obj1.filename,日付.nc」とする．　
-#
-#   path_chk(tk.Frame Root, DxfFile　dxf_obj0, DxfFile　dxf_obj1, tk.Entry entry_ox, tk.Entry entry_oy, tk.Entry entry_ex, tk.Entry entry_ey, tk.Entry mach_dist_entry, tk.Entry entry_dl, messeage_window messeage_window)
-#   【引数】 Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, mach_dist_entry, entry_dl, messeage_window
-#   【戻り値】 なし
-#   【機能】 gコードを生成する．始点をentry_ox, entry_oyから，終点をentry_ex, entry_eyから読み取る．XY，UV平面距離をentry_MachDistから読み取る．分割距離をentry_dlから読み取る．
-#　　　　　　　　1. カットパスをプロットするウィンドウをRootをベースとして生成する．
-#　　　　　　　　2. dxf_obj0, dxf_obj1のline_num_listにて0以上の値を取得し，a_line_num_list0,a_line_num_list1に格納する．
-#　　　　　　　　3. a_line_num_list0,a_line_num_list1のライン数が一致しているかを確認する．
-#　　　　　　　　4. 各ラインについてgenerate_arc_length_pointsをコールし，等間隔点列x, y, u, vを取得する．また，各ライン間距離がdl*2より大きい場合，generate_arc_length_points4lineをコールし，補完点列を作成する，
-#　　　　　　　　5. x,y,u,vを統合した配列x_array, y_array, u_array, v_arrayを生成する．
-#　　　　　　　　6. plot_3d_cut_pathにより,x_array, y_array, u_array, v_arrayをプロットする．
-#
-#   _destroyWindow()
-#   【引数】 なし
-#   【戻り値】 なし
-#   【機能】 メインウィンドウが閉じられた際，インスタンスを破棄する．
-#
-#   offset_origin(dxf_obj0, dxf_obj1, entry_offset_ox, entry_offset_oy, messeage_window)
-#   【引数】 dxf_obj0, dxf_obj1, entry_offset_ox, entry_offset_oy, messeage_window
-#   【戻り値】 なし
-#   【機能】 entry_offset_ox, entry_offset_oyから原点のオフセット量を取得し、dxf_obj0、dxf_obj1のoffset_originメソッドを使用して、すべての線の座標を原点のオフセット量だけ移動する
 
 def open_file_explorer(entry):
     """エクスプローラーからファイルパスを取得し、entryに挿入する
@@ -1731,7 +1595,7 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
 
 
 def _destroyWindow():
-    """メインウィンドウを削除する
+    """メインウィンドウが閉じられた際にインスタンスを破棄する
     """
     root.quit()
     root.destroy()

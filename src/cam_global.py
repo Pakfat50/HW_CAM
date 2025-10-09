@@ -1,30 +1,25 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Aug 11 15:53:27 2025
+"""グローバル変数（定数）をまとめたライブラリ
 
-@author: hirar
 """
 
-#======================================================================================================================================
-#            グローバル変数
-#======================================================================================================================================
-VERSION = "4.0"                         #バージョン
-LINE_MARGE_NORM_MN = 1                  #単位:mm ラインを結合時にラインを結合してよいかを判断するためのライン端点間距離
-N_FILLET_INTERPORATE = 10               #オフセットした線間を補完するフィレットの座標点数
-ERROR_LOG_FILENAME = "error_log.txt"    #エラーログを出力するファイル名
-DIST_NEAR = 0.0001                      #近傍点判定距離[mm]
-AUTOSORT_WHEN_LOADFILE = True           #dxfファイルオープン時に自動ソートする
-CUTSPEED_DEFAULT = 20                   #読み込み時のカット速度
-DIST_CUTPATH_PLOT = 3                   #単位：mm パスチェック時に線を描画する間隔
-REFINE_SPLINE_PCHIP = False             #スプライン読み込み時に不連続点を考慮する。Trueとすると、CADとは異なる補完アルゴリズムとなる。
-DIST_REFINE_SPLINE = 2                  #単位：mm スプラインのリファインする点列の間隔
-REFINE_SPLINE_EDGE = True               #リファイン時にスプライン端点に作成する
-N_REFINE_SPLINE_MIN = 10                #スプラインをリファインする点列の最小点数
-N_SPLINE_EDGE = 3                       #リファイン時にスプライン端点に作成する点数
-DIST_SPLINE_EDGE = 0.5                  #リファイン時にスプライン端点に作成する点列の幅
-R_C_MAX = 100                           #単位：mm　スプラインをリファインする際の曲率半径の上限リミット
-R_C_MIN = 1                             #単位：mm　スプラインをリファインする際の曲率半径の下限リミット
-DIST_DELTA = 0.0001                     #単位：mm スプライン補完可能な最小距離
-USE_PCHIP = True                        #不連続点を持つスプラインに対応する
-FILET_INTERPOLATE = True                #フィレット補完する
-DIST_FILET = 0.3                        #単位:mm フィレットを挿入する端点同士の間隔。これより離れていると挿入する
+VERSION = "4.0"                         # バージョン
+LINE_MARGE_NORM_MN = 1                  # 単位:mm ラインを結合時にラインを結合してよいかを判断するためのライン端点間距離
+N_FILLET_INTERPORATE = 10               # オフセットした線間を補完するフィレットの座標点数
+ERROR_LOG_FILENAME = "error_log.txt"    # エラーログを出力するファイル名
+DIST_NEAR = 0.0001                      # 近傍点判定距離[mm]
+AUTOSORT_WHEN_LOADFILE = True           # dxfファイルオープン時に自動ソートする
+CUTSPEED_DEFAULT = 20                   # 読み込み時のカット速度
+DIST_CUTPATH_PLOT = 3                   # 単位：mm パスチェック時に線を描画する間隔
+REFINE_SPLINE_PCHIP = False             # スプライン読み込み時に不連続点を考慮する。Trueとすると、CADとは異なる補完アルゴリズムとなる。
+DIST_REFINE_SPLINE = 2                  # 単位：mm スプラインのリファインする点列の間隔
+REFINE_SPLINE_EDGE = True               # リファイン時にスプライン端点に作成する
+N_REFINE_SPLINE_MIN = 10                # スプラインをリファインする点列の最小点数
+N_SPLINE_EDGE = 3                       # リファイン時にスプライン端点に作成する点数
+DIST_SPLINE_EDGE = 0.5                  # リファイン時にスプライン端点に作成する点列の幅
+R_C_MAX = 100                           # 単位：mm　スプラインをリファインする際の曲率半径の上限リミット
+R_C_MIN = 1                             # 単位：mm　スプラインをリファインする際の曲率半径の下限リミット
+DIST_DELTA = 0.0001                     # 単位：mm スプライン補完可能な最小距離
+USE_PCHIP = True                        # 不連続点を持つスプラインに対応する
+FILET_INTERPOLATE = True                # フィレット補完する
+DIST_FILET = 0.3                        # 単位:mm フィレットを挿入する端点同士の間隔。これより離れていると挿入する

@@ -716,6 +716,7 @@
 <div><p>今の線：交点から終点までを削除</p>
 <p>次の線：始点から交点までを削除</p>
 </div></blockquote>
+<img alt="_images/remove_collision.png" src="_images/remove_collision.png" />
 <dl class="field-list simple">
 <dt class="field-odd">パラメータ<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -735,6 +736,10 @@
 </ul>
 </dd>
 </dl>
+<div class="admonition-todo admonition" id="id2">
+<p class="admonition-title">課題</p>
+<p>交差が1箇所のみのケースしか想定できていない。</p>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -762,6 +767,7 @@
 <span class="sig-prename descclassname"><span class="pre">cam_generic_lib.</span></span><span class="sig-name descname"><span class="pre">remove_self_collision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cam_generic_lib.remove_self_collision" title="Link to this definition"></a></dt>
 <dd><p>線が自己交差を保つ場合、自己交差を解消した座標点列を出力する</p>
 <p>自己交差の開始点と終了点を検出し、その間の座標点を削除することで自己交差を解消する。</p>
+<img alt="_images/remove_self_collision.png" src="_images/remove_self_collision.png" />
 <dl class="field-list simple">
 <dt class="field-odd">パラメータ<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -777,6 +783,10 @@
 </ul>
 </dd>
 </dl>
+<div class="admonition-todo admonition" id="id3">
+<p class="admonition-title">課題</p>
+<p>自己交差の交点に座標点を追加すべきであるが、追加すると点列の間隔が狭い場合に、自己交差を除去できない場合があったので一旦コメントアウトしている。</p>
+</div>
 </dd></dl>
 
 <dl class="py function">

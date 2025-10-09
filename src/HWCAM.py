@@ -1286,6 +1286,7 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, xy_di
                             x_f, y_f = generate_offset_interporate_point(l0_x, l0_y, l1_x, l1_y, xy_offset_dist[-1], xy_offset_dist[-2])
                             u_f, v_f = generate_offset_interporate_point(l0_u, l0_v, l1_u, l1_v, uv_offset_dist[-1], uv_offset_dist[-2])        
                             
+                            # XY平面およびUV平面でフィレットを作成できた場合
                             if (not(len(x_f) == 0)) and (not(len(u_f) == 0)):
                                 #オフセット面の作成
                                 x_m_f, y_m_f, u_m_f, v_m_f = make_offset_path(x_f, y_f, u_f, v_f, z_xy, z_uv, z_mach)
@@ -1294,25 +1295,34 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, xy_di
                                 y0 = y_m_f[-1]
                                 u0 = u_m_f[-1]
                                 v0 = v_m_f[-1]
-                            
+
+                                # フィレットの座標点列を追加
                                 x_array = np.concatenate([x_array, x_f], 0)
                                 y_array = np.concatenate([y_array, y_f], 0)
                                 u_array = np.concatenate([u_array, u_f], 0)
-                                v_array = np.concatenate([v_array, v_f], 0)      
+                                v_array = np.concatenate([v_array, v_f], 0)
+                            
+                            # フィレットを作成できななった場合
                             else:
+                                # 隙間があかないように、端点の座標を一致させる
                                 x[0] = x_array[-1]
                                 y[0] = y_array[-1]
                                 u[0] = u_array[-1]
                                 v[0] = v_array[-1]                                     
                         
-                    #オフセット面の作成
+                    # 駆動面での座標点列を計算
                     x_m, y_m, u_m, v_m = make_offset_path(x, y, u, v, z_xy, z_uv, z_mach)
+
+                    # Gコード命令文を作成
                     code_line_list.append(gen_g_code_line_str(x_m, y_m, u_m, v_m, x0, y0, u0, v0, cs_xy, cs_uv, CncCsdDef))
+
+                    # 前の線の終点座標を更新
                     x0 = x_m[-1]
                     y0 = y_m[-1]
                     u0 = u_m[-1]
                     v0 = v_m[-1]                    
                     
+                    # 補完後の座標点列を追加
                     x_array = np.concatenate([x_array, x], 0)
                     y_array = np.concatenate([y_array, y], 0)
                     u_array = np.concatenate([u_array, u], 0)
@@ -1320,38 +1330,48 @@ def gen_g_code(dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, xy_di
                     
                     i += 1
                 
+                # 切り出し終点への移動命令を追加
                 code_line_list.append(gen_g_code_line_str([ex], [ey], [ex], [ey], x0, y0, u0, v0, cs_xy, cs_uv, CncCsdDef))
                 
+                # Gコード命令の軸名称を置き換え
                 replaced_code_line_list = []
                 for g_code_str in code_line_list:
                     replaced_code_line_list.append(replace_g_code(g_code_str, config.X_STR, config.Y_STR, config.U_STR, config.V_STR))
                 
+                # Gコード命令を1つの文字列に結合
                 line = ""
                 for elem in replaced_code_line_list:
                     line += elem
+                # 加工終了命令の追加
                 line += "M02"
                 
+                # ファイル名称の作成
                 # 現在時刻を取得
                 dt_now = datetime.datetime.now()
-                
                 time_str = dt_now.strftime('%Y%m%d_%H%M%S')
-                
+                # CAD図面名称の取得
                 name0 = os.path.splitext(os.path.basename(dxf_obj0.filename))[0]
                 name1 = os.path.splitext(os.path.basename(dxf_obj1.filename))[0]
-                
+                # ファイル名称の決定
                 Output_FileName = "%s,%s,%s_%s.nc"%(name0, name1, CS, time_str)
                 
+                # Gコードファイル出力
                 f = open(Output_FileName,'w')
                 f.write(line)
                 f.close()
                 
+                # メッセージウィンドウに結果を出力
                 messeage_window.set_messeage("Gコード生成成功。%sで保存しました。\n"%Output_FileName)
             
+            # 線の本数がXY-UV断面で不一致の場合
             else:
                 messeage_window.set_messeage("XY座標とUV座標でライン数が一致しません。XY：%s本，UV：%s本\n"%(len(all_items0),len(all_items1)))
+        
+        # 入力値が異常な場合
         if temp_error_flg == True:
             messeage_window.set_messeage("入力値に誤りがあります。Gコード生成を中止しました。\n\n")
     except:
+        # 予期しない例外が発生した場合
         traceback.print_exc()
         output_log(traceback.format_exc())
         messeage_window.set_messeage("Gコード生成途中でエラーが発生しました。\n\n")
@@ -1379,9 +1399,10 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
         use3dValue (bool): True;3Dでパスチェックする, False:2Dでパスチェックする
         messeage_window (MesseageWindow): メッセージウィンドウ
     """
+    # チェックボックスの値を取得
     is_plot_3d = use3dValue.get()
     
-    
+    # グラフ描画用の新規ウィンドウを作成
     fig = Figure(figsize=(15, 8), dpi=70)
     plot_window = tk.Toplevel(Root)
     plot_window.wm_title("Cut Path")
@@ -1391,11 +1412,14 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
     toolbar.update()
     canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)    
 
+    # 3Dの場合
     if is_plot_3d == True:
         ax = fig.add_subplot(111, projection="3d", proj_type = 'ortho')
+    # 2Dの場合
     else:
         ax = fig.add_subplot(111)
     
+    # Gコード生成(gen_g_code)と同様に座標点列を計算する
     entry_ox_value = entry_ox.get()
     entry_oy_value = entry_oy.get()
     entry_ex_value = entry_ex.get()
@@ -1452,6 +1476,7 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
                 x, y = generate_arc_length_points(line0, n)
                 u, v = generate_arc_length_points(line1, n)
                 
+                # 切り出し始点からの移動 or 切り出し始点への移動出ない場合
                 if (i != 0) and (i != len(all_items0)):
                     if FILET_INTERPOLATE == True:
                         # 始点と終点以外は、フィレット補完する
@@ -1477,8 +1502,10 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
                             x[0] = x_array[-1]
                             y[0] = y_array[-1]
                             u[0] = u_array[-1]
-                            v[0] = v_array[-1]                    
+                            v[0] = v_array[-1] 
+                # 切り出し始点からの移動 or 切り出し始点への移動の場合
                 else:
+                    # 始点からの移動、終点への移動　までは端点しかないので、線の途中に座標点列を追加する
                     norm_line2line0 = norm(x_array[-1], y_array[-1], x[0], y[0])
                     norm_line2line1 = norm(u_array[-1], v_array[-1], u[0], v[0])
                     
@@ -1519,30 +1546,33 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
                 u_array = np.concatenate([u_array, up], 0)
                 v_array = np.concatenate([v_array, vp], 0)
             
-            #オフセット面の作成
+            # 駆動面での座標点列を計算
             x_m_array, y_m_array, u_m_array, v_m_array = make_offset_path(x_array, y_array, u_array, v_array, z_xy, z_uv, z_mach)
             
-            
+            # 3Dで描画する場合
             if is_plot_3d == True:
+                # 熱線長を計算
                 point_dist_array = calc_point_dist(x_m_array, y_m_array, u_m_array, v_m_array, 0, z_mach)
                 
-                
+                # 3Dグラフに、ワーク端面、駆動面でのカットパスを黒線で描画
                 ax.plot(x_array, y_array, np.ones(len(x_array))*z_xy, 'k')
                 ax.plot(u_array, v_array, np.ones(len(x_array))*(z_mach-z_uv), 'k')
                 ax.plot(x_m_array, y_m_array, np.ones(len(x_array))*0, 'k')
                 ax.plot(u_m_array, v_m_array, np.ones(len(x_array))*z_mach, 'k')
                 
-                
+                # すべての線を描画すると重いので、間引いて描画
                 num_per_plot = int(len(x_array) / length_sum * DIST_CUTPATH_PLOT)
                 num_plot = int(len(x_array)/num_per_plot) + 1
                 
                 if num_per_plot < 1:
                     num_per_plot = 1
                 
+                # 熱線のアニメーション描画用
+                # frameで指定した時刻での熱線を描画する
                 def update(frame):
                     plot_3d_cut_path(ax, x_array, y_array, u_array, v_array, x_m_array, y_m_array, u_m_array, v_m_array, z_xy, z_uv, z_mach, num_per_plot, frame)
                 
-                
+                # 画角調整
                 x_max = max(max(x_array), max(u_array))
                 x_min = min(min(x_array), min(u_array))
                 y_max = max(max(y_array), max(v_array))
@@ -1561,33 +1591,45 @@ def path_chk(Root, dxf_obj0, dxf_obj1, entry_ox, entry_oy, entry_ex, entry_ey, \
                 
                 ax.view_init(elev=87, azim=66, roll = 154) 
                 
+                # アニメーション描画
                 anim = FuncAnimation(fig, update, frames=num_plot, interval=100, repeat=False)
                 canvas.draw()
+
+                # アニメーション保存　デバッグ用
                 #anim.save('anim.gif', writer="imagemagick")
+
+            # 2Dで描画する場合
             else:
+                # 熱線長を計算
                 point_dist_array = calc_point_dist(x_m_array, y_m_array, u_m_array, v_m_array, 0, z_mach)
+                # 3Dグラフに、ワーク端面、駆動面でのカットパスを描画
                 ax.plot(x_m_array, y_m_array, "b", label = "XY Mech Path")
                 ax.plot(u_m_array, v_m_array, "r", label = "UV Mech Path")
                 ax.plot(x_array, y_array, "b--", label = "XY Work Path")
                 ax.plot(u_array, v_array, "r--", label = "UV Work Path")
+                # 画角調整
                 ax.set_aspect('equal')
+                # グラフ表示
                 ax.legend()
             
             
-            
+            # 結果および熱線長をメッセージウィンドウに出力
             messeage_window.set_messeage("パスを描画しました。ワイヤーの最大長は%s mmです。（初期長%s mm）\n"%(int(max(point_dist_array)), int(z_mach)))
             messeage_window.set_messeage("\n【加工範囲】 \nX: %smm～%smm\nY: %smm～%smm\nU: %smm～%smm\nV: %smm～%smm\n\n"
                                          %(int(min(x_array)), int(max(x_array)), int(min(y_array)), int(max(y_array)), int(min(u_array)), int(max(u_array)), int(min(v_array)), int(max(v_array))))
 
+            # 入力値がおかしい場合は警告をメッセージウィンドウに出力
             if z_xy > z_mach:
                 messeage_window.set_messeage("【警告】\nXY面距離が駆動面距離に対して%s mm 長いです。\n入力値を確認してください。\n\n"%(z_xy - z_mach))
             if z_uv > z_mach:
                 messeage_window.set_messeage("【警告】\nUV面距離が駆動面距離に対して%s mm 長いです。\n入力値を確認してください。\n\n"%(z_uv - z_mach))
-            
+        
+        # 線の本数がXY-UV断面で不一致の場合
         else:
             messeage_window.set_messeage("XY座標とUV座標でライン数が一致しません。XY：%s本，UV：%s本\n"%(len(all_items0), len(all_items1)))
         
     except:
+        # 予期しない例外が発生した場合
         traceback.print_exc()
         output_log(traceback.format_exc())
         messeage_window.set_messeage("パスチェック中にエラーが発生しました。\n")

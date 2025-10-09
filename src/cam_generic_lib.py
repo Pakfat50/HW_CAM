@@ -1152,6 +1152,9 @@ def remove_self_collision(x, y):
 
     自己交差の開始点と終了点を検出し、その間の座標点を削除することで自己交差を解消する。
 
+    .. image:: 
+        ../../documents/res/remove_self_collision.png    
+
     Args:
         x (numpy.array): x座標点列
         y (numpy.array): x座標点列
@@ -1160,6 +1163,10 @@ def remove_self_collision(x, y):
         numpy.array : 自己交差修正後のx座標点列
         numpy.array : 自己交差修正後のy座標点列
         bool: True:自己交差あり/ False:自己交差なし
+
+    Todo:
+        自己交差の交点に座標点を追加すべきであるが、追加すると点列の間隔が狭い場合に、自己交差を除去できない場合があったので一旦コメントアウトしている。
+
     """
 
     # 同一点があると正しく自己交差を検出できないため、削除する
@@ -1169,6 +1176,7 @@ def remove_self_collision(x, y):
     new_y = [y[0]]
     detection = False
     
+    # 交点を走査
     i = 1
     while i < len(x):
         j = i+1
@@ -1179,6 +1187,7 @@ def remove_self_collision(x, y):
             p4 = [x[j+1], y[j+1]]
             if cross_judge(p1, p2, p3, p4) == True:
                 detection = True
+                # 交点を追加すると、点列の間隔が狭い場合は、自己交差を除去できない場合があったので一旦コメントアウト
                 #cx, cy = get_cross_point_from_point(p1[0], p1[1], p3[0], p3[1], p2[0], p2[1], p4[0], p4[1])
                 #new_x.append(cx)
                 #new_y.append(cy)             
@@ -1200,6 +1209,10 @@ def remove_collision(x1, y1, x2, y2):
 
         次の線：始点から交点までを削除
 
+    .. image:: 
+        ../../documents/res/remove_collision.png    
+
+
     Args:
         x1 (_type_): 今の線のx座標点列
         y1 (_type_): 今の線のy座標点列
@@ -1212,6 +1225,10 @@ def remove_collision(x1, y1, x2, y2):
         numpy.array : 交差修正後の次の線のx座標点列
         numpy.array : 交差修正後の次の線のy座標点列        
         bool: True:自己交差あり/ False:自己交差なし
+
+    Todo:
+        交差が1箇所のみのケースしか想定できていない。
+
     """
     # 前提：x1[-1] -> x2[0] と繋がる
     x1, y1 = remove_same_point(x1, y1)
@@ -1230,6 +1247,7 @@ def remove_collision(x1, y1, x2, y2):
     else:
         i = 1
     
+    # 交点を走査
     while (i < len(x1)) and (detection==False):
         j = 1
         p1 = [x1[i-1], y1[i-1]]
@@ -1245,6 +1263,7 @@ def remove_collision(x1, y1, x2, y2):
             j += 1
         i += 1
         
+    # 交点があった場合、交差を
     if detection == True:
         new_x1 = x1[:num1]
         new_y1 = y1[:num1]

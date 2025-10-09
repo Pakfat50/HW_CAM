@@ -699,7 +699,7 @@ class DxfFile:
         この処理フローは下図による。
 
         .. uml::
-            :scale: 50 %
+            :scale: 25 %
             :align: center
 
             @startuml
@@ -1283,10 +1283,14 @@ class DxfFile:
             index_st = self.get_index_from_item(item_st)
             line_st = self.line_list[index_st]
 
+            # 端点間距離の最小値。初期値は無限大としておく
             norm_mn = np.inf
+
+            # ライン端
             x0 = line_st.ed[0]
             y0 = line_st.ed[1]
 
+            # データ格納用の配列を準備
             x_array = np.array(line_st.x_raw)
             y_array = np.array(line_st.y_raw)                
             new_lines = [line_st]
@@ -1296,53 +1300,70 @@ class DxfFile:
             
             # ソートを実行
             i = 0
+            # 1番目の線は選択した線でソート済みのため、N-1回探索する
             while i < len(all_items) - 1:
                 norm_mn = np.inf
                 j = 0
+                # 残っている全ての線の端点に対して探索
                 while j < len(all_items):
                     index = self.get_index_from_item(all_items[j])
                     line = self.line_list[index]
-
+                    # ソート済みの線の場合はBreak
                     if (line in sum(new_line_list, [])) or (line in new_lines):
                         pass
-                    
+                    # 未ソートの線の場合は端点が最短距離かを判定
                     else:
+                        # 始点と前の線の終点（x0,y0）との距離
                         norm_st = norm(x0, y0, line.st[0], line.st[1])
+                        # 終点と前の線の終点（x0,y0）との距離
                         norm_ed = norm(x0, y0, line.ed[0], line.ed[1])
+                        # 端点間距離が、これまでで最短の場合は更新
                         if min(norm_st, norm_ed) < norm_mn:
+                            # 端点間の距離が最短である線(=次の線の候補)を更新
                             line_mn = line
-                            norm_mn = min(norm_st, norm_ed)                      
+                            norm_mn = min(norm_st, norm_ed)
+                            # 前の線の終点->今の線の始点の場合は今の線は反転不要             
                             if norm_st < norm_ed:
                                 toggle = False
-                            else:
+                            # 前の線の終点->今の線の終点の場合は今の線を反転する  
+                            else: # norm_st >= norm_ed
                                 toggle = True
                     j += 1
                 
+                # 次の線の向きを反転する必要がある場合
                 if toggle == True:
+                    # 座標点列を反転
                     line_mn.toggle_cut_dir()
+                # 反転後は、必ず終点が次の探索始点になるのでedでx0,y0を更新
                 x0 = line_mn.ed[0]
                 y0 = line_mn.ed[1]
                 
                 # 同じ閉曲線かどうかを判定
+                # 端点間距離が十分小さい場合は同じ曲線
                 if norm_mn <= DIST_NEAR:
                     new_lines.append(line_mn)
                     x_array = np.concatenate([x_array, line_mn.x_raw], 0)
                     y_array = np.concatenate([y_array, line_mn.y_raw], 0)
-                else:
+                
+                # 端点間距離が近接していない場合、線が分割していると判定
+                else: # norm_mn > DIST_NEAR
+                    # 今までのnew_lines, x_array, y_arrayをリストに格納
                     new_line_list.append(new_lines)
                     x_array_list.append(x_array)
                     y_array_list.append(y_array)
+                    # new_lines, x_array, y_arrayを初期化
                     new_lines = [line_mn]
                     x_array = np.array(line_mn.x_raw)
                     y_array = np.array(line_mn.y_raw)
                 
                 i += 1
                 
+            # 最後の線はリストに追加されないため、追加
             new_line_list.append(new_lines)
             x_array_list.append(x_array)
             y_array_list.append(y_array)    
              
-            # 閉曲線の向きを判定
+            # リスト内のすべての閉曲線の向きを判定
             ccw_list = []
             i = 0
             while i < len(x_array_list):

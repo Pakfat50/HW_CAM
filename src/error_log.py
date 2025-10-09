@@ -20,7 +20,7 @@ def output_log(error_str):
         error_str (str): エラーメッセージ
     """
     cur_dir =  glib.get_curdir()
-    file_name = "%s\%s"%(cur_dir, gdata.ERROR_LOG_FILENAME)
+    file_name = "%s\\%s"%(cur_dir, gdata.ERROR_LOG_FILENAME)
     dt_now = datetime.datetime.now()
     time_str = dt_now.strftime('%Y/%m/%d %H:%M:%S')
     
